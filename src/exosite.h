@@ -38,21 +38,12 @@
 
 #include <stdint.h>
 
-// defines
-typedef enum
-{
-    IF_WIFI,
-    IF_ENET,
-    IF_FILE,
-    IF_HDD,
-    IF_I2C,
-    IF_GPRS,
-    IF_NOVATEL,
-    IF_NONE
-}UUIDInterfaceTypes;
-#define EXOSITE_DEMO_UPDATE_INTERVAL            4000 // ms
+
+// DEFINES
 #define CIK_LENGTH                              40
 
+
+// ENUMS
 typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
 {
     CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
@@ -61,16 +52,20 @@ typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
     R_W_ERROR               /*!< R/W error */
 }EXOSITE_DEVICE_ACTIVATION_STATE;
 
-// functions for export
-int Exosite_Write(char * pbuf, unsigned char bufsize);
-int Exosite_Read(char * palias, char * pbuf, unsigned char buflen);
+
+
+// PUBLIC FUNCTIONS
+int32_t Exosite_Write(char * pbuf, unsigned char bufsize);
+int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen);
 void Exosite_Init(const char *vendor, const char *model, const unsigned char if_nbr);
 void Exosite_Cloud_Setup(void);
-int Exosite_CheckCIK(void);
+int32_t Exosite_CheckCIK(void);
 void Exosite_SetCIK(char * pCIK);
 void Exosite_GetCIK(char * pCIK);
 int Exosite_Cloud_Status(void);
 EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void);
+
+
 #endif
 
 

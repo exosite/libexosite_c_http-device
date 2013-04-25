@@ -107,7 +107,7 @@ void exosite_meta_defaults(void)
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exosite_meta_write(unsigned char * write_buffer, unsigned short srcBytes, unsigned char element)
+void exosite_meta_write(unsigned char * write_buffer, uint16_t srcBytes, unsigned char element)
 {
     exosite_meta * meta_info = 0;
 

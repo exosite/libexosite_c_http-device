@@ -42,14 +42,14 @@
 // local variables
 #define GS_RECV_OFFSET 1
 static uint8_t cid = 0xff;
-char exometa[META_SIZE];
-static int exo_recv_index = -1; // first socket buffer byte was GainSpan command byte
+
+static int32_t exo_recv_index = -1; // first socket buffer byte was GainSpan command byte
 
 // local functions
 
 // externs
-extern void DisplayLCD(uint8_t, const uint8_t *);
-extern char *itoa(int n, char *s, int b);
+//extern void DisplayLCD(uint8_t, const uint8_t *);
+//extern char *itoa(int n, char *s, int b);
 
 // global variables
 #define EXOMETA_ADDR 177
@@ -72,26 +72,13 @@ void exoHAL_SetIface(UUIDInterfaceTypes type)
 *  \brief  Reads the MAC address from the hardware
 *
 *****************************************************************************/
-int exoHAL_ReadUUID(unsigned char if_nbr, unsigned char * UUID_buf)
+int32_t exoHAL_ReadUUID( unsigned char * UUID_buf)
 {
     int retval = 0;
     int check_count = 0;
-    unsigned char idBuf[20];
 
 
-    switch (if_nbr)
-    {
-    case IF_GPRS:
-        break;
-    case IF_ENET:
-        break;
-    case IF_WIFI:
-        break;
-    case IF_NOVATEL:
-        break;
-    default:
-        break;
-    }
+   
 
     return retval;
 }
@@ -219,7 +206,7 @@ void exoHAL_SocketClose(long socket)
 *  \brief  The function opens a TCP socket
 *
 *****************************************************************************/
-long exoHAL_SocketOpenTCP()
+int32_t exoHAL_SocketOpenTCP()
 {
 
     unsigned char server[META_SERVER_SIZE];
@@ -256,7 +243,7 @@ long exoHAL_SocketOpenTCP()
         //AtLibGs_TCPClientStart(serverip, server[5], &cid);
     }
 
-    return (long)cid;
+    return (int32_t)cid;
 }
 
 
@@ -271,11 +258,11 @@ long exoHAL_SocketOpenTCP()
 *  \brief  The function opens a TCP socket
 *
 *****************************************************************************/
-long exoHAL_ServerConnect(long sock)
+int32_t exoHAL_ServerConnect(int32_t sock)
 {
     //TODO - use DNS or check m2.exosite.com/ip to check for updates
-    if( sock == (long)cid)
-        return (long)cid;
+    if( sock == (int32_t)cid)
+        return (int32_t)cid;
     else
         return -1;
 }
@@ -292,10 +279,10 @@ long exoHAL_ServerConnect(long sock)
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-unsigned char exoHAL_SocketSend(long socket, char * buffer, unsigned char len)
+unsigned char exoHAL_SocketSend(int32_t socket, char * buffer, unsigned char len)
 {
     //App_PrepareIncomingData();
-    if(socket == (long)cid)
+    if(socket == (int32_t)cid)
     {
         //if (ifaceType == IF_NOVATEL)
         //{
@@ -325,9 +312,9 @@ unsigned char exoHAL_SocketSend(long socket, char * buffer, unsigned char len)
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-unsigned char exoHAL_SocketRecv(long socket, char * buffer, unsigned char len)
+unsigned char exoHAL_SocketRecv(int32_t socket, char * buffer, unsigned char len)
 {
-    if (socket == (long)cid)
+    if (socket == (int32_t)cid)
     {
         int rec_len = 0, rxbufsize = 0;
         //ATLIBGS_MSG_ID_E rxMsgId = ATLIBGS_MSG_ID_NONE;

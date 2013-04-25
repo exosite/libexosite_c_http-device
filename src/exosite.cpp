@@ -40,13 +40,12 @@
 
 
 //local defines
-unsigned char exosite_provision_info[50];
-#define RX_SIZE 50
-#define MAC_LEN 6
+static char exosite_provision_info[50];
+
 
 enum lineTypes
 {
-    CIK_LINE,
+    CIK_LINE,		/*!< line contains CIK */
     HOST_LINE,
     CONTENT_LINE,
     ACCEPT_LINE,
@@ -70,52 +69,47 @@ enum lineTypes
 #define STR_CRLF "\r\n"
 
 // local functions
-int info_assemble(const char * vendor, const char *model);
-int init_UUID(unsigned char if_nbr);
-void update_m2ip(void);
-int readResponse(long socket, char * expectedCode);
-long connect_to_exosite();
-void sendLine(long socket, unsigned char LINE, const char * payload);
-int checkResponse(char * response, char * code);
-/// place response in buf
-uint16_t getResponse(long socket, char * buf, uint16_t len);
+static int32_t info_assemble(const char * vendor, const char *model);
+static int32_t init_UUID();
+static void update_m2ip(void);
+static int32_t readResponse(int32_t socket, char * expectedCode);
+static int32_t connect_to_exosite();
+static void sendLine(int32_t socket, unsigned char LINE, const char * payload);
+static int32_t checkResponse(char * response, char * code);
+static uint16_t getResponse(int32_t socket, char * buf, uint16_t len);
 
 // global functions
-int Exosite_Write(char * pbuf, unsigned char bufsize);
-int Exosite_Read(char * palias, char * pbuf, unsigned char buflen);
-void Exosite_Init(const char *vendor, const char *model, const unsigned char if_nbr);
-void Exosite_Cloud_Setup(void);
-void Exosite_SetCIK(char * pCIK);
-void Exosite_GetCIK(char * pCIK);
-int Exosite_CheckCIK(void);
-int Exosite_Cloud_Status(void);
+
 
 // externs
 extern char *itoa(int n, char *s, int b);
 
 // global variables
+
+/*!
+* Used to track how many times a write to the Exosite platform has failed
+*/
 static unsigned char exositeWriteFailures = 0;
-int cloud_status = -1;
+int32_t cloud_status = -1;
 
 
-/*****************************************************************************
-*
-* info_assemble
-*
-*  \param  char * vendor, custom's vendor name
-*          char * model, custom's model name
-*
-*  \return string length of assembly customize's vendor information
-*
-*  \brief  The function initializes the custom's vendor and model name for
+
+/*!
+* \brief  The function initializes the custom's vendor and model name for
 *          provision prepare
 *
-*****************************************************************************/
-int info_assemble(const char * vendor, const char *model)
+* [detailed description]
+*
+* \param[in] vendor Pointer to string containing vendor name
+* \param[in] model Pointer to string containing model name
+*
+* \return length of assembled customize's vendor information
+*/
+int32_t info_assemble(const char * vendor, const char *model)
 {
     char vendor_info[95];
-    int info_len = 0;
-    int assemble_len = 0;
+    int32_t info_len = 0;
+    int32_t assemble_len = 0;
 
     // verify the assembly length
     assemble_len = strlen(STR_VENDOR) + strlen(vendor)
@@ -158,43 +152,36 @@ int info_assemble(const char * vendor, const char *model)
 }
 
 
-/*****************************************************************************
+
+/*! 
+* \brief  Feedback the exosite cloud status
 *
-* Exosite_Cloud_Status
-*
-*  \param  None
-*
-*  \return 1 success; 0 failure
-*
-*  \brief  The function feedback the exosite cloud status
-*
-*****************************************************************************/
-int Exosite_Cloud_Status(void)
+* \return 1 success; 0 failure
+*/
+int32_t Exosite_Cloud_Status(void)
 {
     return cloud_status;
 }
 
 
-/*****************************************************************************
+
+/*!
+* \brief  The function initializes the exosite meta structure ,UUID and
+*          provision information
 *
-* Exosite_Init
+* \param[in] vendor Pointer to string containing vendor name
+* \param[in] model Pointer to string containing model name
 *
-*  \param  None
-*
-*  \return None
-*
-*  \brief  The function initializes the exosite meta structure ,UUID and
-*          provision inforation
-*
-*****************************************************************************/
-void Exosite_Init(const char *vendor, const char *model, const unsigned char if_nbr)
+* \return length of assembled customize's vendor information
+*/
+void Exosite_Init(const char *vendor, const char *model)
 {
 
     exoHAL_initModem();
 
     info_assemble(vendor, model);
     exosite_meta_init();        //always initialize our meta structure
-    init_UUID(if_nbr);          //always check to see if the UUID is up to date
+    init_UUID();          //always check to see if the UUID is up to date
 
     //setup some of our globals for operation
     exositeWriteFailures = 0;
@@ -226,18 +213,11 @@ void Exosite_Init(const char *vendor, const char *model, const unsigned char if_
 }
 
 
-/*****************************************************************************
-*
-* Exosite_Cloud_Setup
-*
-*  \param  None
-*
-*  \return None
-*
+/*!
 *  \brief  Called after Init has been ran in the past, but maybe comms were
 *          down and we have to keep trying...
 *
-*****************************************************************************/
+*/
 void Exosite_Cloud_Setup(void)
 {
     update_m2ip();      //check our IP api to see if the old IP is advertising a new one
@@ -259,7 +239,14 @@ void Exosite_Cloud_Setup(void)
 *  \brief  Validate the CIK
 *
 *****************************************************************************/
-int Exosite_CheckCIK(void)
+/*!
+*  \brief  Reads data from Exosite
+*
+*
+* \return 1 - CIK was valid, 0 - CIK was invalid.
+*
+*/
+int32_t Exosite_CheckCIK(void)
 {
     unsigned char i;
     char tempCIK[CIK_LENGTH];
@@ -278,17 +265,13 @@ int Exosite_CheckCIK(void)
 }
 
 
-/*****************************************************************************
-*
-* Exosite_SetCIK
-*
-*  \param  pointer to CIK
-*
-*  \return None
-*
+
+/*!
 *  \brief  Programs a new CIK to flash / non volatile
 *
-*****************************************************************************/
+* \param[in] pCIK Pointer to CIK
+*
+*/
 void Exosite_SetCIK(char * pCIK)
 {
     exosite_meta_write((unsigned char *)pCIK, CIK_LENGTH, META_CIK);
@@ -297,17 +280,14 @@ void Exosite_SetCIK(char * pCIK)
 }
 
 
-/*****************************************************************************
+
+/*!
+*  \brief  Retrieves a the CIK from NV and places it in to the string pointed
+*			at by pCIK
 *
-* Exosite_GetCIK
+* \param[out] pCIK Pointer to CIK
 *
-*  \param  pointer to CIK
-*
-*  \return None
-*
-*  \brief  Programs a new CIK to flash / non volatile
-*
-*****************************************************************************/
+*/
 void Exosite_GetCIK(char * pCIK)
 {
     exosite_meta_read((unsigned char *)pCIK, CIK_LENGTH, META_CIK);
@@ -316,19 +296,16 @@ void Exosite_GetCIK(char * pCIK)
 }
 
 
-/*****************************************************************************
+/*!
+*  \brief  writes data to Exosite
 *
-* Exosite_Write
+* \param[in] pbuf Pointer to buffer of data to write to Exosite
+* \param[in] bufsize length of data in buffer
 *
-*  \param  pbuf - string buffer containing data to be sent
-*          bufsize - number of bytes to send
+* \return TODO
 *
-*  \return 1 success; 0 failure
-*
-*  \brief  The function writes data to Exosite
-*
-*****************************************************************************/
-int Exosite_Write(char * pbuf, unsigned char bufsize)
+*/
+int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
 {
     char strBuf[10];
     long sock = -1;
@@ -386,20 +363,18 @@ int Exosite_Write(char * pbuf, unsigned char bufsize)
 }
 
 
-/*****************************************************************************
+
+/*!
+*  \brief  Reads data from Exosite
 *
-* Exosite_Read
+* \param[in] palias Name of data source alias to read from
+* \param[in] pbuf read buffer to put the read response into
+* \param[in] buflen Size of buffer
 *
-*  \param  palias - string, name of the datasource alias to read from
-*          pbuf - read buffer to put the read response into
-*          buflen - size of the input buffer
+* \return length of data in response
 *
-*  \return number of bytes read
-*
-*  \brief  The function reads data from Exosite
-*
-*****************************************************************************/
-int Exosite_Read(char * palias, char * pbuf, unsigned char buflen)
+*/
+int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen)
 {
     unsigned char vlen;
     long sock = -1;
@@ -477,18 +452,12 @@ int Exosite_Read(char * palias, char * pbuf, unsigned char buflen)
 }
 
 
-/*****************************************************************************
+/*!
+*  \brief  Attempts to activate a device with exosite
 *
-* activate_device
+* \return The results of the activation attempt
 *
-*  \param  none
-*
-*  \return none
-*
-*  \brief  Calls activation API - if successful, it saves the returned
-*          CIK to non-volatile
-*
-*****************************************************************************/
+*/
 EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
 {
     // Try and activate device with Exosite, four possible cases:
@@ -589,58 +558,51 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
 }
 
 
-/*****************************************************************************
-*
-* update_m2ip
-*
-*  \param  none
-*
-*  \return none
-*
+
+/*!
 *  \brief  Checks /ip API to see if a new server IP address should be used
 *
-*****************************************************************************/
+
+* \return none
+*
+*/
 void update_m2ip(void)
 {
     //TODO - stubbed out
     return;
 }
 
-/*****************************************************************************
-*
-* init_UUID
-*
-*  \param  Interface Number (1 - WiFi)
-*
-*  \return 0 for failure, uuid_len for success
-*
+
+/*!
 *  \brief  Reads UUID from the hardware
 *
-*****************************************************************************/
-int init_UUID(unsigned char if_nbr)
+* \return 0 for failure, uuid_len for success
+*
+*/
+int32_t init_UUID()
 {
     unsigned char struuid[25];
     unsigned char uuid_len = 0;
 
-    uuid_len = exoHAL_ReadUUID(if_nbr, struuid);
+    uuid_len = exoHAL_ReadUUID(struuid);
     exosite_meta_write(struuid, uuid_len, META_UUID);
 
     return uuid_len;
 }
 
 
-/*****************************************************************************
-*
-* connect_to_exosite
-*
-*  \param  None
-*
-*  \return success: socket handle; failure: 0;
-*
+
+/*!
 *  \brief  Establishes a connection with the Exosite API server
 *
-*****************************************************************************/
-long connect_to_exosite(void)
+* \param[in] palias Name of data source alias to read from
+* \param[in] pbuf read buffer to put the read response into
+* \param[in] buflen Size of buffer
+*
+* \return success: socket handle; failure: 0;
+*
+*/
+int32_t connect_to_exosite(void)
 {
     static unsigned char connectRetries = 0;
     long sock;
@@ -682,18 +644,17 @@ long connect_to_exosite(void)
 }
 
 
-/*****************************************************************************
-*
-* readResponse
-*
-*  \param  socket handle, pointer to expected HTTP response code
-*
-*  \return 1 if match, 0 if no match
-*
+/*!
 *  \brief  Reads first 12 bytes of HTTP response and extracts the 3 byte code
 *
-*****************************************************************************/
-int readResponse(long socket, char * code)
+* \param[in] socket Pointer to expected HTTP response code
+* \param[in] pbuf read buffer to put the read response into
+* \param[in] buflen Size of buffer
+*
+* \return 1 if match, 0 if no match
+*
+*/
+int32_t readResponse(int32_t socket, char * code)
 {
     char rxBuf[12];
     int rxLen = 0;
@@ -708,7 +669,16 @@ int readResponse(long socket, char * code)
     return 0;
 }
 
-int checkResponse(char * response, char * code)
+/*!
+*  \brief  determines if response matches code
+*
+* \param[in] code Pointer to expected HTTP response code
+* \param[in] response an HTTP response string
+*
+* \return 1 if match, 0 if no match
+*
+*/
+int32_t checkResponse(char * response, char * code)
 {
     if (code[0] == response[9] && code[1] == response[10] && code[2] == response[11])
     {
@@ -720,9 +690,17 @@ int checkResponse(char * response, char * code)
 
 
 
-// place response in buf
-// returns the length of the response
-uint16_t getResponse(long socket, char * buf, uint16_t len)
+/*!
+*  \brief  Retrieves data from a socket
+*
+* \param[in] socket Socket to retrieve data from
+* \param[in] buf Socket to retrieve data from
+* \param[in] len Length of buf
+*
+* \return length of response
+*
+*/
+uint16_t getResponse(int32_t socket, char * buf, uint16_t len)
 {
     uint16_t rxLen = 0;
 
@@ -732,18 +710,17 @@ uint16_t getResponse(long socket, char * buf, uint16_t len)
 }
 
 
-/*****************************************************************************
-*
-*  sendLine
-*
-*  \param  Which line type
-*
-*  \return socket handle
-*
+/*!
 *  \brief  Sends data out the socket
 *
-*****************************************************************************/
-void sendLine(long socket, unsigned char LINE, const char * payload)
+* \param[in] socket Socket to send data out ot
+* \param[in] LINE type of line going out the socket
+* \param[in] payload pointer to data to send out socket
+*
+* \return 1 if match, 0 if no match
+*
+*/
+void sendLine(int32_t socket, unsigned char LINE, const char * payload)
 {
     char strBuf[70];
     unsigned char strLen;

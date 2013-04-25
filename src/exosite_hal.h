@@ -54,15 +54,28 @@ enum ExositeUICodes
     EXO_UI_END
 };
 
+// defines
+typedef enum
+{
+	IF_WIFI,	/*!<  */
+	IF_ENET,
+	IF_FILE,
+	IF_HDD,
+	IF_I2C,
+	IF_GPRS,
+	IF_NOVATEL,
+	IF_NONE
+}UUIDInterfaceTypes;
+
 // functions for export
-int exoHAL_ReadUUID(unsigned char if_nbr, unsigned char * UUID_buf);
+int exoHAL_ReadUUID( unsigned char * UUID_buf);
 void exoHAL_EnableMeta(void);
 void exoHAL_EraseMeta(void);
 void exoHAL_WriteMetaItem(unsigned char * buffer, unsigned char len, int offset);
 void exoHAL_ReadMetaItem(unsigned char * buffer, unsigned char len, int offset);
 void exoHAL_SocketClose(long socket);
-long exoHAL_SocketOpenTCP(void);
-long exoHAL_ServerConnect(long socket);
+int32_t exoHAL_SocketOpenTCP(void);
+int32_t exoHAL_ServerConnect(long socket);
 unsigned char exoHAL_SocketSend(long socket, char * buffer, unsigned char len);
 unsigned char exoHAL_SocketRecv(long socket, char * buffer, unsigned char len);
 void exoHAL_HandleError(unsigned char code);
