@@ -63,7 +63,7 @@ void exosite_meta_init(void)
     exoHAL_EnableMeta(); //turn on the necessary hardware / peripherals
 
     //check our meta mark - if it isn't there, we wipe the meta structure
-    exosite_meta_read((unsigned char *)strBuf, META_MARK_SIZE, META_MARK);
+    exosite_meta_read((char *)strBuf, META_MARK_SIZE, META_MARK);
     if (strncmp(strBuf, EXOMARK, META_MARK_SIZE))
         exosite_meta_defaults();
 
@@ -88,8 +88,8 @@ void exosite_meta_defaults(void)
     const unsigned char meta_server_ip[6] = {173,255,209,28,0,80};
 
     exoHAL_EraseMeta(); //erase the information currently in meta
-    exosite_meta_write((unsigned char *)meta_server_ip, 6, META_SERVER);   //store server IP
-    exosite_meta_write((unsigned char *)EXOMARK, META_MARK_SIZE, META_MARK); //store exosite mark
+    exosite_meta_write((char *)meta_server_ip, 6, META_SERVER);   //store server IP
+    exosite_meta_write((char *)EXOMARK, META_MARK_SIZE, META_MARK); //store exosite mark
 
     return;
 }
@@ -162,7 +162,7 @@ void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element)
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exosite_meta_read(char * read_buffer, unsigned short destBytes, unsigned char element)
+void exosite_meta_read(char * read_buffer, uint16_t destBytes, int32_t element)
 {
     exosite_meta * meta_info = 0;
 

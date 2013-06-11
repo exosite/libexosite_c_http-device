@@ -64,6 +64,7 @@ enforced by using a tool called
 uncrustify (uncrustify.cfg) is included with this release.
 
 \section testing Testing
-Code is checked to compile with GCC using minGW 4.7.2 on Windows, as well as...
+Code is checked to compile with GCC using minGW 4.7.2 on Windows, as well MSVC
+using Visual Studio 2012.
 
 */

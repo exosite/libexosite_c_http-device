@@ -76,7 +76,7 @@ typedef enum
 void exosite_meta_defaults(void);
 void exosite_meta_init(void);
 void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element);
-void exosite_meta_read(char * read_buffer, unsigned short destBytes, int32_t element);
+void exosite_meta_read(char * read_buffer, uint16_t destBytes, int32_t element);
 
 #endif
 
