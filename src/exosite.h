@@ -57,9 +57,9 @@ typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
 // PUBLIC FUNCTIONS
 int32_t Exosite_Write(char * pbuf, unsigned char bufsize);
 int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen);
-void Exosite_Init(const char *vendor, const char *model, const unsigned char if_nbr);
+void Exosite_Init(const char *vendor, const char *model);
 void Exosite_Cloud_Setup(void);
-int32_t Exosite_CheckCIK(void);
+int32_t Exosite_isCIKValid(char cik[CIK_LENGTH]);
 void Exosite_SetCIK(char * pCIK);
 void Exosite_GetCIK(char * pCIK);
 int Exosite_Cloud_Status(void);

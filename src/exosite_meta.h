@@ -36,10 +36,12 @@
 #ifndef EXOSITE_META_H
 #define EXOSITE_META_H
 
+#include <stdint.h>
+
 // defines
 #define META_SIZE                 256
 #define META_CIK_SIZE             40
-#define META_SERVER_SIZE          6
+#define META_SERVER_SIZE          4  /*!< bytes in the IP address */
 #define META_PAD0_SIZE            2
 #define META_MARK_SIZE            8
 #define META_UUID_SIZE            14
@@ -73,8 +75,8 @@ typedef enum
 // functions for export
 void exosite_meta_defaults(void);
 void exosite_meta_init(void);
-void exosite_meta_write(unsigned char * write_buffer, unsigned short srcBytes, unsigned char element);
-void exosite_meta_read(unsigned char * read_buffer, unsigned short destBytes, unsigned char element);
+void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element);
+void exosite_meta_read(char * read_buffer, unsigned short destBytes, int32_t element);
 
 #endif
 

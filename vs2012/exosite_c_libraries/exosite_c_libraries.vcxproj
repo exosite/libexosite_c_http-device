@@ -43,6 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -67,9 +68,12 @@
     <ClInclude Include="..\..\src\exosite_meta.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\exosite.cpp" />
-    <ClCompile Include="..\..\src\exosite_hal.cpp" />
-    <ClCompile Include="..\..\src\exosite_meta.cpp" />
+    <None Include="..\..\src\exosite_c_libraries.dox" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\exosite.c" />
+    <ClCompile Include="..\..\src\exosite_hal.c" />
+    <ClCompile Include="..\..\src\exosite_meta.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -37,6 +37,7 @@
 #include <string.h>
 
 
+
 // external functions
 // externs
 // local functions
@@ -107,7 +108,7 @@ void exosite_meta_defaults(void)
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exosite_meta_write(unsigned char * write_buffer, uint16_t srcBytes, unsigned char element)
+void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element)
 {
     exosite_meta * meta_info = 0;
 
@@ -118,27 +119,27 @@ void exosite_meta_write(unsigned char * write_buffer, uint16_t srcBytes, unsigne
     case META_CIK:
         if (srcBytes > META_CIK_SIZE)
             return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int)meta_info->cik); //store CIK
+        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->cik); //store CIK
         break;
     case META_SERVER:
         if (srcBytes > META_SERVER_SIZE)
             return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int)meta_info->server); //store server IP
+        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->server); //store server IP
         break;
     case META_MARK:
         if (srcBytes > META_MARK_SIZE)
             return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int)meta_info->mark); //store exosite mark
+        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->mark); //store exosite mark
         break;
     case META_UUID:
         if (srcBytes > META_UUID_SIZE)
             return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int)meta_info->uuid); //store UUID
+        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->uuid); //store UUID
         break;
     case META_MFR:
         if (srcBytes > META_MFR_SIZE)
             return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int)meta_info->mfr); //store manufacturing info
+        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->mfr); //store manufacturing info
         break;
     case META_NONE:
     default:
@@ -161,7 +162,7 @@ void exosite_meta_write(unsigned char * write_buffer, uint16_t srcBytes, unsigne
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exosite_meta_read(unsigned char * read_buffer, unsigned short destBytes, unsigned char element)
+void exosite_meta_read(char * read_buffer, unsigned short destBytes, unsigned char element)
 {
     exosite_meta * meta_info = 0;
 

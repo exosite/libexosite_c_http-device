@@ -1,0 +1,69 @@
+/*! \mainpage Exosite Libraries Index
+
+\tableofcontents
+
+\section introduction Introduction
+The Exosite standard C libraries provide a common interface for applications
+connecting to the Exosite cloud.
+
+The Exosite libraries are platform agnostic, but will require the 
+implementation of a hardware abstraction layer(HAL).  This HAL will be
+responsible for communicating with the hardware.  An example HAL can be found
+in the exosite_hal.* files.
+
+
+\section architecture Architecture
+The Exosite C Library contains the library code, which is hardware independent, 
+as well as a HAL which is required to port the library between different 
+platforms.  Below is a high level diagram of how application code, device 
+hardware, library code and Exosite interact.
+
+@startuml{component_diagram.png}
+	[Application code] <-> Library_API
+	package "Exosite C Libraries" {
+	Library_API - [Library Code]
+	[Library Code] - [HAL]
+	[HAL]
+	}
+ 
+	cloud {
+	[Exosite 1P] - [Library Code]
+	}
+ 
+	[Device Hardware] - [HAL]
+@enduml
+
+\section gettingStarted  Getting Started
+The Exosite C Libraries assume that your device has the ability to open a socket
+and send/receive data on that socket.
+
+In order to use the Exosite libraries on your hardware, you will need to create
+the HAL.  The easiest way to do this is to go through exosite_hal.cpp and fill
+in the functions.  The purpose of each function is well documented and should
+provide all the information required to write your own hardware specific code.
+
+\section usingNVM Using NVM
+The libraries allow the use of NVM, or programatically setting individual
+data elements.  The following variables need to be kept in NVM, or your
+HAL must be able to get them from the hardware, or must be hardcoded.
+
+- Exosite CIK -- A unique identifier on the exosite platform
+- Vendor name -- Vendor of your device, as defined be Exosite
+- Model name -- Model of your device, as defined by Exosite
+- Device UUID -- Unique identifier of your device, as defined by vendor/model
+- Exosite server -- url of Exosite server.
+
+\section errorHandling Error Handling
+This library, as well as the HAL supports basic error handling and display.
+
+
+\section codingStyle Coding Style
+Various coding styles are enforced for the Exosite C library.  These are 
+enforced by using a tool called 
+[uncrustify](http://uncrustify.sourceforge.net/).  The configuration file for
+uncrustify (uncrustify.cfg) is included with this release.
+
+\section testing Testing
+Code is checked to compile with GCC using minGW 4.7.2 on Windows, as well as...
+
+*/

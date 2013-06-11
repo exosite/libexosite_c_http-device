@@ -38,21 +38,21 @@
 
 #include "exosite.h"
 // defines
-enum ExositeErrorCodes
+typedef enum 
 {
     EXO_ERROR_WRITE,
     EXO_ERROR_READ,
     EXO_ERROR_CONNECT,
     EXO_ERROR_UNKNOWN,
     EXO_ERROR_END
-};
+}ExositeErrorCodes;
 
-enum ExositeUICodes
+typedef enum 
 {
     EXO_SERVER_CONNECTED,
     EXO_CLIENT_RW,
     EXO_UI_END
-};
+}ExositeUICodes;
 
 // defines
 typedef enum
@@ -68,19 +68,19 @@ typedef enum
 }UUIDInterfaceTypes;
 
 // functions for export
-int exoHAL_ReadUUID( unsigned char * UUID_buf);
+uint8_t exoHAL_ReadUUID( char * UUID_buf);
 void exoHAL_EnableMeta(void);
 void exoHAL_EraseMeta(void);
-void exoHAL_WriteMetaItem(unsigned char * buffer, unsigned char len, int offset);
-void exoHAL_ReadMetaItem(unsigned char * buffer, unsigned char len, int offset);
-void exoHAL_SocketClose(long socket);
+void exoHAL_WriteMetaItem(char * buffer, uint8_t len, int32_t offset);
+void exoHAL_ReadMetaItem(char * buffer, uint8_t len, int32_t offset);
+void exoHAL_SocketClose(int32_t socket);
 int32_t exoHAL_SocketOpenTCP(void);
-int32_t exoHAL_ServerConnect(long socket);
-unsigned char exoHAL_SocketSend(long socket, char * buffer, unsigned char len);
-unsigned char exoHAL_SocketRecv(long socket, char * buffer, unsigned char len);
-void exoHAL_HandleError(unsigned char code);
-void exoHAL_ShowUIMessage(unsigned char code);
-void exoHAL_MSDelay(unsigned short delay);
+int32_t exoHAL_ServerConnect(int32_t socket);
+uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len);
+uint16_t exoHAL_SocketRecv(int32_t socket, char * buffer, uint8_t len);
+void exoHAL_HandleError(ExositeErrorCodes code);
+void exoHAL_ShowUIMessage(ExositeUICodes code);
+void exoHAL_MSDelay(uint16_t delay);
 void exoHAL_SetIface(UUIDInterfaceTypes type);
 void exoHAL_initModem();
 void exoHAL_ShowErrorMessage(char * errMsg, uint8_t length);

@@ -46,7 +46,7 @@ static char exosite_provision_info[50];
 enum lineTypes
 {
     CIK_LINE,		/*!< line contains CIK */
-    HOST_LINE,
+    HOST_LINE,		
     CONTENT_LINE,
     ACCEPT_LINE,
     LENGTH_LINE,
@@ -222,7 +222,10 @@ void Exosite_Cloud_Setup(void)
 {
     update_m2ip();      //check our IP api to see if the old IP is advertising a new one
     activate_device();  //the moment of truth - can this device provision with the Exosite cloud?...
-    cloud_status = Exosite_CheckCIK();
+    char cik[CIK_LENGTH] = {0};
+    Exosite_GetCIK(cik);
+    
+    cloud_status = Exosite_isCIKValid(cik);
 
     return;
 }
@@ -230,7 +233,7 @@ void Exosite_Cloud_Setup(void)
 
 /*****************************************************************************
 *
-* Exosite_CheckCIK
+* Exosite_isCIKValid
 *
 *  \param  None
 *
@@ -240,22 +243,19 @@ void Exosite_Cloud_Setup(void)
 *
 *****************************************************************************/
 /*!
-*  \brief  Reads data from Exosite
+*  \brief  Checks that the cik consists only of lowercase hexadecimal chars
 *
 *
 * \return 1 - CIK was valid, 0 - CIK was invalid.
 *
 */
-int32_t Exosite_CheckCIK(void)
+int32_t Exosite_isCIKValid(char cik[CIK_LENGTH])
 {
-    unsigned char i;
-    char tempCIK[CIK_LENGTH];
-
-    Exosite_GetCIK(tempCIK);
+    uint8_t i;
 
     for (i = 0; i < CIK_LENGTH; i++)
     {
-        if (!(tempCIK[i] >= 'a' && tempCIK[i] <= 'f' || tempCIK[i] >= '0' && tempCIK[i] <= '9'))
+        if (!(cik[i] >= 'a' && cik[i] <= 'f' || cik[i] >= '0' && cik[i] <= '9'))
         {
             return 0;
         }
@@ -274,7 +274,7 @@ int32_t Exosite_CheckCIK(void)
 */
 void Exosite_SetCIK(char * pCIK)
 {
-    exosite_meta_write((unsigned char *)pCIK, CIK_LENGTH, META_CIK);
+    exosite_meta_write((char *)pCIK, CIK_LENGTH, META_CIK);
 
     return;
 }
@@ -290,7 +290,7 @@ void Exosite_SetCIK(char * pCIK)
 */
 void Exosite_GetCIK(char * pCIK)
 {
-    exosite_meta_read((unsigned char *)pCIK, CIK_LENGTH, META_CIK);
+    exosite_meta_read((char *)pCIK, CIK_LENGTH, META_CIK);
 
     return;
 }
@@ -489,7 +489,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
     char cik[CIK_LENGTH] = {'\0'};
 
     // get UUID
-    exoHAL_ReadMetaItem((unsigned char *)cik, CIK_LENGTH, META_CIK);
+    exoHAL_ReadMetaItem((char *)cik, CIK_LENGTH, META_CIK);
 
     length = strlen((char *)exosite_provision_info) + META_UUID_SIZE;
     itoa(length, strLen, 10); //make a string for length
@@ -581,8 +581,8 @@ void update_m2ip(void)
 */
 int32_t init_UUID()
 {
-    unsigned char struuid[25];
-    unsigned char uuid_len = 0;
+    char struuid[25];
+    uint16_t uuid_len = 0;
 
     uuid_len = exoHAL_ReadUUID(struuid);
     exosite_meta_write(struuid, uuid_len, META_UUID);
@@ -730,7 +730,7 @@ void sendLine(int32_t socket, unsigned char LINE, const char * payload)
     case CIK_LINE:
         strLen = strlen(STR_CIK_HEADER);
         memcpy(strBuf,STR_CIK_HEADER,strLen);
-        exosite_meta_read((unsigned char *)&strBuf[strLen], CIK_LENGTH, META_CIK);
+        exosite_meta_read((char *)&strBuf[strLen], CIK_LENGTH, META_CIK);
         strLen += CIK_LENGTH;
         memcpy(&strBuf[strLen],STR_CRLF, 2);
         strLen += strlen(STR_CRLF);
@@ -770,7 +770,7 @@ void sendLine(int32_t socket, unsigned char LINE, const char * payload)
     case VENDOR_LINE:
         strLen = strlen((char *)exosite_provision_info);
         memcpy(strBuf, exosite_provision_info, strLen);
-        exosite_meta_read((unsigned char *)&strBuf[strLen], META_UUID_SIZE, META_UUID);
+        exosite_meta_read((char *)&strBuf[strLen], META_UUID_SIZE, META_UUID);
         strLen += META_UUID_SIZE;
         break;
     case POSTDATA_LINE:
