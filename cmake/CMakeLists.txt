@@ -14,6 +14,7 @@ include_directories(
 add_definitions("-D_VARIADIC_MAX=10")
 
 
+##########################exosite lib######################################
 set(lib_srcs
     ../src/exosite.c
     ../src/exosite_hal.c
@@ -26,11 +27,26 @@ SET_SOURCE_FILES_PROPERTIES( ${lib_srcs} PROPERTIES LANGUAGE CXX)
 ENDIF()
 
 add_library(exosite-lib STATIC ${lib_srcs})
+###############################################################################
 
 
+##########################gtest lib######################################
 set(gtest_srcs
     ../gtest-1.6.0/src/gtest-all.cc
 )
 
 add_library(gtest STATIC ${gtest_srcs})
+###############################################################################
+
+
+##########################test runner code#####################################
+set(test_srcs
+    ../src-tests/main.cpp
+    ../src-tests/tests.cpp
+)
+
+add_executable(tests ${test_srcs})
+
+target_link_libraries(tests exosite-lib gtest)
+###############################################################################
 
