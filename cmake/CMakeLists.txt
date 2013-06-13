@@ -10,9 +10,12 @@ include_directories(
   ../gtest-1.6.0/src
 )
 
+find_package (Threads)
+
 # required for gtest (http://stackoverflow.com/a/8274747/275354)
 add_definitions("-D_VARIADIC_MAX=10")
 
+add_definitions(-std=c99)
 
 ##########################exosite lib######################################
 set(lib_srcs
@@ -36,6 +39,8 @@ set(gtest_srcs
 )
 
 add_library(gtest STATIC ${gtest_srcs})
+target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
+
 ###############################################################################
 
 
