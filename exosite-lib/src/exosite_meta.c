@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-*  exosite.h - Exosite library interface header
+*  exosite_meta.c - Exosite meta information handler.
 *  Copyright (C) 2012 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,41 +32,18 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-
-#ifndef EXOSITE_H
-#define EXOSITE_H
-
-#include <stdint.h>
-
-
-// DEFINES
-#define CIK_LENGTH                              40
-
-
-// ENUMS
-typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
-{
-    CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
-    VALID_CIK,              /*!< CIK is valid  */
-    DEVICE_NOT_ENABLED,     /*!< Device has not been enabled */
-    R_W_ERROR               /*!< R/W error */
-}EXOSITE_DEVICE_ACTIVATION_STATE;
+#include "exosite_meta.h"
+#include "exosite_hal.h"
+//#include <string.h>
 
 
 
-// PUBLIC FUNCTIONS
-int32_t Exosite_Write(char * pbuf, unsigned char bufsize);
-int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen);
-void Exosite_Init(const char *vendor, const char *model);
-void Exosite_Cloud_Setup(void);
-int32_t Exosite_isCIKValid(char cik[CIK_LENGTH]);
-void Exosite_SetCIK(char * pCIK);
-void Exosite_GetCIK(char * pCIK);
-int Exosite_Cloud_Status(void);
-EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void);
-
-
-#endif
+// external functions
+// externs
+// local functions
+// exported functions
+// local defines
+// globals
 
 
 

@@ -56,7 +56,8 @@ used to communicate with the devices non-volatile memory.
 
 \section gettingStarted  Getting Started
 The Exosite C Libraries assume that your device has the ability to open a socket
-and send/receive data on that socket.
+and send/receive data on that socket.  The library is also limited to only a 
+single Exosite connection at a time.
 
 In order to use the Exosite libraries on your hardware, you will need to create
 the HAL.  The easiest way to do this is to go through exosite_hal.cpp and fill

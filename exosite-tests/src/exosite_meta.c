@@ -34,7 +34,7 @@
 *****************************************************************************/
 #include "exosite_meta.h"
 #include "exosite_hal.h"
-#include <string.h>
+//#include <string.h>
 
 
 
@@ -45,6 +45,17 @@
 // local defines
 // globals
 
+/*!< Used to mock out NVM during unit testing */
+struct UnitTest_meta_storage
+{
+   char cik[40];
+   char uuid[20];
+   char vendor[15];
+   char model[15];
+   char server[40];
+};
+
+struct UnitTest_meta_storage nvm;
 /*****************************************************************************
 *
 *  exosite_meta_init
@@ -58,41 +69,15 @@
 *****************************************************************************/
 void exosite_meta_init(void)
 {
-    char strBuf[META_MARK_SIZE];
+    // Perform and NVM/hardware initialization here
 
-    exoHAL_EnableMeta(); //turn on the necessary hardware / peripherals
-
-    //check our meta mark - if it isn't there, we wipe the meta structure
-    exosite_meta_read((char *)strBuf, META_MARK_SIZE, META_MARK);
-    if (strncmp(strBuf, EXOMARK, META_MARK_SIZE))
-        exosite_meta_defaults();
-
+    // This is intended to get NVM hardware ready to read/write, not
+    // actually do any reading or writing.
+    
     return;
 }
 
 
-/*****************************************************************************
-*
-*  exosite_meta_defaults
-*
-*  \param  None
-*
-*  \return None
-*
-*  \brief  Writes default meta values to NV memory.  Erases existing meta
-*          information!
-*
-*****************************************************************************/
-void exosite_meta_defaults(void)
-{
-    const unsigned char meta_server_ip[6] = {173,255,209,28,0,80};
-
-    exoHAL_EraseMeta(); //erase the information currently in meta
-    exosite_meta_write((char *)meta_server_ip, 6, META_SERVER);   //store server IP
-    exosite_meta_write((char *)EXOMARK, META_MARK_SIZE, META_MARK); //store exosite mark
-
-    return;
-}
 
 
 /*****************************************************************************
@@ -108,38 +93,25 @@ void exosite_meta_defaults(void)
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element)
+void exosite_meta_write(char * write_buffer, uint16_t srcBytes, MetaTypes element)
 {
-    exosite_meta * meta_info = 0;
-
-    //TODO - do not write if the data already there is identical...
 
     switch (element)
     {
-    case META_CIK:
-        if (srcBytes > META_CIK_SIZE)
-            return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->cik); //store CIK
+    case EXO_META_CIK:
+            memcpy(nvm.cik, write_buffer,srcBytes);
         break;
-    case META_SERVER:
-        if (srcBytes > META_SERVER_SIZE)
-            return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->server); //store server IP
+    case EXO_META_MODEL:
+            memcpy(nvm.cik, write_buffer,srcBytes);
         break;
-    case META_MARK:
-        if (srcBytes > META_MARK_SIZE)
-            return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->mark); //store exosite mark
+    case EXO_META_VENDOR:
+            memcpy(nvm.cik, write_buffer,srcBytes);
         break;
-    case META_UUID:
-        if (srcBytes > META_UUID_SIZE)
-            return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->uuid); //store UUID
+    case EXO_META_SERVER:
+            memcpy(nvm.cik, write_buffer,srcBytes);
         break;
-    case META_MFR:
-        if (srcBytes > META_MFR_SIZE)
-            return;
-        exoHAL_WriteMetaItem(write_buffer, srcBytes, (int32_t)meta_info->mfr); //store manufacturing info
+    case EXO_META_UUID:
+            memcpy(nvm.cik, write_buffer,srcBytes);
         break;
     case META_NONE:
     default:

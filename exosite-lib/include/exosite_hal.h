@@ -37,6 +37,9 @@
 #define EXOSITE_HAL_H
 
 #include "exosite.h"
+
+
+
 // defines
 typedef enum 
 {
@@ -75,9 +78,8 @@ void exoHAL_WriteMetaItem(char * buffer, uint8_t len, int32_t offset);
 void exoHAL_ReadMetaItem(char * buffer, uint8_t len, int32_t offset);
 void exoHAL_SocketClose(int32_t socket);
 int32_t exoHAL_SocketOpenTCP(void);
-int32_t exoHAL_ServerConnect(int32_t socket);
-uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len);
-uint16_t exoHAL_SocketRecv(int32_t socket, char * buffer, uint8_t len);
+uint8_t exoHAL_SocketSend(char * buffer, uint8_t len);
+uint16_t exoHAL_SocketRecv(char * buffer, uint8_t len);
 void exoHAL_HandleError(ExositeErrorCodes code);
 void exoHAL_ShowUIMessage(ExositeUICodes code);
 void exoHAL_MSDelay(uint16_t delay);

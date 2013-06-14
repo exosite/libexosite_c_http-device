@@ -40,22 +40,57 @@
 
 
 // local variables
-#define GS_RECV_OFFSET 1
-static uint8_t cid = 0xff;
 
-static int32_t exo_recv_index = -1; // first socket buffer byte was GainSpan command byte
 
 // used to determine if NVM is available for use
 static uint8_t hasNVM = 0;
 
+static uint8_t isSocketOpen = 0;/*!< 0 if closed 1 if open */
+
 // local functions
 
 // externs
-//extern void DisplayLCD(uint8_t, const uint8_t *);
-//extern char *itoa(int n, char *s, int b);
+
 
 // global variables
 
+// global functions
+// Convert an integer into a char
+char* Itoa(int value, char* str, int radix) {
+    static char dig[] =
+        "0123456789"
+        "abcdefghijklmnopqrstuvwxyz";
+    int n = 0, neg = 0;
+    unsigned int v;
+    char* p, *q;
+    char c;
+    if (radix == 10 && value < 0) {
+        value = -value;
+        neg = 1;
+    }
+    v = value;
+    do {
+        str[n++] = dig[v%radix];
+        v /= radix;
+    } while (v);
+    if (neg)
+        str[n++] = '-';
+    str[n] = '\0';
+    for (p = str, q = p + n/2; p != q; ++p, --q)
+        c = *p, *p = *q, *q = c;
+    return str;
+}
+
+// simple memcpy 
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* dst8 = (char*)dest;
+    char* src8 = (char*)src;
+
+    while (count--) {
+        *dst8++ = *src8++;
+    }
+    return dest;
+}
 
 UUIDInterfaceTypes ifaceType = IF_NONE;
 
@@ -68,7 +103,7 @@ UUIDInterfaceTypes ifaceType = IF_NONE;
 *	option to have multiple interfaces in the same source file
 *
 *
-* \param[in] type The iterface type to use
+* \param[in] type The interface type to use
 *
 */
 void exoHAL_SetIface(UUIDInterfaceTypes type)
@@ -76,17 +111,6 @@ void exoHAL_SetIface(UUIDInterfaceTypes type)
     ifaceType = type;
 }
 
-/*****************************************************************************
-*
-*  exoHAL_ReadHWMAC
-*
-*  \param  Interface Number (1 - WiFi), buffer to return hexadecimal MAC
-*
-*  \return 0 if failure; len of UUID if success;
-*
-*  \brief  Reads the MAC address from the hardware
-*
-*****************************************************************************/
 
 /*!
 * \brief  Retrieves UUID from device
@@ -203,25 +227,9 @@ void exoHAL_ReadMetaItem(char * buffer, uint8_t len, int32_t offset)
 *  \brief  The function closes a socket
 *
 *****************************************************************************/
-void exoHAL_SocketClose(int32_t socket)
+void exoHAL_SocketClose()
 {
-    if(socket == (int32_t)cid)
-    {
-        if (ifaceType == IF_NOVATEL)
-        {
-            //AtModem_SocketClose(cid);
-            cid = 0xff;
-            // 1 second delay required after disconnect
-            //MSTimerDelay(1000);
-            /* open novatel socket */
-        }
-        else
-        {
-            //AtLibGs_Close(cid);
-            cid = 0xff;
-            exo_recv_index = -1;
-        }
-    }
+    isSocketOpen = 0;
     return;
 }
 
@@ -232,71 +240,19 @@ void exoHAL_SocketClose(int32_t socket)
 *
 *  \param  None
 *
-*  \return -1: failure; Other: socket handle
+*  \return -1: failure; else 0
 *
 *  \brief  The function opens a TCP socket
 *
 *****************************************************************************/
 int32_t exoHAL_SocketOpenTCP()
 {
-
-    unsigned char server[META_SERVER_SIZE];
-    char serverip[20];
-
-    if (cid != 0xff)
-        return -1;
-
-    exosite_meta_read((char *)server, META_SERVER_SIZE, META_SERVER);
-
-    // convert to string IP
-    sprintf(  serverip,
-        "%hhu.%hhu.%hhu.%hhu",
-        server[0],
-        server[1],
-        server[2],
-        server[3]);
-
-    if (ifaceType == IF_NOVATEL)
-    {
-        //if(AtModem_SocketOpen(serverip, server[5], &cid) == -1)
-        //{
-        //    exoHAL_HandleError(EXO_ERROR_CONNECT);
-        //    return -1;
-        //}
-        //else
-        //{
-        //    // delay required after socket opened and before writing to it
-        //    MSTimerDelay(500);
-        //}
-    }
-    else
-    {
-        //AtLibGs_TCPClientStart(serverip, server[5], &cid);
-    }
-
-    return (int32_t)cid;
+        isSocketOpen = 1
+        return 0;
 }
 
 
-/*****************************************************************************
-*
-*  exoHAL_ServerConnect
-*
-*  \param  None
-*
-*  \return socket - socket handle
-*
-*  \brief  The function opens a TCP socket
-*
-*****************************************************************************/
-int32_t exoHAL_ServerConnect(int32_t sock)
-{
-    //TODO - use DNS or check m2.exosite.com/ip to check for updates
-    if( sock == (int32_t)cid)
-        return (int32_t)cid;
-    else
-        return -1;
-}
+
 
 /*****************************************************************************
 *
@@ -310,24 +266,9 @@ int32_t exoHAL_ServerConnect(int32_t sock)
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len)
+uint8_t exoHAL_SocketSend( char * buffer, uint8_t len)
 {
-    //App_PrepareIncomingData();
-    if(socket == (int32_t)cid)
-    {
-        //if (ifaceType == IF_NOVATEL)
-        //{
-        //    Modem_Socket_Send(cid, buffer, len);
-        //}
-        //else
-        //{
-        //    AtLibGs_SendTCPData(cid, (char *)buffer, len);
-        //}
-    }
-    else
-        len = 0;
-
-    return len;
+  
 }
 
 
@@ -345,43 +286,7 @@ uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len)
 *****************************************************************************/
 uint16_t exoHAL_SocketRecv(int32_t socket, char * buffer, uint8_t len)
 {
-    if (socket == (int32_t)cid)
-    {
-        int rec_len = 0, rxbufsize = 0;
-        //ATLIBGS_MSG_ID_E rxMsgId = ATLIBGS_MSG_ID_NONE;
-
-        //if (exo_recv_index == -1)
-        //{
-        //    if (ifaceType == IF_NOVATEL)
-        //    {
-        //        // read incoming data for 10 seconds,
-        //        rxMsgId = (ATLIBGS_MSG_ID_E)AtModem_ReadLineTimeOut( 10000, buffer, len);
-        //        // novatel doesn't need the rest of this stuff
-        //        return rxMsgId;
-        //    }
-        //    else
-        //    {
-        //        rxMsgId = AtLibGs_ReceiveDataHandle(3000);
-        //    }
-        //    if (ATLIBGS_MSG_ID_DATA_RX != rxMsgId || G_receivedCount <= GS_RECV_OFFSET)
-        //        return 0;
-        //    exo_recv_index = GS_RECV_OFFSET;
-        //}
-        //rxbufsize = G_receivedCount - exo_recv_index;
-
-        //rec_len = len <= rxbufsize ? len : rxbufsize;
-        //memcpy(buffer, &G_received[exo_recv_index], rec_len);
-        //exo_recv_index += rec_len;
-
-        //if(exo_recv_index == G_receivedCount)
-        //{
-        //    exo_recv_index = -1;
-        //}
-
-        //return rec_len;
-    }
-
-    return 0;
+  return 1;
 }
 
 
@@ -489,7 +394,7 @@ void exoHAL_initModem()
     // if modem isn't activated, tell user.
     //if(!Novatel_isModemActivate())
     //{
-    //    exoHAL_ShowErrorMessage("Not Activatd",sizeof("Not Activatd"));
+    //    exoHAL_ShowErrorMessage("Not Activated",sizeof("Not Activated"));
     //    while(1);
     //    
     //}

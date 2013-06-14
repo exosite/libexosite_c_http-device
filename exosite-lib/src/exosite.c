@@ -36,11 +36,9 @@
 #include "exosite_meta.h"
 #include "exosite.h"
 
-#include <string.h>
-
-
 //local defines
-static char exosite_provision_info[50];
+#define MAX_PROV_STRING_SIZE 100
+static char exosite_provision_info[MAX_PROV_STRING_SIZE]; // TODO figure out array size
 
 
 enum lineTypes
@@ -69,9 +67,7 @@ enum lineTypes
 #define STR_CRLF "\r\n"
 
 // local functions
-static int32_t info_assemble(const char * vendor, const char *model);
 static int32_t init_UUID();
-static void update_m2ip(void);
 static int32_t readResponse(int32_t socket, char * expectedCode);
 static int32_t connect_to_exosite();
 static void sendLine(int32_t socket, unsigned char LINE, const char * payload);
@@ -95,73 +91,61 @@ int32_t cloud_status = -1;
 
 
 /*!
-* \brief  The function initializes the custom's vendor and model name for
-*          provision prepare
+* \brief  Initializes the Exosite libraries with the devices vendor and model
+*           name.
 *
 * [detailed description]
 *
 * \param[in] vendor Pointer to string containing vendor name
 * \param[in] model Pointer to string containing model name
 *
-* \return length of assembled customize's vendor information
+* \return Device Activation status
 */
-int32_t info_assemble(const char * vendor, const char *model)
+EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *model)
 {
-    char vendor_info[95];
-    int32_t info_len = 0;
-    int32_t assemble_len = 0;
+
+    uint16_t info_len = 0;
+    uint16_t assemble_len = 0;
 
     // verify the assembly length
-    assemble_len = strlen(STR_VENDOR) + strlen(vendor)
-                   + strlen(STR_MODEL) + strlen(model)
-                   + strlen(STR_SN) + 3;
-    if (assemble_len > 95)
+    assemble_len = sizeof(STR_VENDOR) + strlen(vendor)
+                   + sizeof(STR_MODEL) + strlen(model)
+                   + sizeof(STR_SN) + 3;
+    if (assemble_len > MAX_PROV_STRING_SIZE)
         return info_len;
 
     // vendor=
-    memcpy(vendor_info, STR_VENDOR, strlen(STR_VENDOR));
-    info_len = strlen(STR_VENDOR);
+    memcpy(exosite_provision_info, STR_VENDOR, sizeof(STR_VENDOR));
+    info_len = sizeof(STR_VENDOR);
 
     // vendor="custom's vendor"
-    memcpy(&vendor_info[info_len], vendor, strlen(vendor));
+    memcpy(&exosite_provision_info[info_len], vendor, strlen(vendor));
     info_len += strlen(vendor);
 
     // vendor="custom's vendor"&
-    vendor_info[info_len] = '&'; // &
+    exosite_provision_info[info_len] = '&'; // &
     info_len += 1;
 
     // vendor="custom's vendor"&model=
-    memcpy(&vendor_info[info_len], STR_MODEL, strlen(STR_MODEL));
-    info_len += strlen(STR_MODEL);
+    memcpy(&exosite_provision_info[info_len], STR_MODEL, sizeof(STR_MODEL));
+    info_len += sizeof(STR_MODEL);
 
     // vendor="custom's vendor"&model="custom's model"
-    memcpy(&vendor_info[info_len], model, strlen(model));
+    memcpy(&exosite_provision_info[info_len], model, strlen(model));
     info_len += strlen(model);
 
     // vendor="custom's vendor"&model="custom's model"&
-    vendor_info[info_len] = '&'; // &
+    exosite_provision_info[info_len] = '&'; // &
     info_len += 1;
 
     // vendor="custom's vendor"&model="custom's model"&sn=
-    memcpy(&vendor_info[info_len], STR_SN, strlen(STR_SN));
-    info_len += strlen(STR_SN);
+    memcpy(&exosite_provision_info[info_len], STR_SN, sizeof(STR_SN));
+    info_len += sizeof(STR_SN);
 
-    memcpy(exosite_provision_info, vendor_info, info_len);
 
-    return info_len;
+    return exosite_activate();
 }
 
-
-
-/*! 
-* \brief  Feedback the exosite cloud status
-*
-* \return 1 success; 0 failure
-*/
-int32_t Exosite_Cloud_Status(void)
-{
-    return cloud_status;
-}
 
 
 
@@ -174,61 +158,22 @@ int32_t Exosite_Cloud_Status(void)
 *
 * \return length of assembled customize's vendor information
 */
-void Exosite_Init(const char *vendor, const char *model)
+static EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
 {
 
     exoHAL_initModem();
 
-    info_assemble(vendor, model);
     exosite_meta_init();        //always initialize our meta structure
-    init_UUID();          //always check to see if the UUID is up to date
 
     //setup some of our globals for operation
     exositeWriteFailures = 0;
     
     EXOSITE_DEVICE_ACTIVATION_STATE stat = activate_device();
     
-    if (stat != VALID_CIK)
-    {
-        if (stat == CONNECTION_ERROR)
-        {
-            exoHAL_ShowErrorMessage("Conn err", sizeof("Conn err"));
-        }
-        else if (stat == DEVICE_NOT_ENABLED)
-        {
-            exoHAL_ShowErrorMessage("Dev Not Enab", sizeof("Dev Not Enab"));
-        }
-        else if (stat == R_W_ERROR)
-        {
-            exoHAL_ShowErrorMessage("R_W Error", sizeof("R_W Error"));
-        }
-        else
-        {
-            exoHAL_ShowErrorMessage("Unknown: 1", sizeof("Unknown: 1"));
-        }
-        while(1);
-    }
-    
-    return;
+    return stat;
+
 }
 
-
-/*!
-*  \brief  Called after Init has been ran in the past, but maybe comms were
-*          down and we have to keep trying...
-*
-*/
-void Exosite_Cloud_Setup(void)
-{
-    update_m2ip();      //check our IP api to see if the old IP is advertising a new one
-    activate_device();  //the moment of truth - can this device provision with the Exosite cloud?...
-    char cik[CIK_LENGTH] = {0};
-    Exosite_GetCIK(cik);
-    
-    cloud_status = Exosite_isCIKValid(cik);
-
-    return;
-}
 
 
 /*****************************************************************************
@@ -249,7 +194,7 @@ void Exosite_Cloud_Setup(void)
 * \return 1 - CIK was valid, 0 - CIK was invalid.
 *
 */
-int32_t Exosite_isCIKValid(char cik[CIK_LENGTH])
+uint8_t Exosite_isCIKValid(char cik[CIK_LENGTH])
 {
     uint8_t i;
 
@@ -274,7 +219,7 @@ int32_t Exosite_isCIKValid(char cik[CIK_LENGTH])
 */
 void Exosite_SetCIK(char * pCIK)
 {
-    exosite_meta_write((char *)pCIK, CIK_LENGTH, META_CIK);
+    exosite_meta_write((char *)pCIK, CIK_LENGTH, EXO_META_CIK);
 
     return;
 }
@@ -290,7 +235,7 @@ void Exosite_SetCIK(char * pCIK)
 */
 void Exosite_GetCIK(char * pCIK)
 {
-    exosite_meta_read((char *)pCIK, CIK_LENGTH, META_CIK);
+    exosite_meta_read((char *)pCIK, CIK_LENGTH, EXO_META_CIK);
 
     return;
 }
@@ -472,7 +417,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
 
     long sock = -1;
     volatile int length;
-    char strLen[5];
+    char contentLengthStr[5];
     uint16_t responseLen = 0;
 
     EXOSITE_DEVICE_ACTIVATION_STATE retVal = CONNECTION_ERROR;
@@ -492,13 +437,19 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
     exoHAL_ReadMetaItem((char *)cik, CIK_LENGTH, META_CIK);
 
     length = strlen((char *)exosite_provision_info) + META_UUID_SIZE;
-    itoa(length, strLen, 10); //make a string for length
+    itoa(length, contentLengthStr, 10); //make a string for length
+    uint8_t charCnt = strlen(contentLengthStr);
+    contentLengthStr[charCnt] = '\r';
+    contentLengthStr[charCnt + 1] = '\n';
 
-    sendLine(sock, POSTDATA_LINE, "/provision/activate");
-    sendLine(sock, HOST_LINE, NULL);
-    sendLine(sock, CONTENT_LINE, NULL);
-    sendLine(sock, LENGTH_LINE, strLen);
-    sendLine(sock, VENDOR_LINE, NULL);
+    exoHAL_SocketSend("POST /provision/activate",sizeof("POST /provision/activate"));
+    exoHAL_SocketSend(STR_HTTP, sizeof(STR_HTTP));
+    exoHAL_SocketSend(STR_HOST, sizeof(STR_HOST));
+    exoHAL_SocketSend(STR_CONTENT, sizeof(STR_CONTENT));
+    exoHAL_SocketSend(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH));
+    exoHAL_SocketSend(contentLengthStr, strlen(contentLengthStr));
+    exoHAL_SocketSend(exosite_provision_info, strlen(exosite_provision_info));
+ 
 
     char responseStr[255];
     responseLen = getResponse(sock, responseStr, 255);
@@ -559,36 +510,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
 
 
 
-/*!
-*  \brief  Checks /ip API to see if a new server IP address should be used
-*
 
-* \return none
-*
-*/
-void update_m2ip(void)
-{
-    //TODO - stubbed out
-    return;
-}
-
-
-/*!
-*  \brief  Reads UUID from the hardware
-*
-* \return 0 for failure, uuid_len for success
-*
-*/
-int32_t init_UUID()
-{
-    char struuid[25];
-    uint16_t uuid_len = 0;
-
-    uuid_len = exoHAL_ReadUUID(struuid);
-    exosite_meta_write(struuid, uuid_len, META_UUID);
-
-    return uuid_len;
-}
 
 
 
@@ -720,78 +642,78 @@ uint16_t getResponse(int32_t socket, char * buf, uint16_t len)
 * \return 1 if match, 0 if no match
 *
 */
-void sendLine(int32_t socket, unsigned char LINE, const char * payload)
-{
-    char strBuf[70];
-    unsigned char strLen;
-
-    switch(LINE)
-    {
-    case CIK_LINE:
-        strLen = strlen(STR_CIK_HEADER);
-        memcpy(strBuf,STR_CIK_HEADER,strLen);
-        exosite_meta_read((char *)&strBuf[strLen], CIK_LENGTH, META_CIK);
-        strLen += CIK_LENGTH;
-        memcpy(&strBuf[strLen],STR_CRLF, 2);
-        strLen += strlen(STR_CRLF);
-        break;
-    case HOST_LINE:
-        strLen = strlen(STR_HOST);
-        memcpy(strBuf,STR_HOST,strLen);
-        break;
-    case CONTENT_LINE:
-        strLen = strlen(STR_CONTENT);
-        memcpy(strBuf,STR_CONTENT,strLen);
-        break;
-    case ACCEPT_LINE:
-        strLen = strlen(STR_ACCEPT);
-        memcpy(strBuf,STR_ACCEPT,strLen);
-        memcpy(&strBuf[strLen],payload, strlen(payload));
-        strLen += strlen(payload);
-        break;
-    case LENGTH_LINE: // Content-Length: NN
-        strLen = strlen(STR_CONTENT_LENGTH);
-        memcpy(strBuf,STR_CONTENT_LENGTH,strLen);
-        memcpy(&strBuf[strLen],payload, strlen(payload));
-        strLen += strlen(payload);
-        memcpy(&strBuf[strLen],STR_CRLF, 2);
-        strLen += 2;
-        memcpy(&strBuf[strLen],STR_CRLF, 2);
-        strLen += 2;
-        break;
-    case GETDATA_LINE:
-        strLen = strlen(STR_GET_URL);
-        memcpy(strBuf,STR_GET_URL,strLen);
-        memcpy(&strBuf[strLen],payload, strlen(payload));
-        strLen += strlen(payload);
-        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
-        strLen += strlen(STR_HTTP);
-        break;
-    case VENDOR_LINE:
-        strLen = strlen((char *)exosite_provision_info);
-        memcpy(strBuf, exosite_provision_info, strLen);
-        exosite_meta_read((char *)&strBuf[strLen], META_UUID_SIZE, META_UUID);
-        strLen += META_UUID_SIZE;
-        break;
-    case POSTDATA_LINE:
-        strLen = strlen("POST ");
-        memcpy(strBuf,"POST ", strLen);
-        memcpy(&strBuf[strLen],payload, strlen(payload));
-        strLen += strlen(payload);
-        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
-        strLen += strlen(STR_HTTP);
-        break;
-    case EMPTY_LINE:
-        strLen = strlen(STR_CRLF);
-        memcpy(strBuf,STR_CRLF,strLen);
-        break;
-    default:
-        break;
-    }
-    exoHAL_SocketSend(socket, strBuf, strLen);
-
-    return;
-}
+//void sendLine(int32_t socket, unsigned char LINE, const char * payload)
+//{
+//    char strBuf[70];
+//    unsigned char strLen;
+//
+//    switch(LINE)
+//    {
+//    case CIK_LINE:
+//        strLen = strlen(STR_CIK_HEADER);
+//        memcpy(strBuf,STR_CIK_HEADER,strLen);
+//        exosite_meta_read((char *)&strBuf[strLen], CIK_LENGTH, META_CIK);
+//        strLen += CIK_LENGTH;
+//        memcpy(&strBuf[strLen],STR_CRLF, 2);
+//        strLen += strlen(STR_CRLF);
+//        break;
+//    case HOST_LINE:
+//        strLen = strlen(STR_HOST);
+//        memcpy(strBuf,STR_HOST,strLen);
+//        break;
+//    case CONTENT_LINE:
+//        strLen = strlen(STR_CONTENT);
+//        memcpy(strBuf,STR_CONTENT,strLen);
+//        break;
+//    case ACCEPT_LINE:
+//        strLen = strlen(STR_ACCEPT);
+//        memcpy(strBuf,STR_ACCEPT,strLen);
+//        memcpy(&strBuf[strLen],payload, strlen(payload));
+//        strLen += strlen(payload);
+//        break;
+//    case LENGTH_LINE: // Content-Length: NN
+//        strLen = strlen(STR_CONTENT_LENGTH);
+//        memcpy(strBuf,STR_CONTENT_LENGTH,strLen);
+//        memcpy(&strBuf[strLen],payload, strlen(payload));
+//        strLen += strlen(payload);
+//        memcpy(&strBuf[strLen],STR_CRLF, 2);
+//        strLen += 2;
+//        memcpy(&strBuf[strLen],STR_CRLF, 2);
+//        strLen += 2;
+//        break;
+//    case GETDATA_LINE:
+//        strLen = strlen(STR_GET_URL);
+//        memcpy(strBuf,STR_GET_URL,strLen);
+//        memcpy(&strBuf[strLen],payload, strlen(payload));
+//        strLen += strlen(payload);
+//        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
+//        strLen += strlen(STR_HTTP);
+//        break;
+//    case VENDOR_LINE:
+//        strLen = strlen((char *)exosite_provision_info);
+//        memcpy(strBuf, exosite_provision_info, strLen);
+//        exosite_meta_read((char *)&strBuf[strLen], META_UUID_SIZE, META_UUID);
+//        strLen += META_UUID_SIZE;
+//        break;
+//    case POSTDATA_LINE:
+//        strLen = strlen("POST ");
+//        memcpy(strBuf,"POST ", strLen);
+//        memcpy(&strBuf[strLen],payload, strlen(payload));
+//        strLen += strlen(payload);
+//        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
+//        strLen += strlen(STR_HTTP);
+//        break;
+//    case EMPTY_LINE:
+//        strLen = strlen(STR_CRLF);
+//        memcpy(strBuf,STR_CRLF,strLen);
+//        break;
+//    default:
+//        break;
+//    }
+//    //exoHAL_SocketSend(socket, strBuf, strLen);
+//
+//    return;
+//}
 
 
 

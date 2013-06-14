@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-*  exosite_meta.h - Meta informatio header
+*  exosite.h - Exosite library interface header
 *  Copyright (C) 2012 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -33,51 +33,35 @@
 *
 *****************************************************************************/
 
-#ifndef EXOSITE_META_H
-#define EXOSITE_META_H
+#ifndef EXOSITE_H
+#define EXOSITE_H
 
 #include <stdint.h>
 
-// defines
-#define META_SIZE                 256
-#define META_CIK_SIZE             40
-#define META_SERVER_SIZE          4  /*!< bytes in the IP address */
-#define META_PAD0_SIZE            2
-#define META_MARK_SIZE            8
-#define META_UUID_SIZE            14
-#define META_PAD1_SIZE            4
-#define META_RSVD_SIZE            48          // TODO - flash block size is 128 - either make MFR these 48 RSVD bytes or instrument flash routine to use next block for MFR
-#define META_MFR_SIZE             128
-typedef struct
+
+// DEFINES
+#define CIK_LENGTH                              40
+
+
+// ENUMS
+typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
 {
-    char cik[META_CIK_SIZE];                   // our client interface key
-    char server[META_SERVER_SIZE];             // ip address of m2.exosite.com (not using DNS at this stage)
-    char pad0[META_PAD0_SIZE];                 // pad 'server' to 8 bytes
-    char mark[META_MARK_SIZE];                 // watermark
-    char uuid[META_UUID_SIZE];                 // UUID in ascii
-    char pad1[META_PAD1_SIZE];                 // pad 'uuid' to 16 bytes
-    char rsvd[META_RSVD_SIZE];                 // reserved space - pad to ensure mfr is at end of RDK_META_SIZE
-    char mfr[META_MFR_SIZE];                   // manufacturer data structure
-} exosite_meta;
+    CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
+    VALID_CIK,              /*!< CIK is valid  */
+    DEVICE_NOT_ENABLED,     /*!< Device has not been enabled */
+    R_W_ERROR               /*!< R/W error */
+}EXOSITE_DEVICE_ACTIVATION_STATE;
 
-#define EXOMARK "exosite!"
 
-typedef enum
-{
-    META_CIK,
-    META_SERVER,
-    META_MARK,
-    META_UUID,
-    META_MFR,
-    META_NONE
-} MetaElements;
 
-// functions for export
-void exosite_meta_defaults(void);
-void exosite_meta_init(void);
-void exosite_meta_write(char * write_buffer, uint16_t srcBytes, int32_t element);
-void exosite_meta_read(char * read_buffer, uint16_t destBytes, int32_t element);
+// PUBLIC FUNCTIONS
+void exosite_init(const char *vendor, const char *model);
+EXOSITE_DEVICE_ACTIVATION_STATE exosite_connect();
+int32_t exosite_write(char * pbuf, unsigned char bufsize);
+int32_t exosite_read(char * palias, char * pbuf, unsigned char buflen);
+void exosite_disconnect();
 
+void Exosite_GetCIK(char * pCIK);
 #endif
 
 
