@@ -41,6 +41,7 @@
 
 // DEFINES
 #define CIK_LENGTH                              40
+#define MAX_UUID_LENGTH                         40
 
 
 // ENUMS
@@ -49,14 +50,14 @@ typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
     CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
     VALID_CIK,              /*!< CIK is valid  */
     DEVICE_NOT_ENABLED,     /*!< Device has not been enabled */
-    R_W_ERROR               /*!< R/W error */
+    R_W_ERROR,               /*!< R/W error */
+    UNABLE_TO_MAKE_REQUEST  /*!< string was too long */
 }EXOSITE_DEVICE_ACTIVATION_STATE;
 
 
 
 // PUBLIC FUNCTIONS
-void exosite_init(const char *vendor, const char *model);
-EXOSITE_DEVICE_ACTIVATION_STATE exosite_connect();
+EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char *vendor, const char *model);
 int32_t exosite_write(char * pbuf, unsigned char bufsize);
 int32_t exosite_read(char * palias, char * pbuf, unsigned char buflen);
 void exosite_disconnect();

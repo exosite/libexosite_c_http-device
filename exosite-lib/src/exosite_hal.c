@@ -32,28 +32,11 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-#include "exosite.h"
+//#include "exosite.h"
 #include "exosite_hal.h"
 
 
 
-
-
-typedef enum
-{
-    EXO_META_CIK,    /*!< CIK of this individual Device*/
-    EXO_META_UUID,   /*!< This devices UUID (e.g. serial #/MAC/MEID) */
-    EXO_META_VENDOR, /*!< The vendor of this device as known to Exosite */
-    EXO_META_MODEL,  /*!< The model of this device as known to Exosite */
-    EXO_META_SERVER  /*!< The Exosite server URL */
-
-}MetaDataTypes; /*!< Different types of data that are stored in NVM */
-
-
-// functions for export
-void exoHAL_meta_init(void);
-void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
-void exoHAL_meta_read(char * read_buffer, uint16_t destBytes, MetaDataTypes element);
 
 // local functions
 
@@ -62,8 +45,9 @@ void exoHAL_meta_read(char * read_buffer, uint16_t destBytes, MetaDataTypes elem
 //extern char *itoa(int n, char *s, int b);
 
 // global variables
-
-char* Itoa(int value, char* str, int radix) {
+#ifndef TESTING
+char* Itoa(int value, char* str, int radix) 
+{
     static char dig[] =
         "0123456789"
         "abcdefghijklmnopqrstuvwxyz";
@@ -89,7 +73,8 @@ char* Itoa(int value, char* str, int radix) {
 }
 
 // simple memcpy 
-void* memcpy(void* dest, const void* src, size_t count) {
+void* memcpy(void* dest, const void* src, uint32_t count) 
+{
     char* dst8 = (char*)dest;
     char* src8 = (char*)src;
 
@@ -99,9 +84,20 @@ void* memcpy(void* dest, const void* src, size_t count) {
     return dest;
 }
 
+uint16_t strlen(const char *s)
+{
+    uint16_t retVal = 0;
+    while (s[retVal])
+    {
+        retVal++;
+    }
+    return retVal;
+}
+#else
+#include "string.h"
+#endif
 
-
-/*!< Used to mock out NVM during unit testing */
+/*!< Used to reserve memory to emulate NVM during unit testing */
 struct UnitTest_meta_storage
 {
     char cik[40];
@@ -111,7 +107,19 @@ struct UnitTest_meta_storage
     char server[40];
 };
 
-struct UnitTest_meta_storage nvm;
+struct UnitTest_meta_storage mem_nvm;
+
+struct dev_nvm
+{
+    const char * cik;
+    const char * uuid;
+    const char * vendor;
+    const char * model;
+    const char * server;
+};
+
+struct dev_nvm mem;
+
 
 UUIDInterfaceTypes ifaceType = IF_NONE;
 
@@ -205,47 +213,13 @@ void exoHAL_EnableMeta(void)
 */
 void exoHAL_EraseMeta(void)
 {
-
-
-    return;
+    mem.cik = "";
+    mem.model = "";
+    mem.server = "";
+    mem.uuid = "";
+    mem.vendor = "";
 }
 
-
-/*!
-* \brief  Writes data to NVM
-* 
-*	
-*
-* \param[in] buffer Buffer of data to write to NVM 
-* \param[in] len Length of data to write to NVM. 
-* \param[in] offset offset, from base meta, to write buffer to 
-*
-*
-*/
-void exoHAL_WriteMetaItem(char * buffer, uint8_t len, int32_t offset)
-{
-
-    return;
-}
-
-
-/*!
-* \brief  Reads data from NVM
-* 
-*	
-*
-* \param[in] buffer Buffer to write data, from NVM, into 
-* \param[in] len Length of data to read from NVM. 
-* \param[in] offset offset, from base meta, to read from
-*
-*
-*/
-void exoHAL_ReadMetaItem(char * buffer, uint8_t len, int32_t offset)
-{
-
-
-    return;
-}
 
 
 /*****************************************************************************
@@ -298,7 +272,7 @@ int32_t exoHAL_SocketOpenTCP()
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len)
+uint8_t exoHAL_SocketSend( char * buffer, uint8_t len)
 {
     return len;
 }
@@ -316,7 +290,7 @@ uint8_t exoHAL_SocketSend(int32_t socket, char * buffer, uint8_t len)
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-uint16_t exoHAL_SocketRecv(int32_t socket, char * buffer, uint8_t len)
+uint16_t exoHAL_SocketRecv( char * buffer, uint8_t len)
 {
     
 
@@ -436,19 +410,19 @@ void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes ele
     switch (element)
     {
     case EXO_META_CIK:
-        memcpy(nvm.cik, write_buffer,srcBytes);
+        memcpy(mem_nvm.cik, write_buffer,srcBytes);
         break;
     case EXO_META_MODEL:
-        memcpy(nvm.model, write_buffer,srcBytes);
+        memcpy(mem_nvm.model, write_buffer,srcBytes);
         break;
     case EXO_META_VENDOR:
-        memcpy(nvm.vendor, write_buffer,srcBytes);
+        memcpy(mem_nvm.vendor, write_buffer,srcBytes);
         break;
     case EXO_META_SERVER:
-        memcpy(nvm.server, write_buffer,srcBytes);
+        memcpy(mem_nvm.server, write_buffer,srcBytes);
         break;
     case EXO_META_UUID:
-        memcpy(nvm.uuid, write_buffer,srcBytes);
+        memcpy(mem_nvm.uuid, write_buffer,srcBytes);
         break;
     }
 
@@ -473,19 +447,19 @@ void exoHAL_meta_read(char * read_buffer, MetaDataTypes element)
     switch (element)
     {
     case EXO_META_CIK:
-        memcpy( read_buffer,nvm.cik,sizeof(nvm.cik));
+        memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
         break;
     case EXO_META_MODEL:
-        memcpy(read_buffer,nvm.model, sizeof(nvm.model));
+        memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
         break;
     case EXO_META_VENDOR:
-        memcpy(read_buffer,nvm.vendor, sizeof(nvm.vendor));
+        memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
         break;
     case EXO_META_SERVER:
-        memcpy(read_buffer,nvm.server, sizeof(nvm.server));
+        memcpy(read_buffer,mem_nvm.server, sizeof(mem_nvm.server));
         break;
     case EXO_META_UUID:
-        memcpy(read_buffer,nvm.uuid, sizeof(nvm.uuid));
+        memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
         break;
     }
 

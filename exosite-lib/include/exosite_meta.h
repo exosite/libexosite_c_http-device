@@ -36,23 +36,6 @@
 #ifndef EXOSITE_META_H
 #define EXOSITE_META_H
 
-#include <stdint.h>
-
-typedef enum
-{
-    EXO_META_CIK,    /*!< CIK of this individual Device*/
-    EXO_META_UUID,   /*!< This devices UUID (e.g. serial #/MAC/MEID) */
-    EXO_META_VENDOR, /*!< The vendor of this device as known to Exosite */
-    EXO_META_MODEL,  /*!< The model of this device as known to Exosite */
-    EXO_META_SERVER  /*!< The Exosite server URL */
-
-}MetaDataTypes; /*!< Different types of data that are stored in NVM */
-
-
-// functions for export
-void exoHAL_meta_init(void);
-void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
-void exoHAL_meta_read(char * read_buffer, uint16_t destBytes, MetaDataTypes element);
 
 #endif
 

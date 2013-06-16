@@ -59,7 +59,7 @@ enum lineTypes
 #define STR_GET_URL "GET /onep:v1/stack/alias?"
 #define STR_HTTP " HTTP/1.1\r\n"
 #define STR_HOST "Host: m2.exosite.com\r\n"
-#define STR_ACCEPT "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
+#define STR_ACCEPT "\r\nAccept: application/x-www-form-urlencoded; charset=utf-8\r\n\r\n"
 #define STR_CONTENT "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
 #define STR_VENDOR "vendor="
 #define STR_MODEL "model="
@@ -73,6 +73,8 @@ static int32_t connect_to_exosite();
 static void sendLine(int32_t socket, unsigned char LINE, const char * payload);
 static int32_t checkResponse(char * response, char * code);
 static uint16_t getResponse(int32_t socket, char * buf, uint16_t len);
+static EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate();
+static EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void);
 
 // global functions
 
@@ -112,7 +114,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *mo
                    + sizeof(STR_MODEL) + strlen(model)
                    + sizeof(STR_SN) + 3;
     if (assemble_len > MAX_PROV_STRING_SIZE)
-        return info_len;
+        return UNABLE_TO_MAKE_REQUEST;
 
     // vendor=
     memcpy(exosite_provision_info, STR_VENDOR, sizeof(STR_VENDOR));
@@ -219,7 +221,7 @@ uint8_t Exosite_isCIKValid(char cik[CIK_LENGTH])
 */
 void Exosite_SetCIK(char * pCIK)
 {
-    exosite_meta_write((char *)pCIK, CIK_LENGTH, EXO_META_CIK);
+    exoHAL_meta_write((char *)pCIK, CIK_LENGTH, EXO_META_CIK);
 
     return;
 }
@@ -235,7 +237,7 @@ void Exosite_SetCIK(char * pCIK)
 */
 void Exosite_GetCIK(char * pCIK)
 {
-    exosite_meta_read((char *)pCIK, CIK_LENGTH, EXO_META_CIK);
+   exoHAL_meta_read((char *)pCIK,  EXO_META_CIK);
 
     return;
 }
@@ -252,7 +254,7 @@ void Exosite_GetCIK(char * pCIK)
 */
 int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
 {
-    char strBuf[10];
+    char contentLengthStr[10];
     long sock = -1;
 
     uint16_t responseLen = 0;
@@ -260,7 +262,8 @@ int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
     while (sock < 0)
         sock = connect_to_exosite();
 
-
+    char cik[CIK_LENGTH];
+    exoHAL_meta_read(cik, EXO_META_CIK);
 
 // This is an example write POST...
 //  s.send('POST /onep:v1/stack/alias HTTP/1.1\r\n')
@@ -270,14 +273,24 @@ int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
 //  s.send('Content-Length: 6\r\n\r\n')
 //  s.send('temp=2')
 
-    itoa((int)bufsize, strBuf, 10); //make a string for length
+    itoa((int)bufsize, contentLengthStr, 10); //make a string for length
 
-    sendLine(sock, POSTDATA_LINE, "/onep:v1/stack/alias");
-    sendLine(sock, HOST_LINE, NULL);
-    sendLine(sock, CIK_LINE, NULL);
-    sendLine(sock, CONTENT_LINE, NULL);
-    sendLine(sock, LENGTH_LINE, strBuf);
-    exoHAL_SocketSend(sock, pbuf, bufsize);
+    uint8_t charCnt = strlen(contentLengthStr);
+    contentLengthStr[charCnt++] = '\r';
+    contentLengthStr[charCnt++] = '\n';
+    contentLengthStr[charCnt++] = '\r';
+    contentLengthStr[charCnt++] = '\n';
+
+
+    exoHAL_SocketSend("POST /onep:v1/stack/alias",sizeof("POST /onep:v1/stack/alias"));
+    exoHAL_SocketSend(STR_HTTP, sizeof(STR_HTTP));
+    exoHAL_SocketSend(STR_HOST, sizeof(STR_HOST));
+    exoHAL_SocketSend(STR_CIK_HEADER, sizeof(STR_CIK_HEADER));
+    exoHAL_SocketSend(cik, CIK_LENGTH);
+    exoHAL_SocketSend(STR_CONTENT, sizeof(STR_CONTENT));
+    exoHAL_SocketSend(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH));
+    exoHAL_SocketSend(contentLengthStr, strlen(contentLengthStr));
+    exoHAL_SocketSend(pbuf, bufsize);
 
     char responseStr[255];
     responseLen = getResponse(sock, responseStr, 255);
@@ -329,6 +342,8 @@ int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen)
     while (sock < 0)
         sock = connect_to_exosite();
 
+    char cik[CIK_LENGTH];
+    exoHAL_meta_read(cik, EXO_META_CIK);
 
 // This is an example read GET
 //  s.send('GET /onep:v1/stack/alias?temp HTTP/1.1\r\n')
@@ -336,11 +351,15 @@ int32_t Exosite_Read(char * palias, char * pbuf, unsigned char buflen)
 //  s.send('X-Exosite-CIK: 5046454a9a1666c3acfae63bc854ec1367167815\r\n')
 //  s.send('Accept: application/x-www-form-urlencoded; charset=utf-8\r\n\r\n')
 
-    sendLine(sock, GETDATA_LINE, palias);
-    sendLine(sock, HOST_LINE, NULL);
-    sendLine(sock, CIK_LINE, NULL);
-    sendLine(sock, ACCEPT_LINE, "\r\n");
 
+    exoHAL_SocketSend(STR_GET_URL,sizeof(STR_GET_URL));
+    exoHAL_SocketSend(palias,sizeof(buflen));
+    exoHAL_SocketSend(STR_HTTP, sizeof(STR_HTTP));
+    exoHAL_SocketSend(STR_HOST, sizeof(STR_HOST));
+    exoHAL_SocketSend(STR_CIK_HEADER, sizeof(STR_CIK_HEADER));
+    exoHAL_SocketSend(cik, CIK_LENGTH);
+    exoHAL_SocketSend(STR_ACCEPT, sizeof(STR_ACCEPT));
+   
     vlen = 0;
 
     char responseStr[255];
@@ -432,15 +451,21 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
     }
 
     char cik[CIK_LENGTH] = {'\0'};
+    char uuid[MAX_UUID_LENGTH] = {'\0'};
 
     // get UUID
-    exoHAL_ReadMetaItem((char *)cik, CIK_LENGTH, META_CIK);
+    exoHAL_meta_read((char *)cik,  EXO_META_CIK);
 
-    length = strlen((char *)exosite_provision_info) + META_UUID_SIZE;
+    exoHAL_meta_read((char *)uuid, EXO_META_UUID);
+
+
+    length = strlen((char *)exosite_provision_info) + strlen(uuid);
     itoa(length, contentLengthStr, 10); //make a string for length
     uint8_t charCnt = strlen(contentLengthStr);
-    contentLengthStr[charCnt] = '\r';
-    contentLengthStr[charCnt + 1] = '\n';
+    contentLengthStr[charCnt++] = '\r';
+    contentLengthStr[charCnt++] = '\n';
+    contentLengthStr[charCnt++] = '\r';
+    contentLengthStr[charCnt++] = '\n';
 
     exoHAL_SocketSend("POST /provision/activate",sizeof("POST /provision/activate"));
     exoHAL_SocketSend(STR_HTTP, sizeof(STR_HTTP));
@@ -545,22 +570,7 @@ int32_t connect_to_exosite(void)
         return 0;
     }
 
-    if (exoHAL_ServerConnect(sock) < 0) // Try to connect
-    {
-        // TODO - the typical reason the connect doesn't work is because
-        // something was wrong in the way the comms hardware was initialized (timing, bit
-        // error, etc...). There may be a graceful way to kick the hardware
-        // back into gear at the right state, but for now, we just
-        // return and let the caller retry us if they want
-        exoHAL_MSDelay(100);
-        return 0;
-    }
-    else
-    {
-        connectRetries = 0;
-        exoHAL_ShowUIMessage(EXO_SERVER_CONNECTED);
-    }
-
+ 
     // Success
     return sock;
 }
@@ -581,7 +591,7 @@ int32_t readResponse(int32_t socket, char * code)
     char rxBuf[12];
     int rxLen = 0;
 
-    rxLen = exoHAL_SocketRecv(socket, rxBuf, 12);
+    rxLen = exoHAL_SocketRecv( rxBuf, 12);
 
     if (12 == rxLen && code[0] == rxBuf[9] && code[1] == rxBuf[10] && code[2] == rxBuf[11])
     {
@@ -626,7 +636,7 @@ uint16_t getResponse(int32_t socket, char * buf, uint16_t len)
 {
     uint16_t rxLen = 0;
 
-    rxLen = exoHAL_SocketRecv(socket, buf, len);
+    rxLen = exoHAL_SocketRecv( buf, len);
 
     return rxLen;
 }

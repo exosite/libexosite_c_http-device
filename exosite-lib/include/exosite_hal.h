@@ -71,11 +71,28 @@ typedef enum
 }UUIDInterfaceTypes;
 
 // functions for export
+
+
+
+typedef enum
+{
+    EXO_META_CIK,    /*!< CIK of this individual Device*/
+    EXO_META_UUID,   /*!< This devices UUID (e.g. serial #/MAC/MEID) */
+    EXO_META_VENDOR, /*!< The vendor of this device as known to Exosite */
+    EXO_META_MODEL,  /*!< The model of this device as known to Exosite */
+    EXO_META_SERVER  /*!< The Exosite server URL */
+
+}MetaDataTypes; /*!< Different types of data that are stored in NVM */
+
+
+
+
+
+void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
+void exoHAL_meta_read(char * read_buffer, MetaDataTypes element);
 uint8_t exoHAL_ReadUUID( char * UUID_buf);
 void exoHAL_EnableMeta(void);
 void exoHAL_EraseMeta(void);
-void exoHAL_WriteMetaItem(char * buffer, uint8_t len, int32_t offset);
-void exoHAL_ReadMetaItem(char * buffer, uint8_t len, int32_t offset);
 void exoHAL_SocketClose(int32_t socket);
 int32_t exoHAL_SocketOpenTCP(void);
 uint8_t exoHAL_SocketSend(char * buffer, uint8_t len);
@@ -87,7 +104,14 @@ void exoHAL_SetIface(UUIDInterfaceTypes type);
 void exoHAL_initModem();
 void exoHAL_ShowErrorMessage(char * errMsg, uint8_t length);
 
+void exosite_meta_init(void);
+
+#ifndef TESTING
+uint16_t strlen(const char *s);
+void* memcpy(void* dest, const void* src, size_t count);
+char* Itoa(int value, char* str, int radix);
 #endif
 
+#endif
 
 
