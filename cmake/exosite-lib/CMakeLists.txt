@@ -13,4 +13,4 @@ ENDIF()
 
 add_library(exosite-lib STATIC ${lib_srcs})
 
-target_link_libraries(exosite-lib exosite-hal)
+target_link_libraries(exosite-lib )
