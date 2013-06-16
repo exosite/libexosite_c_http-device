@@ -108,7 +108,7 @@ void exosite_meta_init(void);
 
 #ifndef TESTING
 uint16_t strlen(const char *s);
-void* memcpy(void* dest, const void* src, size_t count);
+void* memcpy(void* dest, const void* src, uint32_t count);
 char* Itoa(int value, char* str, int radix);
 #endif
 
