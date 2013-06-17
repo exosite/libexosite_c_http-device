@@ -46,7 +46,7 @@
 
 // global variables
 #ifndef TESTING
-char* Itoa(int value, char* str, int radix) 
+char*Itoa(int value, char* str, int radix)
 {
     static char dig[] =
         "0123456789"
@@ -55,15 +55,18 @@ char* Itoa(int value, char* str, int radix)
     unsigned int v;
     char* p, *q;
     char c;
-    if (radix == 10 && value < 0) {
+    if (radix == 10 && value < 0)
+    {
         value = -value;
         neg = 1;
     }
     v = value;
-    do {
+    do
+    {
         str[n++] = dig[v%radix];
         v /= radix;
-    } while (v);
+    }
+    while (v);
     if (neg)
         str[n++] = '-';
     str[n] = '\0';
@@ -72,13 +75,14 @@ char* Itoa(int value, char* str, int radix)
     return str;
 }
 
-// simple memcpy 
-void* memcpy(void* dest, const void* src, uint32_t count) 
+// simple memcpy
+void*memcpy(void* dest, const void* src, uint32_t count)
 {
     char* dst8 = (char*)dest;
     char* src8 = (char*)src;
 
-    while (count--) {
+    while (count--)
+    {
         *dst8++ = *src8++;
     }
     return dest;
@@ -125,16 +129,16 @@ UUIDInterfaceTypes ifaceType = IF_NONE;
 
 
 /*!
-* \brief  Selects the interface that this HAL will use
-*
-*	This is an optional method and can be used if there are
-*	multiple interfaces into your hardware and you want the
-*	option to have multiple interfaces in the same source file
-*
-*
-* \param[in] type The iterface type to use
-*
-*/
+ * \brief  Selects the interface that this HAL will use
+ *
+ *	This is an optional method and can be used if there are
+ *	multiple interfaces into your hardware and you want the
+ *	option to have multiple interfaces in the same source file
+ *
+ *
+ * \param[in] type The iterface type to use
+ *
+ */
 void exoHAL_SetIface(UUIDInterfaceTypes type)
 {
     ifaceType = type;
@@ -153,21 +157,21 @@ void exoHAL_SetIface(UUIDInterfaceTypes type)
 *****************************************************************************/
 
 /*!
-* \brief  Retrieves UUID from device
-*
-*	This function retrieves a unique ID from your device.  This is typically 
-*	the MEID of a cell modem, MAC address of a network card, or serial number
-*	of the device.
-*
-*  
-* 
-*
-*
-* \param[in] UUID_buf Buffer to put the devices UUID into.  
-*
-*  \return  if failed to retrieve UUID, else 0
-*
-*/
+ * \brief  Retrieves UUID from device
+ *
+ *	This function retrieves a unique ID from your device.  This is typically
+ *	the MEID of a cell modem, MAC address of a network card, or serial number
+ *	of the device.
+ *
+ *
+ *
+ *
+ *
+ * \param[in] UUID_buf Buffer to put the devices UUID into.
+ *
+ *  \return  if failed to retrieve UUID, else 0
+ *
+ */
 uint8_t exoHAL_ReadUUID( char * UUID_buf)
 {
     uint8_t retVal = 1;
@@ -193,10 +197,10 @@ uint8_t exoHAL_ReadUUID( char * UUID_buf)
 *
 *****************************************************************************/
 /*!
-* \brief  Performs any initialization of your NVM and notifies the HAL that 
-*			NVM is available
-*
-*/
+ * \brief  Performs any initialization of your NVM and notifies the HAL that
+ *			NVM is available
+ *
+ */
 void exoHAL_EnableMeta(void)
 {
     return;
@@ -205,12 +209,12 @@ void exoHAL_EnableMeta(void)
 
 
 /*!
-* \brief  Fills NVM with zeros
-* 
-*	
-*
-*
-*/
+ * \brief  Fills NVM with zeros
+ *
+ *
+ *
+ *
+ */
 void exoHAL_EraseMeta(void)
 {
     mem.cik = "";
@@ -235,7 +239,7 @@ void exoHAL_EraseMeta(void)
 *****************************************************************************/
 void exoHAL_SocketClose(int32_t socket)
 {
-    
+
     return;
 }
 
@@ -254,7 +258,7 @@ void exoHAL_SocketClose(int32_t socket)
 int32_t exoHAL_SocketOpenTCP()
 {
 
-   return 1;
+    return 1;
 }
 
 
@@ -292,7 +296,7 @@ uint8_t exoHAL_SocketSend( char * buffer, uint8_t len)
 *****************************************************************************/
 uint16_t exoHAL_SocketRecv( char * buffer, uint8_t len)
 {
-    
+
 
     return len;
 }
@@ -361,7 +365,7 @@ void exoHAL_initModem()
     //{
     //    exoHAL_ShowErrorMessage("Not Activatd",sizeof("Not Activatd"));
     //    while(1);
-    //    
+    //
     //}
 
     return;

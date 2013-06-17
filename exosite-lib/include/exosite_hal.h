@@ -41,7 +41,7 @@
 
 
 // defines
-typedef enum 
+typedef enum
 {
     EXO_ERROR_WRITE,
     EXO_ERROR_READ,
@@ -50,7 +50,7 @@ typedef enum
     EXO_ERROR_END
 }ExositeErrorCodes;
 
-typedef enum 
+typedef enum
 {
     EXO_SERVER_CONNECTED,
     EXO_CLIENT_RW,
@@ -60,14 +60,14 @@ typedef enum
 // defines
 typedef enum
 {
-	IF_WIFI,	/*!<  */
-	IF_ENET,
-	IF_FILE,
-	IF_HDD,
-	IF_I2C,
-	IF_GPRS,
-	IF_NOVATEL,
-	IF_NONE
+    IF_WIFI,    /*!<  */
+    IF_ENET,
+    IF_FILE,
+    IF_HDD,
+    IF_I2C,
+    IF_GPRS,
+    IF_NOVATEL,
+    IF_NONE
 }UUIDInterfaceTypes;
 
 // functions for export
@@ -108,8 +108,8 @@ void exosite_meta_init(void);
 
 #ifndef TESTING
 uint16_t strlen(const char *s);
-void* memcpy(void* dest, const void* src, uint32_t count);
-char* Itoa(int value, char* str, int radix);
+void*memcpy(void* dest, const void* src, uint32_t count);
+char*Itoa(int value, char* str, int radix);
 #endif
 
 #endif
