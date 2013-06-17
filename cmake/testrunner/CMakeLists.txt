@@ -8,8 +8,10 @@ include_directories(
 
 set(test_srcs
     ../../exosite-tests/src/main.cpp
-    ../../exosite-tests/src/tests.cpp
+    ../../exosite-tests/src/hal-tests.cpp
+    ../../exosite-tests/src/lib-tests.cpp
     ../../exosite-lib/include/exosite_hal.h
+    ../../exosite-lib/include/exosite.h
 )
 
 IF(MSVC)

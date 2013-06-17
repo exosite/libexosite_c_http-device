@@ -46,7 +46,7 @@
 
 // global variables
 #ifndef TESTING
-char*Itoa(int value, char* str, int radix)
+char*itoa(int value, char* str, int radix)
 {
     static char dig[] =
         "0123456789"
@@ -97,8 +97,7 @@ uint16_t strlen(const char *s)
     }
     return retVal;
 }
-#else
-#include "string.h"
+
 #endif
 
 /*!< Used to reserve memory to emulate NVM during unit testing */

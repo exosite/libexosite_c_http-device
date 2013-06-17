@@ -98,18 +98,19 @@ int32_t exoHAL_SocketOpenTCP(void);
 uint8_t exoHAL_SocketSend(char * buffer, uint8_t len);
 uint16_t exoHAL_SocketRecv(char * buffer, uint8_t len);
 void exoHAL_HandleError(ExositeErrorCodes code);
-void exoHAL_ShowUIMessage(ExositeUICodes code);
 void exoHAL_MSDelay(uint16_t delay);
 void exoHAL_SetIface(UUIDInterfaceTypes type);
 void exoHAL_initModem();
-void exoHAL_ShowErrorMessage(char * errMsg, uint8_t length);
 
 void exosite_meta_init(void);
 
 #ifndef TESTING
 uint16_t strlen(const char *s);
 void*memcpy(void* dest, const void* src, uint32_t count);
-char*Itoa(int value, char* str, int radix);
+char*itoa(int value, char* str, int radix);
+#else
+#include "string.h"
+#include <stdlib.h>
 #endif
 
 #endif

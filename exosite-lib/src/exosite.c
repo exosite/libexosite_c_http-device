@@ -79,7 +79,6 @@ static EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void);
 
 
 // externs
-extern char *itoa(int n, char *s, int b);
 
 // global variables
 
@@ -312,7 +311,6 @@ int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
 
     if (!exositeWriteFailures)
     {
-        exoHAL_ShowUIMessage(EXO_CLIENT_RW);
         return 1; // success
     }
 
