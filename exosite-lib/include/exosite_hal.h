@@ -88,14 +88,14 @@ typedef enum
 
 
 
-void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
+void exoHAL_meta_write(const char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
 void exoHAL_meta_read(char * read_buffer, MetaDataTypes element);
 uint8_t exoHAL_ReadUUID( char * UUID_buf);
 void exoHAL_EnableMeta(void);
 void exoHAL_EraseMeta(void);
 void exoHAL_SocketClose(int32_t socket);
 int32_t exoHAL_SocketOpenTCP(void);
-uint8_t exoHAL_SocketSend(char * buffer, uint8_t len);
+uint8_t exoHAL_SocketSend(const char * buffer, uint8_t len);
 uint16_t exoHAL_SocketRecv(char * buffer, uint8_t len);
 void exoHAL_HandleError(ExositeErrorCodes code);
 void exoHAL_MSDelay(uint16_t delay);

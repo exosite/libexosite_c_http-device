@@ -70,7 +70,7 @@ static int32_t init_UUID();
 static int32_t readResponse(int32_t socket, char * expectedCode);
 static int32_t connect_to_exosite();
 static void sendLine(int32_t socket, unsigned char LINE, const char * payload);
-static int32_t checkResponse(char * response, char * code);
+static int32_t checkResponse(char * response, const char * code);
 static uint16_t getResponse(int32_t socket, char * buf, uint16_t len);
 static EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate();
 static EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void);
@@ -608,7 +608,7 @@ int32_t readResponse(int32_t socket, char * code)
  * \return 1 if match, 0 if no match
  *
  */
-int32_t checkResponse(char * response, char * code)
+int32_t checkResponse(char * response, const char * code)
 {
     if (code[0] == response[9] && code[1] == response[10] && code[2] == response[11])
     {

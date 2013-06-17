@@ -248,7 +248,7 @@ int32_t exoHAL_SocketOpenTCP()
 *  \brief  Sends data out the network interface
 *
 *****************************************************************************/
-uint8_t exoHAL_SocketSend( char * buffer, uint8_t len)
+uint8_t exoHAL_SocketSend( const char * buffer, uint8_t len)
 {
     return len;
 }
@@ -380,7 +380,7 @@ void exosite_meta_init(void)
 *  \brief  Writes specific meta information to meta memory.
 *
 *****************************************************************************/
-void exoHAL_meta_write(char * write_buffer, uint16_t srcBytes, MetaDataTypes element)
+void exoHAL_meta_write(const char * write_buffer, uint16_t srcBytes, MetaDataTypes element)
 {
 
     switch (element)
