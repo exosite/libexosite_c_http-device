@@ -104,13 +104,14 @@ void exoHAL_initModem();
 
 void exosite_meta_init(void);
 
+char*exoHAL_itoa(int value, char* str, int radix);
+
 #ifndef TESTING
 uint16_t strlen(const char *s);
 void*memcpy(void* dest, const void* src, uint32_t count);
-char*itoa(int value, char* str, int radix);
+
 #else
 #include "string.h"
-#include <stdlib.h>
 #endif
 
 #endif

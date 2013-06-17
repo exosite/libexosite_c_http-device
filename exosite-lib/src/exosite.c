@@ -271,7 +271,7 @@ int32_t Exosite_Write(char * pbuf, unsigned char bufsize)
 //  s.send('Content-Length: 6\r\n\r\n')
 //  s.send('temp=2')
 
-    itoa((int)bufsize, contentLengthStr, 10); //make a string for length
+    exoHAL_itoa((int)bufsize, contentLengthStr, 10); //make a string for length
 
     uint8_t charCnt = strlen(contentLengthStr);
     contentLengthStr[charCnt++] = '\r';
@@ -458,7 +458,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE activate_device(void)
 
 
     length = strlen((char *)exosite_provision_info) + strlen(uuid);
-    itoa(length, contentLengthStr, 10); //make a string for length
+    exoHAL_itoa(length, contentLengthStr, 10); //make a string for length
     uint8_t charCnt = strlen(contentLengthStr);
     contentLengthStr[charCnt++] = '\r';
     contentLengthStr[charCnt++] = '\n';
