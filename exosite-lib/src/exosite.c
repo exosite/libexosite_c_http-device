@@ -33,7 +33,6 @@
 *
 *****************************************************************************/
 #include "exosite_hal.h"
-#include "exosite_meta.h"
 #include "exosite.h"
 
 //local defines
