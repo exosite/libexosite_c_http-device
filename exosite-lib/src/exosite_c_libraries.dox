@@ -33,10 +33,10 @@ hardware, library code and Exosite interact.
 	[Device Hardware] - [HAL]
 @enduml
 
-There are three main components to the Exosite C-libs.
+There are two main components to the Exosite C-libs.
  1. Exosite Core
  2. Device HAL
- 3. Exosite Meta data
+
 
  \subsection exosite_core Exosite Core
  The Exosite Core consists to the exosite.c and exosite.h files.  These files
@@ -48,11 +48,7 @@ The Device HAL serves as an interface between an individual devices hardware
 and the Exosite Core code.  These files (exosite_HAL.c exosite_hal.h )will need
 modification for different hardware platfoms.
 
-\subsection exosite_meta Exosite Meta data
-The Exosite Meta data code could also be considered a subsection of the HAL,
-but was broken out as a separate section to better modularize the code for
-different hardware types.  These files (exosite_meta.c and exosite_meta.h) are 
-used to communicate with the devices non-volatile memory.
+
 
 \section gettingStarted  Getting Started
 The Exosite C Libraries assume that your device has the ability to open a socket
@@ -86,7 +82,14 @@ enforced by using a tool called
 uncrustify (uncrustify.cfg) is included with this release.
 
 \section testing Testing
-Code is checked to compile with GCC using minGW 4.7.2 on Windows, as well MSVC
+Code is checked to compile with GCC 4.7.2 on Debian 7 as well MSVC
 using Visual Studio 2012.
+
+Unit tests are ran using the
+[Google Test](https://code.google.com/p/googletest/) framework.
+
+\section diagraming Diagramming
+Diagrams in this documentation are generated with 
+[PlantUML](http://plantuml.sourceforge.net/)
 
 */
