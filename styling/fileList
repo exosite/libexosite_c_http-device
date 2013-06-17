@@ -1,0 +1,6 @@
+../exosite-lib/src/exosite.c
+../exosite-lib/src/exosite_hal.c
+../exosite-lib/include/exosite.h
+../exosite-lib/include/exosite_hal.h
+../exosite-tests/src/main.cpp
+../exosite-tests/src/tests.cpp
