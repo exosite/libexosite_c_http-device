@@ -138,7 +138,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *mo
  *
  * \return length of assembled customize's vendor information
  */
-static EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
+EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
 {
 
     // Try and activate device with Exosite, four possible cases:
@@ -288,7 +288,7 @@ void exosite_getCIK(char * pCIK)
  * \return TODO
  *
  */
-int32_t exosite_write(const char * writeData, uint16_t length)
+uint8_t exosite_write(const char * writeData, uint16_t length)
 {
 
     // connect to exosite

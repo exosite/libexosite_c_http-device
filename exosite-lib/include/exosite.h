@@ -68,8 +68,10 @@ typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
 // PUBLIC FUNCTIONS
 EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate();
 EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char *vendor, const char *model);
-uint8_t exosite_write(const char * pAlias, char * pbuf);
-uint8_t exosite_read(const char * alias, char * readResponse, uint16_t bufferSize);
+
+uint8_t exosite_write(const char * writeData, uint16_t length);
+uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
+
 
 uint8_t exosite_resetCik();
 
