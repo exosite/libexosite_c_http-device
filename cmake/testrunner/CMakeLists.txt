@@ -22,4 +22,4 @@ add_executable(testrunner ${test_srcs} )
 
 set_target_properties (testrunner PROPERTIES COMPILE_DEFINITIONS "TESTING")
 
-target_link_libraries(testrunner exosite-lib gtest)
+target_link_libraries(testrunner exosite-hal gtest)
