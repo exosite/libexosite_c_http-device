@@ -71,6 +71,36 @@ HAL must be able to get them from the hardware, or must be hardcoded.
 - Device UUID -- Unique identifier of your device, as defined by vendor/model
 - Exosite server -- url of Exosite server.
 
+\section communicating_with_exosite Communicating With Exosite
+At the beginning of your application code, you must call the exosite_init()
+function and pass it your vendo and model names.  These will be predetermined
+by the device you are using on the Exosite platform
+\todo more info on this.
+The exosite_init() function initializes some things in local memory and then
+attempts to activate your device with Exosite.  Be sure to check for the return
+codes and make sure you receive a VALID_CIK response.  If not, the rest of your
+calls to Exosite won't be successful.
+
+After your communications with Exosite have been initialized, you can now read
+and write to Exosite data sources using the exosite_read() and exosite_write()
+functions.
+
+Example communications:
+\code
+EXOSITE_DEVICE_ACTIVATION_STATE activation_results;
+activation_results = exosite_init(vendorStr, modelStr);
+if (activation_results == VALID_CIK)
+{
+    const char * dataToWrite = "Hello"
+    const char * exositeDataAlias = "greetings"
+    exosite_write(exositeDataAlias, dataToWrite);
+    
+    
+}
+
+
+\endcode
+
 \section errorHandling Error Handling
 This library, as well as the HAL supports basic error handling and display.
 

@@ -43,6 +43,15 @@
 #define CIK_LENGTH                              40
 #define MAX_UUID_LENGTH                         40
 
+/*!< This defines the maximum size that a string can be for sending data
+to Exosite.  It is used to prevent exosite_strlen from overrunning.
+If you are have a need to increase string length, you can freely adjust
+this number up to uint16_t*/
+
+/*!< This defines the size of the rx buffer in exosite.c.  This buffer is used
+to place incoming data from the modem in.*/
+#define RX_BUFFER_SIZE                         512
+
 
 // ENUMS
 typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
@@ -57,12 +66,14 @@ typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
 
 
 // PUBLIC FUNCTIONS
+EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate();
 EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char *vendor, const char *model);
-int32_t exosite_write(char * pbuf, unsigned char bufsize);
-int32_t exosite_read(char * palias, char * pbuf, unsigned char buflen);
-void exosite_disconnect();
+uint8_t exosite_write(const char * pAlias, char * pbuf);
+uint8_t exosite_read(const char * alias, char * readResponse, uint16_t bufferSize);
 
-void Exosite_GetCIK(char * pCIK);
+uint8_t exosite_resetCik();
+
+void exosite_getCIK(char * pCIK);
 #endif
 
 

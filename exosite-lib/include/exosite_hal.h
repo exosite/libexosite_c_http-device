@@ -50,61 +50,26 @@ typedef enum
     EXO_ERROR_END
 }ExositeErrorCodes;
 
-typedef enum
-{
-    EXO_SERVER_CONNECTED,
-    EXO_CLIENT_RW,
-    EXO_UI_END
-}ExositeUICodes;
+
 
 // defines
-typedef enum
-{
-    IF_WIFI,    /*!<  */
-    IF_ENET,
-    IF_FILE,
-    IF_HDD,
-    IF_I2C,
-    IF_GPRS,
-    IF_NOVATEL,
-    IF_NONE
-}UUIDInterfaceTypes;
+
 
 // functions for export
 
 
 
-typedef enum
-{
-    EXO_META_CIK,    /*!< CIK of this individual Device*/
-    EXO_META_UUID,   /*!< This devices UUID (e.g. serial #/MAC/MEID) */
-    EXO_META_VENDOR, /*!< The vendor of this device as known to Exosite */
-    EXO_META_MODEL,  /*!< The model of this device as known to Exosite */
-    EXO_META_SERVER  /*!< The Exosite server URL */
-
-}MetaDataTypes; /*!< Different types of data that are stored in NVM */
+uint8_t exoHal_setCik(const char * read_buffer);
+uint8_t exoHal_getCik(char * read_buffer);
+uint8_t exoHal_getModel(char * read_buffer);
+uint8_t exoHal_getVendor(char * read_buffer);
+uint8_t exoHal_getUuid(char * read_buffer);
 
 
+uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
+uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len);
 
-
-
-void exoHAL_meta_write(const char * write_buffer, uint16_t srcBytes, MetaDataTypes element);
-void exoHAL_meta_read(char * read_buffer, MetaDataTypes element);
-uint8_t exoHAL_ReadUUID( char * UUID_buf);
-void exoHAL_EnableMeta(void);
-void exoHAL_EraseMeta(void);
-void exoHAL_SocketClose(int32_t socket);
-int32_t exoHAL_SocketOpenTCP(void);
-uint8_t exoHAL_SocketSend(const char * buffer, uint8_t len);
-uint16_t exoHAL_SocketRecv(char * buffer, uint8_t len);
-void exoHAL_HandleError(ExositeErrorCodes code);
-void exoHAL_MSDelay(uint16_t delay);
-void exoHAL_SetIface(UUIDInterfaceTypes type);
-void exoHAL_initModem();
-
-void exosite_meta_init(void);
-
-char*exoHAL_itoa(int value, char* str, int radix);
+uint8_t exoHAL_itoa(int value, char* str, int radix);
 
 #ifndef TESTING
 uint16_t strlen(const char *s);
