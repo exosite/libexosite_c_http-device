@@ -1,5 +1,11 @@
+#ifdef  __GNUC__
+extern "C" {
+#endif
 #include "exosite.h"
 #include "exosite_hal.h"
+#ifdef  __GNUC__
+}
+#endif
 #include "gtest/gtest.h"
 
 

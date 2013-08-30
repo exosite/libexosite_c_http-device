@@ -75,7 +75,7 @@ uint16_t exoHal_strlen(const char *s)
  */
 uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
 {
-    int32_t chars = sprintf_s(buf,bufSize, "%d", value);
+    int32_t chars = sprintf(buf, "%d", value);
     if (chars < 0)
     {
         return 0;
