@@ -42,6 +42,8 @@
 // DEFINES
 #define CIK_LENGTH                              40
 #define MAX_UUID_LENGTH                         40
+#define MAX_VENDOR_LENGTH                       20
+#define MAX_MODEL_LENGTH                        20
 
 /*!< This defines the maximum size that a string can be for sending data
 to Exosite.  It is used to prevent exosite_strlen from overrunning.
@@ -72,6 +74,8 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char *vendor, const char *mod
 uint8_t exosite_write(const char * writeData, uint16_t length);
 uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
+uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
+void exosite_setCIK(char * pCIK);
 
 uint8_t exosite_resetCik();
 

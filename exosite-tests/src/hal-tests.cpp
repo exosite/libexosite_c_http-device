@@ -1,5 +1,5 @@
-#include "exosite_hal.c"
-#include "gtest/gtest.h"
+//#include "exosite_hal.c"
+//#include "gtest/gtest.h"
 
 //
 //class HalLibCleanNVM : public ::testing::Test {

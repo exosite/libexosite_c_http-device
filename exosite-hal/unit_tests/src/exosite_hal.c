@@ -35,7 +35,12 @@
 //#include "exosite.h"
 #include "exosite_hal.h"
 #include "string.h"
+#include "stdio.h"
 
+// used to see where we are in the TX buffer
+static uint16_t bufferCount=0;
+
+static uint8_t isSocketOpen = 0;
 
 // local functions
 
@@ -50,11 +55,36 @@ void * getUnitTestStorageStruct()
 
 
 
-uint16_t exoHAL_strlen(const char *s)
+uint16_t exoHal_strlen(const char *s)
 {
     return strlen(s);
     
 }
+
+/*!
+ * \brief
+ *
+ * 
+ *
+ * \param[in]
+ * \param[out]
+ * \return
+ * \sa
+ * \note
+ * \warning
+ */
+uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
+{
+    int32_t chars = sprintf_s(buf,bufSize, "%d", value);
+    if (chars < 0)
+    {
+        return 0;
+    }
+    return chars;
+    
+}
+
+
 
 void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
 {
@@ -73,8 +103,10 @@ void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
  * \note
  * \warning
  */
-uint8_t exoHAL_tcpSocketClose()
+uint8_t exoHal_tcpSocketClose()
 {
+    isSocketOpen = 0;
+    bufferCount = 0;
     return mem_nvm.retVal_tcpSocketClose;   
 }
 
@@ -91,9 +123,12 @@ uint8_t exoHAL_tcpSocketClose()
  * \note
  * \warning
  */
-uint8_t exoHAL_tcpSocketOpen()
+uint8_t exoHal_tcpSocketOpen()
 {
-  
+    if (mem_nvm.retVal_tcpSocketOpen == 0)
+    {
+        isSocketOpen = 1;
+    }
     return mem_nvm.retVal_tcpSocketOpen;   
 }
 
@@ -113,8 +148,14 @@ uint8_t exoHAL_tcpSocketOpen()
  * \note
  * \warning
  */
-uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
+uint8_t exoHal_socketWrite( const char * buffer, uint16_t len)
 {
+    if (isSocketOpen == 1)
+    {
+        exoHal_memcpy(mem_nvm.writeToBuffer + bufferCount,buffer,len);
+        bufferCount += len;
+    }
+    
     return mem_nvm.retVal_socketWrite;   
 }
 
@@ -133,9 +174,9 @@ uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
  * \note len must be greater than sizeof(buffer)
  * \warning
  */
-uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
+uint8_t exoHal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
 {
-
+    exoHal_memcpy(buffer,mem_nvm.readFromBuffer,bufSize);
     return mem_nvm.retVal_socketRead;
 }
 
@@ -154,7 +195,7 @@ uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseL
  * \note
  * \warning
  */
-void exoHAL_MSDelay(uint16_t delay)
+void exoHal_MSDelay(uint16_t delay)
 {
     //MSTimerDelay(delay);
 
@@ -265,47 +306,4 @@ uint8_t exoHal_getUuid(char * read_buffer)
 }
 
 
-
-/*!
- * \brief
- *
- * 
- *
- * \param[in]
- * \param[out]
- * \return
- * \sa
- * \note
- * \warning
- */
-uint8_t exoHAL_itoa(int value, char* str, int radix)
-{
-    uint8_t strLength = 0;
-    static char dig[] =
-        "0123456789"
-        "abcdefghijklmnopqrstuvwxyz";
-    int n = 0, neg = 0;
-    unsigned int v;
-    char* p, *q;
-    char c;
-    if (radix == 10 && value < 0)
-    {
-        value = -value;
-        neg = 1;
-    }
-    v = value;
-    do
-    {
-        str[n++] = dig[v%radix];
-        v /= radix;
-    }
-    while (v);
-    if (neg)
-        str[n++] = '-';
-    str[n] = '\0';
-    strLength = n-1;
-    for (p = str, q = p + n/2; p != q; ++p, --q)
-        c = *p, *p = *q, *q = c;
-    return strLength;
-}
 

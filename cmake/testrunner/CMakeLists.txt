@@ -3,9 +3,7 @@ include_directories(
   ../../gtest-1.6.0/include
   ../../gtest-1.6.0/src
   ../../exosite-lib/include/
-  ../../exosite-lib/src
   ../../exosite-hal/unit_tests/include/
-  ../../exosite-hal/unit_tests/src
 )
 
 set(test_srcs
@@ -24,4 +22,4 @@ add_executable(testrunner ${test_srcs} )
 
 set_target_properties (testrunner PROPERTIES COMPILE_DEFINITIONS "TESTING")
 
-target_link_libraries(testrunner exosite-hal gtest)
+target_link_libraries(testrunner exosite-hal exosite-lib gtest)

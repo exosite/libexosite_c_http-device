@@ -1,4 +1,4 @@
-#include "exosite.c"
+#include "exosite.h"
 #include "exosite_hal.h"
 #include "gtest/gtest.h"
 
@@ -38,17 +38,17 @@ protected:
 TEST_F(ExoLibCleanState, isCIKValid)
 {
     char * testcik = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    uint8_t results = Exosite_isCIKValid(testcik);
+    uint8_t results = exosite_isCIKValid(testcik);
     EXPECT_EQ(1,results);
 
     // check if a non hexadecimal char causes check to fail
     testcik = "@abcdef1234abcdef1234abcdef1234abcdef124";
-    results = Exosite_isCIKValid(testcik);
+    results = exosite_isCIKValid(testcik);
     EXPECT_EQ(0,results);
 
     // check if a less then 40 char causes check to fail
     testcik = "abcdef1234abcdef1234abcdef1234abcdef123";
-    results = Exosite_isCIKValid(testcik);
+    results = exosite_isCIKValid(testcik);
     EXPECT_EQ(0,results);
 
     // cik may not be stored as a null terminated string, so we don't want to 
@@ -77,4 +77,20 @@ TEST_F(ExoLibCleanState, cikSetTest)
     exosite_getCIK(newcik);
 
     EXPECT_STREQ(testcik, newcik);
+}
+
+TEST_F(ExoLibCleanState, sendRequest)
+{
+    strcpy(nvm->uuid,"123456789");
+    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    exosite_setCIK(testcik);
+
+    exosite_init("aVendor", "aModel");
+
+    char newcik[41] = "";
+    // make sure that we start up with an empty cik
+
+    
+
+    EXPECT_STREQ("", "");
 }

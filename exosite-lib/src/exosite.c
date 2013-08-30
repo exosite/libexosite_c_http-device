@@ -40,7 +40,7 @@ static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
 static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
 static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
-static const char STR_ACTIVATE_URL[] = "POST /provision/activate";
+static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
 static const char STR_ACCEPT[] = "\r\nAccept: application/x-www-form-urlencoded; charset=utf-8";
@@ -62,6 +62,8 @@ static uint16_t exosite_socketWrite( char * buf, uint16_t len);
 
 
 static char cikBuffer[CIK_LENGTH];
+static char vendorBuffer[MAX_VENDOR_LENGTH];
+static char modelBuffer[MAX_MODEL_LENGTH];
 static char uuidBuffer[MAX_UUID_LENGTH];
 
 static char rxBuffer[RX_BUFFER_SIZE];
@@ -106,7 +108,10 @@ uint8_t exosite_resetCik()
 EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *model)
 {
     // get cik and uuid and any other nvm stored data, into ram.
-
+    exoHal_getCik(cikBuffer);
+    exoHal_getUuid(uuidBuffer);
+    exoHal_memcpy(vendorBuffer, vendor, MAX_VENDOR_LENGTH);
+    exoHal_memcpy(modelBuffer, model, MAX_MODEL_LENGTH);
     // create activation request
 
     // open socket
@@ -151,6 +156,50 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
     // * We have a stored CIK and receive a 401 response
     //    * R/W error
 
+    uint8_t vendorLength = exoHal_strlen(vendorBuffer);
+    uint8_t modelLength = exoHal_strlen(modelBuffer);
+    
+    // get body length
+    uint16_t bodyLength = sizeof("&vendor=") - 1 + sizeof("&sn=") - 1;
+    bodyLength += vendorLength + modelLength;
+
+    // assume content length will never be over 9999 bytes
+    char contentLengthStr[5];
+    uint8_t len_of_contentLengthStr = exoHal_itoa((int)bodyLength, contentLengthStr, 5);
+ 
+
+    exosite_connect();
+
+
+    // send request
+    exoHal_socketWrite(STR_ACTIVATE_URL, sizeof(STR_ACTIVATE_URL) - 1);
+    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send Host header
+    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+        // send content type header
+    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send content length header
+    exoHal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
+    exoHal_socketWrite(contentLengthStr, len_of_contentLengthStr);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send body
+    exoHal_socketWrite("vendor=", sizeof("vendor=") - 1);
+    exoHal_socketWrite(vendorBuffer, vendorLength);
+    exoHal_socketWrite("&model=", sizeof("&model=") - 1);
+    exoHal_socketWrite(modelBuffer, modelLength);
+    exoHal_socketWrite("&sn=", sizeof("&sn=") - 1);
+    exoHal_socketWrite(uuidBuffer, exoHal_strlen(uuidBuffer));
+
+
+    exosite_disconnect();
     EXOSITE_DEVICE_ACTIVATION_STATE retVal = CONNECTION_ERROR;
     char cik[] = {"123123123123"};
 
@@ -231,7 +280,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
  * \return 1 - CIK was valid, 0 - CIK was invalid.
  *
  */
-uint8_t Exosite_isCIKValid(char cik[CIK_LENGTH])
+uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
 {
     uint8_t i;
 
@@ -303,38 +352,38 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // assume content length won't be greater than 9999.
     char * contentLengthStr[5];
 
-    uint8_t len_of_contentLengthStr = exoHAL_itoa((int)length, *contentLengthStr, 10);
+    uint8_t len_of_contentLengthStr = exoHal_itoa((int)length, *contentLengthStr, 5);
 
     // send request
-    exoHAL_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
-    exoHAL_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
+    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send Host header
-    exoHAL_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     
     // send cik header
-    exoHAL_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoHAL_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
+    exoHal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
-    exoHAL_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content length header
-    exoHAL_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
-    exoHAL_socketWrite(*contentLengthStr, len_of_contentLengthStr);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
+    exoHal_socketWrite(*contentLengthStr, len_of_contentLengthStr);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send body
-    exoHAL_socketWrite(writeData, length);
+    exoHal_socketWrite(writeData, length);
 
     uint16_t responseLength = 0;
     // get response
-    exoHAL_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoHal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
@@ -375,28 +424,28 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     }
 
     // send request
-    exoHAL_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
-    exoHAL_socketWrite(alias, exoHAL_strlen(alias));
-    exoHAL_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
+    exoHal_socketWrite(alias, exoHal_strlen(alias));
+    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send Host header
-    exoHAL_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send cik header
-    exoHAL_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoHAL_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
+    exoHal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
-    exoHAL_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send accept header
-    exoHAL_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     
 
     uint16_t responseLength = 0;
@@ -471,7 +520,8 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 uint8_t exosite_connect(void)
 {
     // open socket to exosite
-    return 0;
+    
+    return exoHal_tcpSocketOpen();
 }
 
 /*!
@@ -525,7 +575,7 @@ static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * respons
 {
     uint16_t rxLen = 0;
     
-    exoHAL_socketRead( buf, len, &rxLen);
+    exoHal_socketRead( buf, len, &rxLen);
 
     return rxLen;
 }
@@ -543,7 +593,7 @@ uint16_t exosite_socketWrite( char * buf, uint16_t len)
 {
     uint16_t rxLen = 0;
 
-    rxLen = exoHAL_socketWrite( buf, len);
+    rxLen = exoHal_socketWrite( buf, len);
 
     return rxLen;
 }
