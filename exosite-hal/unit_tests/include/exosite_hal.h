@@ -35,8 +35,7 @@
 
 #ifndef EXOSITE_HAL_H
 #define EXOSITE_HAL_H
-
-#include "exosite.h"
+#include <stdint.h>
 
 
 
@@ -65,19 +64,39 @@ uint8_t exoHal_getModel(char * read_buffer);
 uint8_t exoHal_getVendor(char * read_buffer);
 uint8_t exoHal_getUuid(char * read_buffer);
 
-
+uint8_t exoHAL_tcpSocketClose();
+uint8_t exoHAL_tcpSocketOpen();
 uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
 uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len);
 
 uint8_t exoHAL_itoa(int value, char* str, int radix);
+uint16_t exoHAL_strlen(const char *s);
+void * exoHal_memcpy(void* dst, const void * src, uint16_t length);
 
-#ifndef TESTING
-uint16_t strlen(const char *s);
-void*memcpy(void* dest, const void* src, uint32_t count);
+// unit test specific stuffs
+struct UnitTest_storage
+{
+    char cik[40];
+    char uuid[20];
+    char vendor[15];
+    char model[15];
+    char writeToBuffer[100];
+    char readFromBuffer[100];
+    uint8_t retVal_setCik;
+    uint8_t retVal_getCik;
+    uint8_t retVal_getModel;
+    uint8_t retVal_getVendor;
+    uint8_t retVal_getUuid;
+    uint8_t retVal_tcpSocketClose;
+    uint8_t retVal_tcpSocketOpen;
+    uint8_t retVal_socketRead;
+    uint8_t retVal_socketWrite;
 
-#else
-#include "string.h"
-#endif
+};
+
+void * getUnitTestStorageStruct();
+
+
 
 #endif
 

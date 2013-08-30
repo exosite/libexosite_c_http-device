@@ -4,14 +4,16 @@ include_directories(
   ../../gtest-1.6.0/src
   ../../exosite-lib/include/
   ../../exosite-lib/src
+  ../../exosite-hal/unit_tests/include/
+  ../../exosite-hal/unit_tests/src
 )
 
 set(test_srcs
     ../../exosite-tests/src/main.cpp
     ../../exosite-tests/src/hal-tests.cpp
     ../../exosite-tests/src/lib-tests.cpp
-    ../../exosite-lib/include/exosite_hal.h
-    ../../exosite-lib/include/exosite.h
+    ../../exosite-hal/unit_tests/include/exosite_hal.h
+    
 )
 
 IF(MSVC)

@@ -376,7 +376,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
     // send request
     exoHAL_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
-    exoHAL_socketWrite(alias, strlen(alias));
+    exoHAL_socketWrite(alias, exoHAL_strlen(alias));
     exoHAL_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
     exoHAL_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 

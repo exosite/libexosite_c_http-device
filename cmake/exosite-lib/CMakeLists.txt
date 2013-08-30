@@ -1,6 +1,7 @@
 include_directories(
   ../../exosite-lib/include/
-)
+  ../../exosite-hal/unit_tests/include/
+  )
 
 set(lib_srcs
     ../../exosite-lib/src/exosite.c

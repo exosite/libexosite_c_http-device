@@ -34,67 +34,32 @@
 *****************************************************************************/
 //#include "exosite.h"
 #include "exosite_hal.h"
-
-
+#include "string.h"
 
 
 // local functions
 
 
-// global variables
-#ifndef TESTING
+struct UnitTest_storage mem_nvm;
 
-// simple memcpy
-void*memcpy(void* dest, const void* src, uint32_t count)
+
+void * getUnitTestStorageStruct()
 {
-    char* dst8 = (char*)dest;
-    char* src8 = (char*)src;
-
-    while (count--)
-    {
-        *dst8++ = *src8++;
-    }
-    return dest;
+    return &mem_nvm;
 }
 
 
-uint16_t strlen(const char *s)
+
+uint16_t exoHAL_strlen(const char *s)
 {
-    uint16_t retVal = 0;
-    while (s[retVal])
-    {
-        retVal++;
-    }
-    return retVal;
+    return strlen(s);
+    
 }
 
-#endif
-
-/*!< Used to reserve memory to emulate NVM during unit testing */
-struct UnitTest_meta_storage
+void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
 {
-    char cik[40];
-    char uuid[20];
-    char vendor[15];
-    char model[15];
-};
-
-
-struct UnitTest_meta_storage mem_nvm;
-
-struct dev_nvm
-{
-    const char * cik;
-    const char * uuid;
-    const char * vendor;
-    const char * model;
-    const char * server;
-};
-
-struct dev_nvm mem;
-
-
-
+    return memcpy(dst,src,length);
+}
 
 /*!
  * \brief Closes a tcp socket
@@ -110,7 +75,7 @@ struct dev_nvm mem;
  */
 uint8_t exoHAL_tcpSocketClose()
 {
-    return 0;
+    return mem_nvm.retVal_tcpSocketClose;   
 }
 
 
@@ -126,9 +91,10 @@ uint8_t exoHAL_tcpSocketClose()
  * \note
  * \warning
  */
-int32_t exoHAL_tcpSocketOpen()
+uint8_t exoHAL_tcpSocketOpen()
 {
-    return 1;
+  
+    return mem_nvm.retVal_tcpSocketOpen;   
 }
 
 
@@ -149,7 +115,7 @@ int32_t exoHAL_tcpSocketOpen()
  */
 uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
 {
-    return 0;
+    return mem_nvm.retVal_socketWrite;   
 }
 
 
@@ -170,7 +136,7 @@ uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
 uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
 {
 
-    return 1;
+    return mem_nvm.retVal_socketRead;
 }
 
 
@@ -214,7 +180,7 @@ void exoHAL_MSDelay(uint16_t delay)
 uint8_t exoHal_setCik(const char * cik)
 {
     memcpy( mem_nvm.cik,cik, sizeof(mem_nvm.cik));
-    return 0;
+    return mem_nvm.retVal_setCik;
 }
 
 
@@ -234,7 +200,7 @@ uint8_t exoHal_setCik(const char * cik)
 uint8_t exoHal_getCik(char * read_buffer)
 {
     memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
-    return 0;
+    return mem_nvm.retVal_getCik;
 }
 
 
@@ -254,7 +220,7 @@ uint8_t exoHal_getCik(char * read_buffer)
 uint8_t exoHal_getModel(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
-    return 0;
+    return mem_nvm.retVal_getModel;
 }
 
 
@@ -274,7 +240,7 @@ uint8_t exoHal_getModel(char * read_buffer)
 uint8_t exoHal_getVendor(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
-    return 0;
+    return mem_nvm.retVal_getVendor;
 }
 
 
@@ -294,8 +260,8 @@ uint8_t exoHal_getVendor(char * read_buffer)
  */
 uint8_t exoHal_getUuid(char * read_buffer)
 {
-    memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
-    return 0;
+    exoHal_memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
+    return mem_nvm.retVal_getUuid;
 }
 
 
