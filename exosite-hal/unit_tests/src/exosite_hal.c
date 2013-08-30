@@ -37,24 +37,56 @@
 #include "string.h"
 #include "stdio.h"
 
-// used to see where we are in the TX buffer
+/*!
+ * Used to track how far into the rx buffer we are
+ */
 static uint16_t bufferCount=0;
 
+/*!
+ * Used to track if we currently have a socket open
+ */
 static uint8_t isSocketOpen = 0;
 
 // local functions
 
-
+/*!
+ * Stores a bunch of stuff to emulate nvm and manipulate return results
+ */
 struct UnitTest_storage mem_nvm;
 
 
+/*!
+ * \brief Retrieves a pointer to the UnitTest_storage struct
+ *
+ * This allows external applications speciically unit tests, to manipulate
+ * the way the the hal behaves.
+ *
+ *
+ * \return A pointer to the UnitTest_storage
+ * \sa
+ * \note
+ * \warning
+ */
 void * getUnitTestStorageStruct()
 {
     return &mem_nvm;
 }
 
 
-
+/*!
+ * \brief Determines the length of a null terminated string
+ *
+ * You can write your own, or link to one that is available.
+ * This does not include the trailing '\0'. for example, strlen("") == 0 and
+ * strlen("A") == 1
+ *
+ * \param[in] s String you want to determine the length of
+ *
+ * \return The length of the inputted string.
+ * \sa
+ * \note
+ * \warning  There is no protection for overrun here... Be Careful!
+ */
 uint16_t exoHal_strlen(const char *s)
 {
     return strlen(s);
@@ -62,13 +94,15 @@ uint16_t exoHal_strlen(const char *s)
 }
 
 /*!
- * \brief
+ * \brief Gets the decimal ascii representation of an integer
  *
  * 
  *
- * \param[in]
- * \param[out]
- * \return
+ * \param[in] value Number that you want a string representation of
+ * \param[in] buf Buffer to place results
+ * \param[in] bufSizelength of buffer
+
+ * \return Length of string written to buf
  * \sa
  * \note
  * \warning
@@ -85,7 +119,20 @@ uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
 }
 
 
-
+/*!
+ * \brief A function to copy from one place in memory to another
+ *
+ * You can write your own or call another.
+ *
+ * \param[in] dst Memory location of where to write to
+ * \param[in] src Memory location of where to copy from
+ * \param[in] length Number of bytes to copy
+ *
+ * \return 0 if failed, else returns dst address.
+ * \sa
+ * \note
+ * \warning
+ */
 void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
 {
     return memcpy(dst,src,length);
@@ -226,14 +273,13 @@ uint8_t exoHal_setCik(const char * cik)
 
 
 /*!
- * \brief
+ * \brief Retrieves the stored CIK
  *
  * 
  *
- * \param[in]
- * \param[out]
+ * \param[out] read_buffer pointer of buffer to place results in
  *
- * \return
+ * \return 0 if successful, else errorCode
  * \sa
  * \note
  * \warning
@@ -246,14 +292,13 @@ uint8_t exoHal_getCik(char * read_buffer)
 
 
 /*!
- * \brief
+ * \brief Retrieves the stored Model string
  *
  * 
  *
- * \param[in]
- * \param[out]
+ * \param[in] read_buffer pointer of buffer to place results in
  *
- * \return
+ * \return 0 if successful, else returns error code
  * \sa
  * \note
  * \warning
@@ -266,14 +311,13 @@ uint8_t exoHal_getModel(char * read_buffer)
 
 
 /*!
- * \brief
+ * \brief Retrieves the vendor string
  *
  * 
  *
- * \param[in]
- * \param[out]
+ * \param[in] read_buffer pointer of buffer to place results in
  *
- * \return
+ * \return returns 0 if successful, else returns error code.
  * \sa
  * \note
  * \warning

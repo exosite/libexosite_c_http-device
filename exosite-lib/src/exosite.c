@@ -69,7 +69,8 @@ static char uuidBuffer[MAX_UUID_LENGTH];
 static char rxBuffer[RX_BUFFER_SIZE];
 
 /*!
- * 1 if we have an open socket, else 0
+ * Used to determine if there is currently an open socket.  This value is 1 if 
+ * we have an open socket, else 0.
  */
 uint8_t isSocketOpen = 0;
 
@@ -79,10 +80,7 @@ uint8_t isSocketOpen = 0;
  *
  * 
  *
- * \param[in]
- * \param[out]
- *
- * \return
+ * \return Returns 0 if successful, else error code
  * \sa
  * \note
  * \warning
@@ -97,8 +95,11 @@ uint8_t exosite_resetCik()
  * \brief  Initializes the Exosite libraries and attempts to activate the
  *          with Exosite
  *
+ * This **MUST** be called before any other exosite library calls are called. 
+ *
  * Assumes that the modem is setup and ready to make a socket connection.
- * This will fail if activation fails.
+ * This will fail if activation fails.  After initialization, this function 
+ * calls exosite_activate
  *
  * \param[in] vendor Pointer to string containing vendor name
  * \param[in] model Pointer to string containing model name
@@ -114,20 +115,6 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *mo
     exoHal_memcpy(modelBuffer, model, MAX_MODEL_LENGTH);
     // create activation request
 
-    // open socket
-    
-    // send request
-
-    // wait for response
-
-    // if timeout
-
-
-    // w
-
-
-
-
     return exosite_activate();
 }
 
@@ -135,13 +122,11 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *mo
 
 
 /*!
- * \brief  The function initializes the exosite meta structure ,UUID and
- *          provision information
+ * \brief  Makes a provisioning request to Exosite.
  *
- * \param[in] vendor Pointer to string containing vendor name
- * \param[in] model Pointer to string containing model name
+ * 
  *
- * \return length of assembled customize's vendor information
+ * \return The devices activation status
  */
 EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
 {
@@ -261,24 +246,17 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
 }
 
 
-
-/*****************************************************************************
-*
-* Exosite_isCIKValid
-*
-*  \param  None
-*
-*  \return 1 - CIK was valid, 0 - CIK was invalid.
-*
-*  \brief  Validate the CIK
-*
-*****************************************************************************/
 /*!
- *  \brief  Checks that the cik consists only of lowercase hexadecimal chars
+ * \brief Checks if the given cik is valid
  *
+ * Checks for atleast 40 valid hexidecimal bytes.
  *
- * \return 1 - CIK was valid, 0 - CIK was invalid.
+ * \param[in] cik array of CIK_LENGTH bytes
  *
+ * \return Returns 1 if successful, else 0
+ * \sa
+ * \note
+ * \warning
  */
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
 {
@@ -511,11 +489,15 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
 
 /*!
- *  \brief  Open socket with Exosite
+ * \brief Connects to Exosite
  *
+ * This would typically be a call to open a socket 
  *
- * \return success: socket handle; failure: 0;
- *
+ * \return Returns a 0 if socket was successfully opened, else returns the
+ *          error code
+ * \sa
+ * \note
+ * \warning
  */
 uint8_t exosite_connect(void)
 {
@@ -525,11 +507,15 @@ uint8_t exosite_connect(void)
 }
 
 /*!
- *  \brief  close socket with Exosite
+ * \brief Connects to Exosite
  *
+ * This would typically be a call to close a socket 
  *
- * \return success: socket handle; failure: 0;
- *
+ * \return Returns a 0 if socket was successfully close, else returns the
+ *          error code
+ * \sa
+ * \note
+ * \warning
  */
 uint8_t exosite_disconnect(void)
 {
@@ -539,7 +525,7 @@ uint8_t exosite_disconnect(void)
 
 
 /*!
- *  \brief  determines if response matches code
+ * \brief  determines if response matches code
  *
  * \param[in] code Pointer to expected HTTP response code
  * \param[in] response an HTTP response string
@@ -560,10 +546,10 @@ uint8_t exosite_checkResponse(char * response, const char * code)
 
 
 /*!
- *  \brief  Retrieves data from a socket
+ * \brief  Retrieves data from a socket
  *
  * \note This library assumes that the response buffer will alway be large 
- * enough to handle the response string.
+ *          enough to handle the response string.
  *
  * \param[in] buf Buffer to place received data into.
  * \param[in] len Length of buf
@@ -581,7 +567,7 @@ static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * respons
 }
 
 /*!
- *  \brief  Writes data to a socket
+ * \brief  Writes data to a socket
  *
  * \param[in] buf Data to write to socket
  * \param[in] len Length of buf
@@ -597,89 +583,6 @@ uint16_t exosite_socketWrite( char * buf, uint16_t len)
 
     return rxLen;
 }
-
-/*!
- *  \brief  Sends data out the socket
- *
- * \param[in] socket Socket to send data out ot
- * \param[in] LINE type of line going out the socket
- * \param[in] payload pointer to data to send out socket
- *
- * \return 1 if match, 0 if no match
- *
- */
-//void sendLine(int32_t socket, unsigned char LINE, const char * payload)
-//{
-//    char strBuf[70];
-//    unsigned char strLen;
-//
-//    switch(LINE)
-//    {
-//    case CIK_LINE:
-//        strLen = strlen(STR_CIK_HEADER);
-//        memcpy(strBuf,STR_CIK_HEADER,strLen);
-//        exosite_meta_read((char *)&strBuf[strLen], CIK_LENGTH, META_CIK);
-//        strLen += CIK_LENGTH;
-//        memcpy(&strBuf[strLen],STR_CRLF, 2);
-//        strLen += strlen(STR_CRLF);
-//        break;
-//    case HOST_LINE:
-//        strLen = strlen(STR_HOST);
-//        memcpy(strBuf,STR_HOST,strLen);
-//        break;
-//    case CONTENT_LINE:
-//        strLen = strlen(STR_CONTENT);
-//        memcpy(strBuf,STR_CONTENT,strLen);
-//        break;
-//    case ACCEPT_LINE:
-//        strLen = strlen(STR_ACCEPT);
-//        memcpy(strBuf,STR_ACCEPT,strLen);
-//        memcpy(&strBuf[strLen],payload, strlen(payload));
-//        strLen += strlen(payload);
-//        break;
-//    case LENGTH_LINE: // Content-Length: NN
-//        strLen = strlen(STR_CONTENT_LENGTH);
-//        memcpy(strBuf,STR_CONTENT_LENGTH,strLen);
-//        memcpy(&strBuf[strLen],payload, strlen(payload));
-//        strLen += strlen(payload);
-//        memcpy(&strBuf[strLen],STR_CRLF, 2);
-//        strLen += 2;
-//        memcpy(&strBuf[strLen],STR_CRLF, 2);
-//        strLen += 2;
-//        break;
-//    case GETDATA_LINE:
-//        strLen = strlen(STR_GET_URL);
-//        memcpy(strBuf,STR_GET_URL,strLen);
-//        memcpy(&strBuf[strLen],payload, strlen(payload));
-//        strLen += strlen(payload);
-//        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
-//        strLen += strlen(STR_HTTP);
-//        break;
-//    case VENDOR_LINE:
-//        strLen = strlen((char *)exosite_provision_info);
-//        memcpy(strBuf, exosite_provision_info, strLen);
-//        exosite_meta_read((char *)&strBuf[strLen], META_UUID_SIZE, META_UUID);
-//        strLen += META_UUID_SIZE;
-//        break;
-//    case POSTDATA_LINE:
-//        strLen = strlen("POST ");
-//        memcpy(strBuf,"POST ", strLen);
-//        memcpy(&strBuf[strLen],payload, strlen(payload));
-//        strLen += strlen(payload);
-//        memcpy(&strBuf[strLen], STR_HTTP, strlen(STR_HTTP));
-//        strLen += strlen(STR_HTTP);
-//        break;
-//    case EMPTY_LINE:
-//        strLen = strlen(STR_CRLF);
-//        memcpy(strBuf,STR_CRLF,strLen);
-//        break;
-//    default:
-//        break;
-//    }
-//    //exoHAL_SocketSend(socket, strBuf, strLen);
-//
-//    return;
-//}
 
 
 
