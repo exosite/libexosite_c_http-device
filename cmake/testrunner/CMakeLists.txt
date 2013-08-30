@@ -11,6 +11,7 @@ set(test_srcs
     ../../exosite-tests/src/hal-tests.cpp
     ../../exosite-tests/src/lib-tests.cpp
     ../../exosite-hal/unit_tests/include/exosite_hal.h
+    ../../exosite-lib/include/exosite.h
     
 )
 
