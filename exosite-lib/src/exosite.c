@@ -72,8 +72,10 @@ static char rxBuffer[RX_BUFFER_SIZE];
  * Used to determine if there is currently an open socket.  This value is 1 if 
  * we have an open socket, else 0.
  */
-uint8_t isSocketOpen = 0;
+static uint8_t isSocketOpen = 0;
 
+
+static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
 
 /*!
  * \brief Reset the cik to ""
@@ -106,16 +108,24 @@ uint8_t exosite_resetCik()
  *
  * \return Device Activation status
  */
-EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *model)
+EXO_STATE exosite_init(const char * vendor, const char *model)
 {
+    // reset state
+    initState = EXO_STATE_NOT_COMPLETE;
+    uint8_t retStatus = 0;
     // get cik and uuid and any other nvm stored data, into ram.
-    exoHal_getCik(cikBuffer);
-    exoHal_getUuid(uuidBuffer);
+    retStatus |= exoHal_getCik(cikBuffer);
+    retStatus |= exoHal_getUuid(uuidBuffer);
     exoHal_memcpy(vendorBuffer, vendor, MAX_VENDOR_LENGTH);
     exoHal_memcpy(modelBuffer, model, MAX_MODEL_LENGTH);
     // create activation request
-
-    return exosite_activate();
+    if (retStatus)
+    {
+        initState = EXO_STATE_INIT_ERROR;
+        return initState;
+    }
+    initState = exosite_activate();
+    return initState;
 }
 
 
@@ -128,7 +138,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char * vendor, const char *mo
  *
  * \return The devices activation status
  */
-EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
+EXO_STATE exosite_activate()
 {
 
     // Try and activate device with Exosite, four possible cases:
@@ -185,7 +195,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
 
 
     exosite_disconnect();
-    EXOSITE_DEVICE_ACTIVATION_STATE retVal = CONNECTION_ERROR;
+    EXO_STATE retVal = EXO_STATE_CONNECTION_ERROR;
     char cik[] = {"123123123123"};
 
     char responseStr[] = {"asdfasdfasdfasdf"};
@@ -205,7 +215,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
                 {
                     // the data after the '\n' did not equal the length
                     // of the CIK.  An error of some sorts occurred
-                    retVal = CONNECTION_ERROR;
+                    retVal = EXO_STATE_CONNECTION_ERROR;
                     // end this loop and return our error
                     i = 0;
                 }
@@ -213,7 +223,7 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
                 {
                     // copy cik into mem.
                     exoHal_setCik(&responseStr[i + 1]);
-                    retVal = VALID_CIK;
+                    retVal = EXO_STATE_VALID_CIK;
                     i = 0;
                 }
             }
@@ -226,19 +236,19 @@ EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate()
         {
             // if we don't have a CIK in nvm and we receive a 409
             // The device isn't enabled in the dashboard
-            retVal = DEVICE_NOT_ENABLED;
+            retVal = EXO_STATE_DEVICE_NOT_ENABLED;
         }
         else
         {
             // If we receive a 409 and we do have a valid CIK, we will
             // assume we are good to go.
-            retVal = VALID_CIK;
+            retVal = EXO_STATE_VALID_CIK;
         }
     }
     else if (exosite_checkResponse(responseStr, "401"))
     {
         // RW error
-        retVal = R_W_ERROR;
+        retVal = EXO_STATE_R_W_ERROR;
     }
 
     return retVal;
@@ -308,7 +318,6 @@ void exosite_getCIK(char * pCIK)
 /*!
  *  \brief  writes data to Exosite
  *
- * \param[in] pAlias Pointer to buffer of data to write to Exosite
  * \param[in] pbuf Pointer to buffer of data to write to Exosite
  * \param[in] bufsize length of data in buffer
  *

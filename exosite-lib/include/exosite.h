@@ -56,20 +56,26 @@ to place incoming data from the modem in.*/
 
 
 // ENUMS
-typedef enum EXOSITE_DEVICE_ACTIVATION_STATE_tag
+/*!
+ * Tracks the current state of the device on the Exosite Platform.
+ */
+typedef enum EXOSITE_DEVICE_STATE_tag
 {
-    CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
-    VALID_CIK,              /*!< CIK is valid  */
-    DEVICE_NOT_ENABLED,     /*!< Device has not been enabled */
-    R_W_ERROR,               /*!< R/W error */
-    UNABLE_TO_MAKE_REQUEST  /*!< string was too long */
-}EXOSITE_DEVICE_ACTIVATION_STATE;
+    EXO_STATE_CONNECTION_ERROR,       /*!< Error in connecting to Exosite */
+    EXO_STATE_VALID_CIK,              /*!< CIK is valid  */
+    EXO_STATE_DEVICE_NOT_ENABLED,     /*!< Device has not been enabled */
+    EXO_STATE_R_W_ERROR,              /*!< R/W error */
+    EXO_STATE_UNABLE_TO_MAKE_REQUEST, /*!< string was too long */
+    EXO_STATE_INIT_COMPLETE,          /*!< Initialization successfully completed. */
+    EXO_STATE_NOT_COMPLETE,           /*!< Device has not yet completed initialization. */
+    EXO_STATE_INIT_ERROR              /*!< An error occured in exosite_init(). */ 
+}EXO_STATE;
 
 
 
 // PUBLIC FUNCTIONS
-EXOSITE_DEVICE_ACTIVATION_STATE exosite_activate();
-EXOSITE_DEVICE_ACTIVATION_STATE exosite_init(const char *vendor, const char *model);
+EXO_STATE exosite_activate();
+EXO_STATE exosite_init(const char *vendor, const char *model);
 
 uint8_t exosite_write(const char * writeData, uint16_t length);
 uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
