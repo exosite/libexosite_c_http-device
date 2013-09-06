@@ -32,7 +32,7 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-#include "exosite_hal.h"
+#include "exosite_pal.h"
 #include "exosite.h"
 
 
@@ -91,7 +91,7 @@ static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
  */
 uint8_t exosite_resetCik()
 {
-    exoHal_setCik("");
+    exoPal_setCik("");
     return 0;
 }
 
@@ -116,10 +116,10 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
     initState = EXO_STATE_NOT_COMPLETE;
     uint8_t retStatus = 0;
     // get cik and uuid and any other nvm stored data, into ram.
-    retStatus |= exoHal_getCik(cikBuffer);
-    retStatus |= exoHal_getUuid(uuidBuffer);
-    exoHal_memcpy(vendorBuffer, vendor, MAX_VENDOR_LENGTH);
-    exoHal_memcpy(modelBuffer, model, MAX_MODEL_LENGTH);
+    retStatus |= exoPal_getCik(cikBuffer);
+    retStatus |= exoPal_getUuid(uuidBuffer);
+    exoPal_memcpy(vendorBuffer, vendor, MAX_VENDOR_LENGTH);
+    exoPal_memcpy(modelBuffer, model, MAX_MODEL_LENGTH);
     // create activation request
     if (retStatus)
     {
@@ -157,8 +157,8 @@ EXO_STATE exosite_activate()
     // * We have a stored CIK and receive a 401 response
     //    * R/W error
 
-    uint8_t vendorLength = exoHal_strlen(vendorBuffer);
-    uint8_t modelLength = exoHal_strlen(modelBuffer);
+    uint8_t vendorLength = exoPal_strlen(vendorBuffer);
+    uint8_t modelLength = exoPal_strlen(modelBuffer);
     
     // get body length
     uint16_t bodyLength =   sizeof(STR_VENDOR) - 1 + 
@@ -168,38 +168,38 @@ EXO_STATE exosite_activate()
 
     // assume content length will never be over 9999 bytes
     char contentLengthStr[5];
-    uint8_t len_of_contentLengthStr = exoHal_itoa((int)bodyLength, contentLengthStr, 5);
+    uint8_t len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
  
 
     exosite_connect();
 
 
     // send request
-    exoHal_socketWrite(STR_ACTIVATE_URL, sizeof(STR_ACTIVATE_URL) - 1);
-    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_ACTIVATE_URL, sizeof(STR_ACTIVATE_URL) - 1);
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send Host header
-    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
         // send content type header
-    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content length header
-    exoHal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
-    exoHal_socketWrite(contentLengthStr, len_of_contentLengthStr);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
+    exoPal_socketWrite(contentLengthStr, len_of_contentLengthStr);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send body
-    exoHal_socketWrite(STR_VENDOR, sizeof(STR_VENDOR) - 1);
-    exoHal_socketWrite(vendorBuffer, vendorLength);
-    exoHal_socketWrite(STR_MODEL, sizeof(STR_MODEL) - 1);
-    exoHal_socketWrite(modelBuffer, modelLength);
-    exoHal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
-    exoHal_socketWrite(uuidBuffer, exoHal_strlen(uuidBuffer));
+    exoPal_socketWrite(STR_VENDOR, sizeof(STR_VENDOR) - 1);
+    exoPal_socketWrite(vendorBuffer, vendorLength);
+    exoPal_socketWrite(STR_MODEL, sizeof(STR_MODEL) - 1);
+    exoPal_socketWrite(modelBuffer, modelLength);
+    exoPal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
+    exoPal_socketWrite(uuidBuffer, exoPal_strlen(uuidBuffer));
 
 
     exosite_disconnect();
@@ -230,7 +230,7 @@ EXO_STATE exosite_activate()
                 else
                 {
                     // copy cik into mem.
-                    exoHal_setCik(&responseStr[i + 1]);
+                    exoPal_setCik(&responseStr[i + 1]);
                     retVal = EXO_STATE_VALID_CIK;
                     i = 0;
                 }
@@ -301,7 +301,7 @@ uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
  */
 void exosite_setCIK(char * pCIK)
 {
-    exoHal_setCik((char *)pCIK);
+    exoPal_setCik((char *)pCIK);
 
     return;
 }
@@ -317,7 +317,7 @@ void exosite_setCIK(char * pCIK)
  */
 void exosite_getCIK(char * cik)
 {
-    exoHal_getCik((char *)cik);
+    exoPal_getCik((char *)cik);
 
     return;
 }
@@ -347,38 +347,38 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // assume content length won't be greater than 9999.
     char * contentLengthStr[5];
 
-    uint8_t len_of_contentLengthStr = exoHal_itoa((int)length, *contentLengthStr, 5);
+    uint8_t len_of_contentLengthStr = exoPal_itoa((int)length, *contentLengthStr, 5);
 
     // send request
-    exoHal_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
-    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send Host header
-    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     
     // send cik header
-    exoHal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoHal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
+    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
-    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content length header
-    exoHal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
-    exoHal_socketWrite(*contentLengthStr, len_of_contentLengthStr);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
+    exoPal_socketWrite(*contentLengthStr, len_of_contentLengthStr);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send body
-    exoHal_socketWrite(writeData, length);
+    exoPal_socketWrite(writeData, length);
 
     uint16_t responseLength = 0;
     // get response
-    exoHal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
@@ -419,28 +419,28 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     }
 
     // send request
-    exoHal_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
-    exoHal_socketWrite(alias, exoHal_strlen(alias));
-    exoHal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
+    exoPal_socketWrite(alias, exoPal_strlen(alias));
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send Host header
-    exoHal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send cik header
-    exoHal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoHal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
+    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
-    exoHal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send accept header
-    exoHal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     
 
     uint16_t responseLength = 0;
@@ -520,7 +520,7 @@ uint8_t exosite_connect(void)
 {
     // open socket to exosite
     
-    return exoHal_tcpSocketOpen();
+    return exoPal_tcpSocketOpen();
 }
 
 /*!
@@ -578,7 +578,7 @@ static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * respons
 {
     uint16_t rxLen = 0;
     
-    exoHal_socketRead( buf, len, &rxLen);
+    exoPal_socketRead( buf, len, &rxLen);
 
     return rxLen;
 }
@@ -596,7 +596,7 @@ uint16_t exosite_socketWrite( char * buf, uint16_t len)
 {
     uint16_t rxLen = 0;
 
-    rxLen = exoHal_socketWrite( buf, len);
+    rxLen = exoPal_socketWrite( buf, len);
 
     return rxLen;
 }

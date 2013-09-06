@@ -1,6 +1,6 @@
 include_directories(
   ../../exosite-lib/include/
-  ../../exosite-hal/unit_tests/include/
+  ../../exosite-pal/unit_tests/include/
   )
 
 set(lib_srcs

@@ -25,11 +25,11 @@
 //TEST_F(HalLibCleanNVM, cikRW)
 //{
 //    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-//    exoHal_setCik(testcik);
+//    exoPal_setCik(testcik);
 //    char readResults[41] = "";
-//    exoHal_getCik(readResults);
+//    exoPal_getCik(readResults);
 //    EXPECT_STREQ(testcik,readResults);
-//    exoHAL_tcpSocketOpen();
+//    exoPal_tcpSocketOpen();
 //
 //}
 //
@@ -38,21 +38,21 @@
 //TEST_F(HalLibCleanNVM, CommunicateWithExosite)
 //{
 //    uint8_t retVal=99;
-//    retVal = exoHAL_tcpSocketOpen();
+//    retVal = exoPal_tcpSocketOpen();
 //    EXPECT_EQ(0,retVal);
 //
-//    retVal = exoHAL_socketWrite("GET /\r\n",sizeof("GET /\r\n"));
+//    retVal = exoPal_socketWrite("GET /\r\n",sizeof("GET /\r\n"));
 //    EXPECT_EQ(0,retVal);
 //    
 //    
 //    char inBuf[100];
 //    char * pBuf = inBuf;
 //    uint16_t responseL=0;
-//    retVal = exoHAL_socketRead(pBuf,100,&responseL);
+//    retVal = exoPal_socketRead(pBuf,100,&responseL);
 //    EXPECT_EQ(0,retVal);
 //    EXPECT_GT(responseL,0);
 //
-//    retVal = exoHAL_tcpSocketClose();
+//    retVal = exoPal_tcpSocketClose();
 //    EXPECT_EQ(0,retVal);
 //    int32_t t = 1;
 //

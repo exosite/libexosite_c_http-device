@@ -3,14 +3,14 @@ include_directories(
   ../../gtest-1.6.0/include
   ../../gtest-1.6.0/src
   ../../exosite-lib/include/
-  ../../exosite-hal/unit_tests/include/
+  ../../exosite-pal/unit_tests/include/
 )
 
 set(test_srcs
     ../../exosite-tests/src/main.cpp
-    ../../exosite-tests/src/hal-tests.cpp
+    ../../exosite-tests/src/pal-tests.cpp
     ../../exosite-tests/src/lib-tests.cpp
-    ../../exosite-hal/unit_tests/include/exosite_hal.h
+    ../../exosite-pal/unit_tests/include/exosite_pal.h
     ../../exosite-lib/include/exosite.h
     
 )
@@ -23,4 +23,4 @@ add_executable(testrunner ${test_srcs} )
 
 set_target_properties (testrunner PROPERTIES COMPILE_DEFINITIONS "TESTING")
 
-target_link_libraries(testrunner exosite-hal exosite-lib gtest)
+target_link_libraries(testrunner exosite-pal exosite-lib gtest)

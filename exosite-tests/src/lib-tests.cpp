@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 #include "exosite.h"
-#include "exosite_hal.h"
+#include "exosite_pal.h"
 #ifdef  __GNUC__
 }
 #endif

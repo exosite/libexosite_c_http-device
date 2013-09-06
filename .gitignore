@@ -3,6 +3,8 @@ vs2012/exosite_c_libraries/Debug/
 docs/html/
 *.sdf
 
+vs/
+
 *.suo
 *.opensdf
 *.filters

@@ -33,7 +33,7 @@
 *
 *****************************************************************************/
 //#include "exosite.h"
-#include "exosite_hal.h"
+#include "exosite_pal.h"
 #include "string.h"
 #include "stdio.h"
 
@@ -87,7 +87,7 @@ void * getUnitTestStorageStruct()
  * \note
  * \warning  There is no protection for overrun here... Be Careful!
  */
-uint16_t exoHal_strlen(const char *s)
+uint16_t exoPal_strlen(const char *s)
 {
     return strlen(s);
     
@@ -107,7 +107,7 @@ uint16_t exoHal_strlen(const char *s)
  * \note
  * \warning
  */
-uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
+uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
 {
     int32_t chars = sprintf(buf, "%d", value);
     if (chars < 0)
@@ -133,7 +133,7 @@ uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
  * \note
  * \warning
  */
-void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
+void * exoPal_memcpy(void* dst, const void * src, uint16_t length)
 {
     return memcpy(dst,src,length);
 }
@@ -150,7 +150,7 @@ void * exoHal_memcpy(void* dst, const void * src, uint16_t length)
  * \note
  * \warning
  */
-uint8_t exoHal_tcpSocketClose()
+uint8_t exoPal_tcpSocketClose()
 {
     isSocketOpen = 0;
     bufferCount = 0;
@@ -170,7 +170,7 @@ uint8_t exoHal_tcpSocketClose()
  * \note
  * \warning
  */
-uint8_t exoHal_tcpSocketOpen()
+uint8_t exoPal_tcpSocketOpen()
 {
     if (mem_nvm.retVal_tcpSocketOpen == 0)
     {
@@ -195,11 +195,11 @@ uint8_t exoHal_tcpSocketOpen()
  * \note
  * \warning
  */
-uint8_t exoHal_socketWrite( const char * buffer, uint16_t len)
+uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 {
     if (isSocketOpen == 1)
     {
-        exoHal_memcpy(mem_nvm.writeToBuffer + bufferCount,buffer,len);
+        exoPal_memcpy(mem_nvm.writeToBuffer + bufferCount,buffer,len);
         bufferCount += len;
     }
     
@@ -221,9 +221,9 @@ uint8_t exoHal_socketWrite( const char * buffer, uint16_t len)
  * \note len must be greater than sizeof(buffer)
  * \warning
  */
-uint8_t exoHal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
+uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
 {
-    exoHal_memcpy(buffer,mem_nvm.readFromBuffer,bufSize);
+    exoPal_memcpy(buffer,mem_nvm.readFromBuffer,bufSize);
     return mem_nvm.retVal_socketRead;
 }
 
@@ -242,7 +242,7 @@ uint8_t exoHal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseL
  * \note
  * \warning
  */
-void exoHal_MSDelay(uint16_t delay)
+void exoPal_MSDelay(uint16_t delay)
 {
     //MSTimerDelay(delay);
 
@@ -265,7 +265,7 @@ void exoHal_MSDelay(uint16_t delay)
  * \note
  * \warning
  */
-uint8_t exoHal_setCik(const char * cik)
+uint8_t exoPal_setCik(const char * cik)
 {
     memcpy( mem_nvm.cik,cik, sizeof(mem_nvm.cik));
     return mem_nvm.retVal_setCik;
@@ -284,7 +284,7 @@ uint8_t exoHal_setCik(const char * cik)
  * \note
  * \warning
  */
-uint8_t exoHal_getCik(char * read_buffer)
+uint8_t exoPal_getCik(char * read_buffer)
 {
     memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
     return mem_nvm.retVal_getCik;
@@ -303,7 +303,7 @@ uint8_t exoHal_getCik(char * read_buffer)
  * \note
  * \warning
  */
-uint8_t exoHal_getModel(char * read_buffer)
+uint8_t exoPal_getModel(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
     return mem_nvm.retVal_getModel;
@@ -322,7 +322,7 @@ uint8_t exoHal_getModel(char * read_buffer)
  * \note
  * \warning
  */
-uint8_t exoHal_getVendor(char * read_buffer)
+uint8_t exoPal_getVendor(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
     return mem_nvm.retVal_getVendor;
@@ -343,9 +343,9 @@ uint8_t exoHal_getVendor(char * read_buffer)
  * \note
  * \warning
  */
-uint8_t exoHal_getUuid(char * read_buffer)
+uint8_t exoPal_getUuid(char * read_buffer)
 {
-    exoHal_memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
+    exoPal_memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
     return mem_nvm.retVal_getUuid;
 }
 

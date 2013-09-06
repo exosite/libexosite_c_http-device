@@ -16,8 +16,8 @@ ELSEIF(CMAKE_COMPILER_IS_GNUCC)
 add_definitions(-std=c99)
 ENDIF()
 
-##########################exosite HAL######################################
-add_subdirectory(exosite-hal)
+##########################exosite PAL######################################
+add_subdirectory(exosite-pal)
 ###############################################################################
 
 

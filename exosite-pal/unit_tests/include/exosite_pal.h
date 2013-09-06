@@ -58,20 +58,20 @@ typedef enum
 
 
 
-uint8_t exoHal_setCik(const char * read_buffer);
-uint8_t exoHal_getCik(char * read_buffer);
-uint8_t exoHal_getModel(char * read_buffer);
-uint8_t exoHal_getVendor(char * read_buffer);
-uint8_t exoHal_getUuid(char * read_buffer);
+uint8_t exoPal_setCik(const char * read_buffer);
+uint8_t exoPal_getCik(char * read_buffer);
+uint8_t exoPal_getModel(char * read_buffer);
+uint8_t exoPal_getVendor(char * read_buffer);
+uint8_t exoPal_getUuid(char * read_buffer);
 
-uint8_t exoHal_tcpSocketClose();
-uint8_t exoHal_tcpSocketOpen();
-uint8_t exoHal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
-uint8_t exoHal_socketWrite( const char * buffer, uint16_t len);
+uint8_t exoPal_tcpSocketClose();
+uint8_t exoPal_tcpSocketOpen();
+uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
+uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
 
-uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize);
-uint16_t exoHal_strlen(const char *s);
-void * exoHal_memcpy(void* dst, const void * src, uint16_t length);
+uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
+uint16_t exoPal_strlen(const char *s);
+void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 
 // unit test specific stuffs
 struct UnitTest_storage
