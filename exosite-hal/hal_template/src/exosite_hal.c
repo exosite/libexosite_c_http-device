@@ -115,7 +115,7 @@ uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
+uint8_t exoHAL_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     // read from socket
     return 0;
@@ -146,7 +146,7 @@ uint8_t exoHal_setCik(const char * cik)
  * The CIK must persist through power cycles and therefore must be in some
  * sort of NVM
  *
- * \param[out] Buffer to write data to, must be at least 40 chars wide
+ * \param[out] read_buffer Buffer to write data to, must be at least 40 chars wide
  *
  * \return 0 if successful, else error code
  */
@@ -206,7 +206,7 @@ uint8_t exoHal_getVendor(char * read_buffer)
  *	the MEID of a cell modem, MAC address of a network card, or serial number
  *	of the device.
  *
- * \param[in] UUID_buf Buffer to put the devices UUID into.
+ * \param[in] read_buffer Buffer to put the devices UUID into.
  *
  * \return 0 if successful, else error code
  */
@@ -243,7 +243,7 @@ uint16_t exoHAL_strlen(const char *s)
  *
  * \param[in] value Number that you want a string representation of
  * \param[in] buf Buffer to place results
- * \param[in] bufSizelength of buffer
+ * \param[in] bufSize Length of buffer
 
  * \return Length of string written to buf
  */

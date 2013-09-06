@@ -310,14 +310,14 @@ void exosite_setCIK(char * pCIK)
 
 /*!
  *  \brief  Retrieves a the CIK from NVM and places it in to the string pointed
- *			at by pCIK
+ *			at by \a cik
  *
- * \param[out] pCIK Pointer to CIK
+ * \param[out] cik Pointer to CIK
  *
  */
-void exosite_getCIK(char * pCIK)
+void exosite_getCIK(char * cik)
 {
-    exoHal_getCik((char *)pCIK);
+    exoHal_getCik((char *)cik);
 
     return;
 }
@@ -326,8 +326,8 @@ void exosite_getCIK(char * pCIK)
 /*!
  *  \brief  writes data to Exosite
  *
- * \param[in] pbuf Pointer to buffer of data to write to Exosite
- * \param[in] bufsize length of data in buffer
+ * \param[in] writeData Pointer to buffer of data to write to Exosite
+ * \param[in] length length of data in buffer
  *
  * \return TODO
  *
@@ -400,7 +400,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
  *  \brief  Reads data from Exosite
  *
  * \param[in] alias Name of data source alias to read from
- * \param[out] buffer to place read respone in
+ * \param[out] readResponse buffer to place read respone in
  * \param[in] buflen length of buffer
  * \param[out] length data placed into readResponse
  *
