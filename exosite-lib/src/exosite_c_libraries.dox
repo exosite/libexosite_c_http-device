@@ -4,17 +4,37 @@
 
 \section introduction Introduction
 The Exosite standard C libraries provide a common interface for applications
-connecting to the Exosite cloud.
+connecting to the Exosite cloud.  It is intended to lower the barrier of
+developing Exosite enabled applications written in C or C++.  This would
+typically be embedded platforms, but there are premade PALs written for Windows
+and Posix operating systems as well.  Once you have created a PAL for your 
+specific platform, you can use Exosite as your cloud platform in as little as
+two lines of code!
+
+\code{.c}
+exosite_init()
+exosite.write("temperature=82",sizeof("temperature=82"))
+\endcode
+
+You can read the \ref pal_creation page for more detailed information in 
+developing the PAL, 
 
 The Exosite libraries are platform agnostic, but will require the 
-implementation of a hardware abstraction layer(HAL).  This HAL will be
-responsible for communicating with the hardware.  An example HAL can be found
-in the exosite_hal.* files.
+implementation of a platform abstraction layer(PAL).  This PAL will be
+responsible for communicating with the hardware.  An example PAL can be found
+in the exosite_PAL.* files.
+
+You can read the \ref pal_creation page for more detailed information in 
+developing the PAL, 
+
+These libraries assume that the hardware has a modem available to it that can
+open/close a socket as well as read/write from that socket
+
 
 
 \section architecture Architecture
 The Exosite C Library contains the library code, which is hardware independent, 
-as well as a HAL which is required to port the library between different 
+as well as a PAL which is required to port the library between different 
 platforms.  Below is a high level diagram of how application code, device 
 hardware, library code and Exosite interact.
 
@@ -22,60 +42,59 @@ hardware, library code and Exosite interact.
 	[Application code] <-> Library_API
 	package "Exosite C Libraries" {
 	Library_API - [Library Code]
-	[Library Code] - [HAL]
-	[HAL]
+	[Library Code] - [PAL]
+	[PAL]
 	}
  
 	cloud {
 	[Exosite 1P] - [Library Code]
 	}
  
-	[Device Hardware] - [HAL]
+	[Device Hardware] - [PAL]
 @enduml
 
 There are two main components to the Exosite C-libs.
- 1. Exosite Core
- 2. Device HAL
+ 1. exosite-lib
+ 2. exosite-pal
 
 
- \subsection exosite_core Exosite Core
- The Exosite Core consists to the exosite.c and exosite.h files.  These files
- contain the logic used to communicate with the Exosite One Platform.  These
- files should never need any modification from the end user.
+\subsection exosite_lib exosite-lib
+exosite-lib consists to the exosite.c and exosite.h files.  These files
+contain the logic used to communicate with the Exosite One Platform.  These
+files should never need any modification from the end user.
 
-\subsection device_hal Device HAL
-The Device HAL serves as an interface between an individual devices hardware
-and the Exosite Core code.  These files (exosite_HAL.c exosite_hal.h )will need
-modification for different hardware platfoms.
-
+\subsection exosite_pal exosite-pal
+exosite-pal serves as an interface between an individual devices hardware
+and the Exosite Core code.  These files (exosite_pal.c exosite_pal.h )will need
+modification (\ref pal_creation page) for different hardware platfoms.
 
 
 \section gettingStarted  Getting Started
 The Exosite C Libraries assume that your device has the ability to open a socket
-and send/receive data on that socket.  The library is also limited to only a 
+and send/receive data on that socket.  The library is limited to only a 
 single Exosite connection at a time.
 
 In order to use the Exosite libraries on your hardware, you will need to create
-the HAL.  The easiest way to do this is to go through exosite_hal.cpp and fill
+the PAL.  The easiest way to do this is to go through exosite_pal.c and fill
 in the functions.  The purpose of each function is well documented and should
 provide all the information required to write your own hardware specific code.
 
-\section usingNVM Using NVM
+\section using_nvm Using NVM
 The libraries allow the use of NVM, or programatically setting individual
 data elements.  The following variables need to be kept in NVM, or your
-HAL must be able to get them from the hardware, or must be hardcoded.
+PAL must be able to get them from the hardware, or they must be hardcoded.
 
 - Exosite CIK -- A unique identifier on the exosite platform
 - Vendor name -- Vendor of your device, as defined be Exosite
 - Model name -- Model of your device, as defined by Exosite
 - Device UUID -- Unique identifier of your device, as defined by vendor/model
-- Exosite server -- url of Exosite server.
 
 \section communicating_with_exosite Communicating With Exosite
 At the beginning of your application code, you must call the exosite_init()
-function and pass it your vendo and model names.  These will be predetermined
-by the device you are using on the Exosite platform
+function.  This pulls any data stored in flash, into RAM.  
+
 \todo more info on this.
+
 The exosite_init() function initializes some things in local memory and then
 attempts to activate your device with Exosite.  Be sure to check for the return
 codes and make sure you receive a VALID_CIK response.  If not, the rest of your
@@ -89,36 +108,37 @@ Example communications:
 \code
 EXOSITE_DEVICE_ACTIVATION_STATE activation_results;
 activation_results = exosite_init(vendorStr, modelStr);
-if (activation_results == VALID_CIK)
+if (activation_results == EXO_STATE_INIT_COMPLETE)
 {
-    const char * dataToWrite = "Hello"
-    const char * exositeDataAlias = "greetings"
+    char * dataToWrite = "Hello"
+    char * exositeDataAlias = "greetings"
     exosite_write(exositeDataAlias, dataToWrite);
-    
-    
 }
 
 
 \endcode
 
 \section errorHandling Error Handling
-This library, as well as the HAL supports basic error handling and display.
+The exosite library and exosite pal allow errorcodes from every hardware call
+to bubble up to the application code.  However, it is up to the developer to
+return these calls from the PAL as well as check them in their application.
 
+\section misc_info Misc. Info
 
-\section codingStyle Coding Style
+\subsection codingStyle Coding Style
 Various coding styles are enforced for the Exosite C library.  These are 
 enforced by using a tool called 
 [uncrustify](http://uncrustify.sourceforge.net/).  The configuration file for
 uncrustify (uncrustify.cfg) is included with this release.
 
-\section testing Testing
+\subsection testing Testing
 Code is checked to compile with GCC 4.7.2 on Debian 7 as well MSVC
 using Visual Studio 2012.
 
 Unit tests are ran using the
 [Google Test](https://code.google.com/p/googletest/) framework.
 
-\section diagraming Diagramming
+\subsection diagraming Diagramming
 Diagrams in this documentation are generated with 
 [PlantUML](http://plantuml.sourceforge.net/)
 
