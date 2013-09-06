@@ -59,7 +59,9 @@ static uint8_t exosite_readResponse(char * response, uint16_t responseSize);
 static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * responseSize);
 static uint16_t exosite_socketWrite( char * buf, uint16_t len);
 
-
+#define STR_VENDOR  "vendor="
+#define STR_MODEL   "&model="
+#define STR_SN      "&sn="
 
 static char cikBuffer[CIK_LENGTH];
 static char vendorBuffer[MAX_VENDOR_LENGTH];
@@ -125,6 +127,10 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
         return initState;
     }
     initState = exosite_activate();
+    if (initState == EXO_STATE_VALID_CIK)
+    {
+        initState = EXO_STATE_INIT_COMPLETE;
+    }
     return initState;
 }
 
@@ -155,7 +161,9 @@ EXO_STATE exosite_activate()
     uint8_t modelLength = exoHal_strlen(modelBuffer);
     
     // get body length
-    uint16_t bodyLength = sizeof("&vendor=") - 1 + sizeof("&sn=") - 1;
+    uint16_t bodyLength =   sizeof(STR_VENDOR) - 1 + 
+                            sizeof(STR_MODEL) - 1 + 
+                            sizeof(STR_SN) - 1;
     bodyLength += vendorLength + modelLength;
 
     // assume content length will never be over 9999 bytes
@@ -186,11 +194,11 @@ EXO_STATE exosite_activate()
     exoHal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send body
-    exoHal_socketWrite("vendor=", sizeof("vendor=") - 1);
+    exoHal_socketWrite(STR_VENDOR, sizeof(STR_VENDOR) - 1);
     exoHal_socketWrite(vendorBuffer, vendorLength);
-    exoHal_socketWrite("&model=", sizeof("&model=") - 1);
+    exoHal_socketWrite(STR_MODEL, sizeof(STR_MODEL) - 1);
     exoHal_socketWrite(modelBuffer, modelLength);
-    exoHal_socketWrite("&sn=", sizeof("&sn=") - 1);
+    exoHal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
     exoHal_socketWrite(uuidBuffer, exoHal_strlen(uuidBuffer));
 
 
