@@ -33,11 +33,7 @@
 *
 *****************************************************************************/
 
-
-
-
-
-#include "exosite_hal.h"
+#include "exosite_pal.h"
 
 
 
@@ -48,9 +44,9 @@
  * an OS, or direct calls to the modem.
  *
  * \return 0 if successful, else error code
- * \sa exoHAL_tcpSocketOpen
+ * \sa exoPal_tcpSocketOpen
  */
-uint8_t exoHAL_tcpSocketClose()
+uint8_t exoPal_tcpSocketClose()
 {
     // do stuff to open socket
     return 0;
@@ -65,9 +61,9 @@ uint8_t exoHAL_tcpSocketClose()
  *
  * \return 0 if successful, else error code
  *
- * \sa exoHAL_tcpSocketClose
+ * \sa exoPal_tcpSocketClose
  */
-uint8_t exoHAL_tcpSocketOpen()
+uint8_t exoPal_tcpSocketOpen()
 {
     // do stuff to open a socket
 
@@ -86,11 +82,11 @@ uint8_t exoHAL_tcpSocketOpen()
  * \param[in] buffer Data to write to socket
  * \param[in] len Length of data to write to socket
  *
- * \sa exoHAL_socketRead
+ * \sa exoPal_socketRead
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
+uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 {
     // check if socket is open
     
@@ -109,13 +105,13 @@ uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len)
  * \param[out] responseLength amount of data received from modem
  *
  *
- * \sa exoHAL_socketWrite
+ * \sa exoPal_socketWrite
  *
  * \note len must be greater than sizeof(buffer)
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHAL_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
+uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     // read from socket
     return 0;
@@ -133,7 +129,7 @@ uint8_t exoHAL_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHal_setCik(const char * cik)
+uint8_t exoPal_setCik(const char * cik)
 {
     // write cik to nvm
     return 0;
@@ -150,7 +146,7 @@ uint8_t exoHal_setCik(const char * cik)
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHal_getCik(char * read_buffer)
+uint8_t exoPal_getCik(char * read_buffer)
 {
     // retrieve cik from nvm
     return 0;
@@ -171,7 +167,7 @@ uint8_t exoHal_getCik(char * read_buffer)
  *          adjusted inside exosite.h (MAX_MODEL_LENGTH)
  * \return 0 if successful, else error code
  */
-uint8_t exoHal_getModel(char * read_buffer)
+uint8_t exoPal_getModel(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
     return 0;
@@ -192,7 +188,7 @@ uint8_t exoHal_getModel(char * read_buffer)
  *          adjusted inside exosite.h (MAX_VENDOR_LENGTH)
  * \return 0 if successful, else error code
  */
-uint8_t exoHal_getVendor(char * read_buffer)
+uint8_t exoPal_getVendor(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
     return 0;
@@ -210,7 +206,7 @@ uint8_t exoHal_getVendor(char * read_buffer)
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoHal_getUuid(char * read_buffer)
+uint8_t exoPal_getUuid(char * read_buffer)
 {
     memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
     return 0;
@@ -230,7 +226,7 @@ uint8_t exoHal_getUuid(char * read_buffer)
  * \warning It is up to the user to make sure that strlen doesn't overrun.
  *          (e.g. pass a non null terminated string)
  */
-uint16_t exoHAL_strlen(const char *s)
+uint16_t exoPal_strlen(const char *s)
 {
     return 0;
 }
@@ -247,7 +243,7 @@ uint16_t exoHAL_strlen(const char *s)
 
  * \return Length of string written to buf
  */
-uint8_t exoHal_itoa(int value, char* buf, uint8_t bufSize)
+uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
 {
     return 0;
 }

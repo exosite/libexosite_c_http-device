@@ -33,8 +33,8 @@
 *
 *****************************************************************************/
 
-#ifndef EXOSITE_HAL_H
-#define EXOSITE_HAL_H
+#ifndef EXOSITE_PAL_H
+#define EXOSITE_PAL_H
 #include <stdint.h>
 
 
