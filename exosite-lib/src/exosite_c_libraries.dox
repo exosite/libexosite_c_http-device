@@ -13,7 +13,7 @@ two lines of code!
 
 \code{.c}
 exosite_init()
-exosite.write("temperature=82",sizeof("temperature=82"))
+exosite_write("temperature=82",sizeof("temperature=82"))
 \endcode
 
 You can read the \ref pal_creation page for more detailed information in 
