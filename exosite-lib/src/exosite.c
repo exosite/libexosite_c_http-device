@@ -206,17 +206,20 @@ EXO_STATE exosite_activate()
     EXO_STATE retVal = EXO_STATE_CONNECTION_ERROR;
     char cik[] = {"123123123123"};
 
-    char responseStr[] = {"asdfasdfasdfasdf"};
-    uint16_t responseLen = 5;
+    uint16_t responseLen;
+    
+    exoPal_socketRead( rxBuffer, RX_BUFFER_SIZE, &responseLen);
+    
+    
 
-    if (exosite_checkResponse(responseStr, "200"))
+    if (exosite_checkResponse(rxBuffer, "200"))
     {
         // we received a CIK.
 
         //find first '\n' char from end of response
         for (int i = responseLen; i > 0; i--)
         {
-            if (responseStr[i] == '\n')
+            if (rxBuffer[i] == '\n')
             {
                 // check that we're where we think we should be.
                 if ((responseLen-i - 1) != CIK_LENGTH)
@@ -230,14 +233,14 @@ EXO_STATE exosite_activate()
                 else
                 {
                     // copy cik into mem.
-                    exoPal_setCik(&responseStr[i + 1]);
+                    exoPal_setCik(&rxBuffer[i + 1]);
                     retVal = EXO_STATE_VALID_CIK;
                     i = 0;
                 }
             }
         }
     }
-    else if (exosite_checkResponse(responseStr, "409"))
+    else if (exosite_checkResponse(rxBuffer, "409"))
     {
         // TODO: validate the cik instead of checking the first char for '\0'
         if (cik[0] == '\0')
@@ -253,7 +256,7 @@ EXO_STATE exosite_activate()
             retVal = EXO_STATE_VALID_CIK;
         }
     }
-    else if (exosite_checkResponse(responseStr, "401"))
+    else if (exosite_checkResponse(rxBuffer, "401"))
     {
         // RW error
         retVal = EXO_STATE_R_W_ERROR;
