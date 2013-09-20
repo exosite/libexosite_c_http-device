@@ -169,7 +169,7 @@ uint8_t exoPal_getCik(char * read_buffer)
  */
 uint8_t exoPal_getModel(char * read_buffer)
 {
-    memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
+    
     return 0;
 }
 
@@ -190,7 +190,7 @@ uint8_t exoPal_getModel(char * read_buffer)
  */
 uint8_t exoPal_getVendor(char * read_buffer)
 {
-    memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
+    
     return 0;
 }
 
@@ -208,7 +208,7 @@ uint8_t exoPal_getVendor(char * read_buffer)
  */
 uint8_t exoPal_getUuid(char * read_buffer)
 {
-    memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
+   
     return 0;
 }
 
