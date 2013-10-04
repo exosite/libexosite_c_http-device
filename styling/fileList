@@ -1,6 +1,8 @@
 ../exosite-lib/src/exosite.c
-../exosite-lib/src/exosite_hal.c
+../exosite-pal/pal_template/src/exosite_pal.c
 ../exosite-lib/include/exosite.h
-../exosite-lib/include/exosite_hal.h
+../exosite-pal/pal_template/include/exosite_pal.h
 ../exosite-tests/src/main.cpp
-../exosite-tests/src/tests.cpp
+../exosite-tests/src/lib-tests.cpp
+../exosite-tests/src/msg.cpp
+../exosite-tests/include/msg.h
