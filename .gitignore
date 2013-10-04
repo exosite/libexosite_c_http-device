@@ -5,6 +5,8 @@ docs/html/
 
 vs/
 
+*.uncrustify
+
 *.suo
 *.opensdf
 *.filters
