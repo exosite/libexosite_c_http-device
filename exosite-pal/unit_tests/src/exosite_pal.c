@@ -153,7 +153,7 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length)
 uint8_t exoPal_tcpSocketClose()
 {
     isSocketOpen = 0;
-    bufferCount = 0;
+    mem_nvm.writeToBufferLen = 0;
     return mem_nvm.retVal_tcpSocketClose;   
 }
 
@@ -199,8 +199,8 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 {
     if (isSocketOpen == 1)
     {
-        exoPal_memcpy(mem_nvm.writeToBuffer + bufferCount,buffer,len);
-        bufferCount += len;
+        exoPal_memcpy(mem_nvm.writeToBuffer + mem_nvm.writeToBufferLen,buffer,len);
+        mem_nvm.writeToBufferLen += len;
     }
     
     return mem_nvm.retVal_socketWrite;   

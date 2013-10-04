@@ -81,6 +81,7 @@ struct UnitTest_storage
     char vendor[21];
     char model[21];
     char writeToBuffer[512];
+    uint16_t writeToBufferLen;
     char readFromBuffer[512];
     uint8_t retVal_setCik;
     uint8_t retVal_getCik;
