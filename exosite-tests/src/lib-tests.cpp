@@ -35,6 +35,7 @@ protected:
         nvm->writeToBuffer[0] = '\0';
         nvm->readFromBuffer[0] = '\0';
         nvm->writeToBufferLen = 0;
+        nvm->readFromBufferLen = 0;
         nvm->retVal_setCik = 0;
         nvm->retVal_getCik = 0;
         nvm->retVal_getModel = 0;
@@ -44,6 +45,13 @@ protected:
         nvm->retVal_tcpSocketOpen = 0;
         nvm->retVal_socketRead = 0;
         nvm->retVal_socketWrite = 0;
+
+        parser_settings.on_header_field = header_field_cb;
+        parser_settings.on_header_value = header_value_cb;
+        parser_settings.on_body = body_cb;
+        parser_settings.on_headers_complete = headers_complete_cb;
+        parser_settings.on_url = request_url_cb;
+        parser_settings.on_status_complete = status_complete_cb;
     }
 
     struct UnitTest_storage * nvm;
@@ -104,7 +112,7 @@ TEST_F(ExoLibCleanState, cikSetTest)
 
 
 
-TEST_F(ExoLibCleanState, sendRequest)
+TEST_F(ExoLibCleanState, provisionActivateRequest)
 {
     strcpy(nvm->uuid,"123456789");
     char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
@@ -112,18 +120,14 @@ TEST_F(ExoLibCleanState, sendRequest)
 
     const char * vendor = "aVendor";
     const char * model = "aModel";
-    exosite_init(vendor, model);
+    EXO_STATE resp;
+    resp = exosite_init(vendor, model);
     
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
+
     message out_msg = {0};
     setMsg(&out_msg);
-
-    parser_settings.on_header_field = header_field_cb;
-    parser_settings.on_header_value = header_value_cb;
-    parser_settings.on_body = body_cb;
-    parser_settings.on_headers_complete = headers_complete_cb;
-    parser_settings.on_url = request_url_cb;
-    parser_settings.on_status_complete = status_complete_cb;
-
     
     http_parser_init(&parser, HTTP_REQUEST);
     
@@ -155,4 +159,127 @@ TEST_F(ExoLibCleanState, sendRequest)
     exoPal_itoa(body_length,contentLengthStr,5);
     EXPECT_STREQ( contentLengthStr, out_msg.headers[2][1]);
     EXPECT_EQ( body_length, out_msg.body_size);
+}
+
+TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
+{
+    const char * returned_cik = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+    strcat(nvm->readFromBuffer,returned_cik);
+
+    nvm->readFromBufferLen = strlen(nvm->readFromBuffer);
+    // we received a 200 response, which means we received a valid cik
+    strcpy(nvm->uuid,"123456789");
+    
+    
+
+    const char * vendor = "aVendor";
+    const char * model = "aModel";
+    EXO_STATE resp;
+    resp = exosite_init(vendor, model);
+
+    // Init should have been successful
+    EXPECT_EQ(EXO_STATE_INIT_COMPLETE,resp);
+
+    // retrieve cik
+    char newcik[41] = "";
+    exosite_getCIK(newcik);
+
+    // We should have our new cik
+    EXPECT_STREQ(returned_cik, newcik);
+    
+}
+
+
+TEST_F(ExoLibCleanState, readRequest)
+{
+    // Checks that the read request is properly formatted
+    strcpy(nvm->uuid,"123456789");
+    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    exosite_setCIK(testcik);
+
+    const char * vendor = "aVendor";
+    const char * model = "aModel";
+    EXO_STATE respa;
+    respa = exosite_init(vendor, model);
+
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
+
+    uint8_t respR;
+
+    message out_msg = {0};
+    setMsg(&out_msg);
+
+    http_parser_init(&parser, HTTP_REQUEST);
+
+
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+
+    char responseBuffer[128] = {'\0'};
+    uint16_t resLength = 0;
+    respR = exosite_read("testAlias", responseBuffer,128, &resLength);
+
+    // build expected body
+    char expected_body[255] = {0};
+    strcpy(expected_body,"");
+
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
+
+
+    // Check body is what we want
+    EXPECT_STREQ(expected_body,out_msg.body);
+
+    // check request url is correct
+    EXPECT_STREQ("/onep:v1/stack/alias?testAlias", out_msg.request_url);
+
+    // Check body size is correct
+    uint16_t body_length = strlen(expected_body);
+    EXPECT_EQ( body_length, out_msg.body_size);
+}
+
+TEST_F(ExoLibCleanState, read_200Response_goodFormat)
+{
+    // checks that we properly process a valid read response
+    strcpy(nvm->uuid,"123456789");
+    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    exosite_setCIK(testcik);
+
+    const char * vendor = "aVendor";
+    const char * model = "aModel";
+    uint8_t resp;
+    resp = exosite_init(vendor, model);
+
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
+
+    message out_msg = {0};
+    setMsg(&out_msg);
+
+    http_parser_init(&parser, HTTP_REQUEST);
+
+    const char * xoResponse = "HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\ntestAlias=5";
+    strcpy(nvm->readFromBuffer, xoResponse);
+
+    nvm->readFromBufferLen = strlen(xoResponse);
+
+    char responseBuffer[128] = {'\0'};
+    uint16_t resLength = 0;
+    resp = exosite_read("testAlias", responseBuffer,128, &resLength);
+
+   
+
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
+
+    // Did parse correctly
+    EXPECT_TRUE(parsed);
+
+    // build expected body
+    char * expected_response = "5";
+
+    // Check response is the value we responded with
+    EXPECT_STREQ(expected_response,"5");
+
 }
