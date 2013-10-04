@@ -203,15 +203,13 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(uuidBuffer, uuidLength);
 
 
-    exosite_disconnect();
+    
     EXO_STATE retVal = EXO_STATE_CONNECTION_ERROR;
-    char cik[] = {"123123123123"};
+    
 
     uint16_t responseLen;
     
     exoPal_socketRead( rxBuffer, RX_BUFFER_SIZE, &responseLen);
-    
-    
 
     exosite_disconnect();
     if (responseLen == 0)
@@ -250,7 +248,8 @@ EXO_STATE exosite_activate()
     else if (exosite_checkResponse(rxBuffer, "409"))
     {
         // TODO: validate the cik instead of checking the first char for '\0'
-        if (cik[0] == '\0')
+        
+        if (exosite_isCIKValid(cikBuffer))
         {
             // if we don't have a CIK in nvm and we receive a 409
             // The device isn't enabled in the dashboard
@@ -431,6 +430,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     // send request
     exoPal_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
     exoPal_socketWrite(alias, exoPal_strlen(alias));
+    exoPal_socketWrite(" ", exoPal_strlen(" "));
     exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
@@ -546,8 +546,8 @@ uint8_t exosite_connect(void)
  */
 uint8_t exosite_disconnect(void)
 {
-    // open socket to exosite
-    return 0;
+    // Close socket to exosite
+    return exoPal_tcpSocketClose();
 }
 
 
@@ -562,9 +562,24 @@ uint8_t exosite_disconnect(void)
  */
 uint8_t exosite_checkResponse(char * response, const char * code)
 {
-    if (code[0] == response[9] && code[1] == response[10] && code[2] == response[11])
+    // get start second ' ' separate column
+    // assumes will always be before the 15th char
+    // assumes first char isn't a ' '
+    uint8_t spaceFound = 0;
+    for (int i = 1; (i < 15) && (spaceFound == 0); i++)
     {
-        return 1;
+        if (response[i] == ' ')
+        {
+            spaceFound = i + 1;
+        }
+    }
+    if (spaceFound > 0)
+    {
+        // If we found a ' ', try to match the code
+        if (code[0] == response[spaceFound] && code[1] == response[spaceFound + 1] && code[2] == response[spaceFound + 2])
+        {
+            return 1;
+        }
     }
 
     return 0;
@@ -580,35 +595,28 @@ uint8_t exosite_checkResponse(char * response, const char * code)
  *
  * \param[in] buf Buffer to place received data into.
  * \param[in] len Length of buf
+ * \param[out] responseSize Length of response
  *
- * \return length of response
+ * \return error code if failed, else 0
  *
  */
 static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * responseSize)
 {
-    uint16_t rxLen = 0;
-    
-    exoPal_socketRead( buf, len, &rxLen);
-
-    return rxLen;
+    return exoPal_socketRead( buf, len, responseSize);;
 }
 
 /*!
  * \brief  Writes data to a socket
  *
  * \param[in] buf Data to write to socket
- * \param[in] len Length of buf
+ * \param[in] len Amount of data to write
  *
- * \return length of response
+ * \return error code if failed, else 0
  *
  */
 uint16_t exosite_socketWrite( char * buf, uint16_t len)
 {
-    uint16_t rxLen = 0;
-
-    rxLen = exoPal_socketWrite( buf, len);
-
-    return rxLen;
+    return exoPal_socketWrite( buf, len);
 }
 
 

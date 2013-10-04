@@ -79,7 +79,7 @@ EXO_STATE exosite_activate();
 EXO_STATE exosite_init(const char *vendor, const char *model);
 
 uint8_t exosite_write(const char * writeData, uint16_t length);
-uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
+uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * responseSize);
 
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
 void exosite_setCIK(char * pCIK);
