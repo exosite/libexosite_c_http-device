@@ -213,7 +213,13 @@ EXO_STATE exosite_activate()
     
     
 
-    if (exosite_checkResponse(rxBuffer, "200"))
+    exosite_disconnect();
+    if (responseLen == 0)
+    {
+        // if we didn't receive any data from the modem
+        retVal = EXO_STATE_NO_RESPONSE;
+    }
+    else if (exosite_checkResponse(rxBuffer, "200"))
     {
         // we received a CIK.
 

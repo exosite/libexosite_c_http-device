@@ -68,7 +68,8 @@ typedef enum EXOSITE_DEVICE_STATE_tag
     EXO_STATE_UNABLE_TO_MAKE_REQUEST, /*!< string was too long */
     EXO_STATE_INIT_COMPLETE,          /*!< Initialization successfully completed. */
     EXO_STATE_NOT_COMPLETE,           /*!< Device has not yet completed initialization. */
-    EXO_STATE_INIT_ERROR              /*!< An error occured in exosite_init(). */ 
+    EXO_STATE_INIT_ERROR,             /*!< An error occured in exosite_init(). */ 
+    EXO_STATE_NO_RESPONSE             /*!< No response was received from modem */ 
 }EXO_STATE;
 
 
