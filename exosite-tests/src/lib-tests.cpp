@@ -4,10 +4,12 @@ extern "C" {
 #include "exosite.h"
 #include "exosite_pal.h"
 #include "http_parser.h"
-#include "msg.h"
+
 #ifdef  __GNUC__
 }
 #endif
+
+#include "msg.h"
 #include "gtest/gtest.h"
 
 http_parser parser;
