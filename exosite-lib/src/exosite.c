@@ -159,12 +159,13 @@ EXO_STATE exosite_activate()
 
     uint8_t vendorLength = exoPal_strlen(vendorBuffer);
     uint8_t modelLength = exoPal_strlen(modelBuffer);
-    
+    uint8_t uuidLength = exoPal_strlen(uuidBuffer);
+
     // get body length
     uint16_t bodyLength =   sizeof(STR_VENDOR) - 1 + 
                             sizeof(STR_MODEL) - 1 + 
                             sizeof(STR_SN) - 1;
-    bodyLength += vendorLength + modelLength;
+    bodyLength += vendorLength + modelLength + uuidLength;
 
     // assume content length will never be over 9999 bytes
     char contentLengthStr[5];
@@ -199,7 +200,7 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(STR_MODEL, sizeof(STR_MODEL) - 1);
     exoPal_socketWrite(modelBuffer, modelLength);
     exoPal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
-    exoPal_socketWrite(uuidBuffer, exoPal_strlen(uuidBuffer));
+    exoPal_socketWrite(uuidBuffer, uuidLength);
 
 
     exosite_disconnect();
