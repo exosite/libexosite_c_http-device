@@ -49,7 +49,7 @@ typedef enum
     EXO_ERROR_END
 }ExositeErrorCodes;
 
-
+#define RX_TX_BUFFER_SIZE 512
 
 // defines
 
@@ -80,9 +80,10 @@ struct UnitTest_storage
     char uuid[41];
     char vendor[21];
     char model[21];
-    char writeToBuffer[512];
+    char writeToBuffer[RX_TX_BUFFER_SIZE];
     uint16_t writeToBufferLen;
-    char readFromBuffer[512];
+    char readFromBuffer[RX_TX_BUFFER_SIZE];
+    uint16_t readFromBufferLen;
     uint8_t retVal_setCik;
     uint8_t retVal_getCik;
     uint8_t retVal_getModel;
