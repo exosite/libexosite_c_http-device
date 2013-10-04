@@ -3,10 +3,21 @@ extern "C" {
 #endif
 #include "exosite.h"
 #include "exosite_pal.h"
+#include "http_parser.h"
+#include "msg.h"
 #ifdef  __GNUC__
 }
 #endif
 #include "gtest/gtest.h"
+
+http_parser parser;
+static http_parser_settings parser_settings = {0};
+
+
+#define TEST_MODEL "aModel"
+#define TEST_VENDOR "aVendor"
+
+
 
 
 class ExoLibCleanState : public ::testing::Test 
@@ -21,6 +32,7 @@ protected:
         nvm->model[0] = '\0';
         nvm->writeToBuffer[0] = '\0';
         nvm->readFromBuffer[0] = '\0';
+        nvm->writeToBufferLen = 0;
         nvm->retVal_setCik = 0;
         nvm->retVal_getCik = 0;
         nvm->retVal_getModel = 0;
@@ -74,16 +86,21 @@ TEST_F(ExoLibCleanState, cikStartEmpty)
 
 TEST_F(ExoLibCleanState, cikSetTest)
 {
+    // set cik 
     char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    // make sure that we start up with an empty cik
     exosite_setCIK(testcik);
 
+    // retrieve cik
     char newcik[41] = "";
-    // make sure that we start up with an empty cik
     exosite_getCIK(newcik);
 
+    // make sure they match
     EXPECT_STREQ(testcik, newcik);
 }
+
+
+
+
 
 TEST_F(ExoLibCleanState, sendRequest)
 {
@@ -91,12 +108,49 @@ TEST_F(ExoLibCleanState, sendRequest)
     char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
     exosite_setCIK(testcik);
 
-    exosite_init("aVendor", "aModel");
+    const char * vendor = "aVendor";
+    const char * model = "aModel";
+    exosite_init(vendor, model);
+    
+    message out_msg = {0};
+    setMsg(&out_msg);
 
-    char newcik[41] = "";
-    // make sure that we start up with an empty cik
+    parser_settings.on_header_field = header_field_cb;
+    parser_settings.on_header_value = header_value_cb;
+    parser_settings.on_body = body_cb;
+    parser_settings.on_headers_complete = headers_complete_cb;
+    parser_settings.on_url = request_url_cb;
+    parser_settings.on_status_complete = status_complete_cb;
 
     
+    http_parser_init(&parser, HTTP_REQUEST);
+    
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
-    EXPECT_STREQ("", "");
+    // Did parse correctly
+    EXPECT_TRUE(parsed);
+
+    // build expected body
+    char expected_body[255] = {0};
+    strcpy(expected_body,"vendor=");
+    strcat(expected_body,vendor);
+    strcat(expected_body,"&model=");
+    strcat(expected_body,model);
+    strcat(expected_body,"&sn=");
+    strcat(expected_body,nvm->uuid);
+
+    
+    // Check body is what we want
+    EXPECT_STREQ(expected_body,out_msg.body);
+
+    // check request url is correct
+    EXPECT_STREQ("/provision/activate", out_msg.request_url);
+
+    // Check Content Length is correct
+    uint16_t body_length = strlen(expected_body);
+    char contentLengthStr[5];
+    exoPal_itoa(body_length,contentLengthStr,5);
+    EXPECT_STREQ( contentLengthStr, out_msg.headers[2][1]);
+    EXPECT_EQ( body_length, out_msg.body_size);
 }
