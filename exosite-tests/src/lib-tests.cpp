@@ -283,3 +283,50 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
     EXPECT_STREQ(expected_response,responseBuffer);
 
 }
+
+TEST_F(ExoLibCleanState, writeRequest)
+{
+    // Checks that the write request is properly formatted
+    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    exosite_setCIK(testcik);
+
+    const char * vendor = "aVendor";
+    const char * model = "aModel";
+    EXO_STATE respa;
+    respa = exosite_init(vendor, model);
+
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
+
+    uint8_t respR;
+
+    message out_msg = {0};
+    setMsg(&out_msg);
+
+    http_parser_init(&parser, HTTP_REQUEST);
+
+
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+
+    const char * writeInfo = "testAlias=4";
+    uint16_t resLength = 0;
+    respR = exosite_write(writeInfo,  strlen(writeInfo));
+
+    // build expected body
+   
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
+
+
+    // Check body is what we want
+    EXPECT_STREQ(writeInfo,out_msg.body);
+
+    // check request url is correct
+    EXPECT_STREQ("/onep:v1/stack/alias", out_msg.request_url);
+
+    // Check body size is correct
+    uint16_t body_length = strlen(writeInfo);
+    EXPECT_EQ( body_length, out_msg.body_size);
+
+    EXPECT_EQ(body_length, atoi(out_msg.headers[3][1]));
+}
