@@ -354,9 +354,9 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     }
 
     // assume content length won't be greater than 9999.
-    char * contentLengthStr[5];
+    char contentLengthStr[5];
 
-    uint8_t len_of_contentLengthStr = exoPal_itoa((int)length, *contentLengthStr, 5);
+    uint8_t len_of_contentLengthStr = exoPal_itoa((int)length, contentLengthStr, 5);
 
     // send request
     exoPal_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
@@ -378,7 +378,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
 
     // send content length header
     exoPal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH) - 1);
-    exoPal_socketWrite(*contentLengthStr, len_of_contentLengthStr);
+    exoPal_socketWrite(contentLengthStr, len_of_contentLengthStr);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
