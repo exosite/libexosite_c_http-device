@@ -408,12 +408,25 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
 /*!
  *  \brief  Reads data from Exosite
  *
- * \param[in] alias Name of data source alias to read from
- * \param[out] readResponse buffer to place read respone in
+ * Allows the reading of for reading data from the Exosite platform.  The alias
+ * variable can include one, or multiple alias names.  For example, if you 
+ * included they must be separated by a '&'.  
+ *
+ * For example, if you want to read from a single alias, you would set the alias
+ * parameter to "myAliasName".  If you wanted to read from multiple alias', you 
+ * would set the alias parameter to "myAliasName&myOtherAliasName".
+ *
+ * If the read is successful, the value returned in readResponse will be the 
+ * body of the HTTP response, and will be in this format 
+ * "myAliasName=someValue&myOtherAliasName=23".
+ *
+ *
+ * \param[in] alias Name/s of data source/s alias to read from
+ * \param[out] readResponse buffer to place read response in
  * \param[in] buflen length of buffer
  * \param[out] length data placed into readResponse
  *
- * \return Errorcode if fail, else 0
+ * \return Error code if fail, else 0
  *
  */
 uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length)
@@ -466,42 +479,18 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
         //find first '\n' char from end of response
         for (int i = responseLength; i > 0; i--)
         {
+            
             // find last \n
             if (rxBuffer[i] == '\n')
             {
-                uint8_t charNotMatch = 0;
-                for (uint16_t j = 1; (j <= i) && i > 0; j++)
+                
+                for (int j = i; j < responseLength; j++)
                 {
-                    // If we're at the end of the inputted string?
-                    if (alias[j-1] == '\0')
-                    {
-                        // if all chars match, we found the key
-                        if (!charNotMatch)
-                        {
-                            // move j passed the '='
-                            j++;
-
-                            for (uint16_t k = 0;
-                                 (k <= buflen) && ((i + j + k) <= responseLength);
-                                 k++)
-                            {
-                                // copy remaining data into buffer
-                                readResponse[k] = rxBuffer[i+j+k];
-                                *length = k;
-                            }
-                            i = 0;
-                        }
-                        else
-                        {
-                            // match not found, exit
-                            i = 0;
-                            *length = 0;
-                        }
-                    }
-
-                    // confirm letter by letter
-                    charNotMatch |= !(rxBuffer[i+j] == alias[j-1]);
+                    readResponse[j-i] = rxBuffer[j + 1];
                 }
+                
+                // exit out
+                i = 0;
             }
         }
     }

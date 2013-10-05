@@ -277,9 +277,9 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
     EXPECT_TRUE(parsed);
 
     // build expected body
-    char * expected_response = "5";
+    char * expected_response = "testAlias=5";
 
     // Check response is the value we responded with
-    EXPECT_STREQ(expected_response,"5");
+    EXPECT_STREQ(expected_response,responseBuffer);
 
 }
