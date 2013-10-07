@@ -48,16 +48,10 @@ static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencod
 static const char STR_CRLF[] = "\r\n";
 
 // local functions
-//static int32_t init_UUID();
-//static int32_t readResponse(int32_t socket, char * expectedCode);
 static uint8_t exosite_connect();
 static uint8_t exosite_disconnect();
-//static void sendLine(int32_t socket, unsigned char LINE, const char * payload);
 static uint8_t exosite_checkResponse(char * response, const char * code);
-static uint8_t exosite_readResponse(char * response, uint16_t responseSize);
 
-static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * responseSize);
-static uint16_t exosite_socketWrite( char * buf, uint16_t len);
 
 #define STR_VENDOR  "vendor="
 #define STR_MODEL   "&model="
@@ -82,7 +76,10 @@ static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
 /*!
  * \brief Reset the cik to ""
  *
- * 
+ * The following code would reset the contents of the cik to be an empty string.
+ \code{.c}
+ exosite_resetCik();
+ \endcode
  *
  * \return Returns 0 if successful, else error code
  * \sa
@@ -276,7 +273,9 @@ EXO_STATE exosite_activate()
 /*!
  * \brief Checks if the given cik is valid
  *
- * Checks for atleast 40 valid hexidecimal bytes.
+ * Checks that the first 40 chars of `cik` are valid, lowercase hexadecimal bytes.
+ *
+ * 
  *
  * \param[in] cik array of CIK_LENGTH bytes
  *
@@ -333,12 +332,20 @@ void exosite_getCIK(char * cik)
 
 
 /*!
- *  \brief  writes data to Exosite
+ *  \brief  Writes data to Exosite
+ *
+ * Writes the data in writeData to Exosite.  The data is written as the body of
+ * a POST request to Exosite's `/onep:v1/stack/alias request`.  
+ *
+ * Below is how you would write a value of `5` to the `myAlias` alias.
+ * \code{.c}
+ * exosite_write("myAlias=5", sizeof("myAlias=5"));
+ * \endcode
  *
  * \param[in] writeData Pointer to buffer of data to write to Exosite
  * \param[in] length length of data in buffer
  *
- * \return TODO
+ * \return Error code if fails, else 0
  *
  */
 uint8_t exosite_write(const char * writeData, uint16_t length)
@@ -369,7 +376,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     
     // send cik header
     exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer));
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
@@ -413,13 +420,19 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
  * included they must be separated by a '&'.  
  *
  * For example, if you want to read from a single alias, you would set the alias
- * parameter to "myAliasName".  If you wanted to read from multiple alias', you 
- * would set the alias parameter to "myAliasName&myOtherAliasName".
+ * parameter to `"myAliasName"`.  If you wanted to read from multiple alias', you 
+ * would set the alias parameter to `"myAliasName&myOtherAliasName"`.
  *
  * If the read is successful, the value returned in readResponse will be the 
  * body of the HTTP response, and will be in this format 
- * "myAliasName=someValue&myOtherAliasName=23".
+ * `"myAliasName=someValue&myOtherAliasName=23"`.
  *
+ \code{.c}
+ exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
+ // After this call, the readBuffer would look something like "myAlias=3". The 
+ // length variable would be updated with the length of the response string, in this
+ // case, 9.
+ \endcode
  *
  * \param[in] alias Name/s of data source/s alias to read from
  * \param[out] readResponse buffer to place read response in
@@ -453,7 +466,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
     // send cik header
     exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
-    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer) - 1);
+    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer));
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
     // send content type header
@@ -468,7 +481,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
     uint16_t responseLength = 0;
     // get response
-    exosite_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
@@ -691,40 +704,5 @@ uint8_t exosite_checkResponse(char * response, const char * code)
 
     return 0;
 }
-
-
-
-/*!
- * \brief  Retrieves data from a socket
- *
- * \note This library assumes that the response buffer will alway be large 
- *          enough to handle the response string.
- *
- * \param[in] buf Buffer to place received data into.
- * \param[in] len Length of buf
- * \param[out] responseSize Length of response
- *
- * \return error code if failed, else 0
- *
- */
-static uint16_t exosite_socketRead( char * buf, uint16_t len, uint16_t * responseSize)
-{
-    return exoPal_socketRead( buf, len, responseSize);;
-}
-
-/*!
- * \brief  Writes data to a socket
- *
- * \param[in] buf Data to write to socket
- * \param[in] len Amount of data to write
- *
- * \return error code if failed, else 0
- *
- */
-uint16_t exosite_socketWrite( char * buf, uint16_t len)
-{
-    return exoPal_socketWrite( buf, len);
-}
-
 
 
