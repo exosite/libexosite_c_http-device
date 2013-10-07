@@ -227,6 +227,8 @@ TEST_F(ExoLibCleanState, readRequest)
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
+    // check cik is correct
+    EXPECT_STREQ(testcik,out_msg.headers[1][1]);
 
     // Check body is what we want
     EXPECT_STREQ(expected_body,out_msg.body);
@@ -312,11 +314,13 @@ TEST_F(ExoLibCleanState, writeRequest)
     uint16_t resLength = 0;
     respR = exosite_write(writeInfo,  strlen(writeInfo));
 
-    // build expected body
-   
+    
+    // Parse write request
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
+    // check cik is correct
+    EXPECT_STREQ(testcik,out_msg.headers[1][1]);
 
     // Check body is what we want
     EXPECT_STREQ(writeInfo,out_msg.body);
@@ -328,5 +332,6 @@ TEST_F(ExoLibCleanState, writeRequest)
     uint16_t body_length = strlen(writeInfo);
     EXPECT_EQ( body_length, out_msg.body_size);
 
+    // check that content length header is same as our measured body length
     EXPECT_EQ(body_length, atoi(out_msg.headers[3][1]));
 }
