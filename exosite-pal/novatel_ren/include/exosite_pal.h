@@ -43,19 +43,20 @@
 
 // functions for export
 
-uint8_t exoHal_setCik(const char * read_buffer);
-uint8_t exoHal_getCik(char * read_buffer);
-uint8_t exoHal_getModel(char * read_buffer);
-uint8_t exoHal_getVendor(char * read_buffer);
-uint8_t exoHal_getUuid(char * read_buffer);
+uint8_t exoPal_setCik(const char * read_buffer);
+uint8_t exoPal_getCik(char * read_buffer);
+uint8_t exoPal_getModel(char * read_buffer);
+uint8_t exoPal_getVendor(char * read_buffer);
+uint8_t exoPal_getUuid(char * read_buffer);
 
-uint8_t exoHAL_tcpSocketClose();
-uint8_t exoHAL_tcpSocketOpen();
-uint8_t exoHAL_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
-uint8_t exoHAL_socketWrite( const char * buffer, uint16_t len);
+uint8_t exoPal_tcpSocketClose();
+uint8_t exoPal_tcpSocketOpen();
+uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
+uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
 
-uint8_t exoHAL_itoa(int value, char* str, int radix);
-uint16_t exoHAL_strlen(const char *s);
+uint8_t exoPal_itoa(int value, char* str, uint8_t radix);
+uint16_t exoPal_strlen(const char *s);
+uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length);
 
 
 #endif

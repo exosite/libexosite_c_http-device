@@ -51,6 +51,8 @@ uint8_t exoPal_tcpSocketClose()
 {
     // do stuff to open socket
     AtModem_SocketClose(1);
+    // small delay required after closing
+    MSTimerDelay(1000);
     return (uint8_t)0;
 }
 
@@ -71,6 +73,7 @@ uint8_t exoPal_tcpSocketOpen()
     uint8_t id;
     if (AtModem_SocketOpen("m2.exosite.com", 80, &id) == AT_REPLY_OK)
     {
+        MSTimerDelay(1000);
         return 0;
     }
     return (uint8_t)1;
@@ -120,7 +123,8 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     // read for 10 seconds
-    return (uint8_t)AtModem_ReadLineTimeOut(10000, buffer, bufferSize);
+    *responseLength = AtModem_ReadLineTimeOut(10000, buffer, bufferSize);
+    return (uint8_t)0;
 
 }
 
@@ -276,6 +280,6 @@ uint16_t exoPal_strlen(const char *s)
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
 {
     itoa(value,buf,10);
-    return 0;
+    return exoPal_strlen(buf);
 }
 
