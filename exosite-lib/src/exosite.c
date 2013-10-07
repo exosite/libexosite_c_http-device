@@ -500,7 +500,125 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
 
 
+ /*!
+ *  \brief  Reads data from Exosite
+ *
+ * Reads a singel alias from the Exosite One Platform.  The alias
+ * variable can only include one alias name.  
+ *
+ * For example, if you want to read from the `myAlias` alias, you would set the 
+ * alias parameter to `"myAliasName"`.  
+ *
+ * If the read is successful, the value returned in readResponse will be the 
+ * value of your alias.  These will always be strings.  Even if your data source
+ * contains a numeric value, you must convert it to an integer before using it.
+ *
+ \code{.c}
+ exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
+ // After this call, the readBuffer would look something like this: "3". The 
+ // length variable would be updated with the length of the response string, in this
+ // case, 1.
+ \endcode
+ *
+ * \param[in] alias Name/s of data source/s alias to read from
+ * \param[out] readResponse buffer to place read response in
+ * \param[in] buflen length of buffer
+ * \param[out] length data placed into readResponse
+ *
+ * \return Error code if fail, else 0
+ *
+ */
+uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length)
+{
+    // connect to exosite
+    uint8_t connection_status = exosite_connect();
 
+    // return error message if connect failed.
+    if (connection_status != 0)
+    {
+        return connection_status;
+    }
+
+    // send request
+    exoPal_socketWrite(STR_READ_URL, sizeof(STR_READ_URL) - 1);
+    exoPal_socketWrite(alias, exoPal_strlen(alias));
+    exoPal_socketWrite(" ", exoPal_strlen(" "));
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send Host header
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send cik header
+    exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
+    exoPal_socketWrite(cikBuffer, sizeof(cikBuffer));
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send content type header
+    exoPal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+
+    // send accept header
+    exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
+    
+
+    uint16_t responseLength = 0;
+    // get response
+    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+
+    exosite_disconnect();
+
+    // 204 "No content"
+    if (exosite_checkResponse(rxBuffer, "200"))
+    {
+        //find first '\n' char from end of response
+        for (int i = responseLength; i > 0; i--)
+        {
+            // find last \n
+            if (rxBuffer[i] == '\n')
+            {
+                uint8_t charNotMatch = 0;
+                for (uint16_t j = 1; (j <= i) && i > 0; j++)
+                {
+                    // If we're at the end of the inputted string?
+                    if (alias[j-1] == '\0')
+                    {
+                        // if all chars match, we found the key
+                        if (!charNotMatch)
+                        {
+                            // move j passed the '='
+                            j++;
+
+                            for (uint16_t k = 0;
+                                (k <= buflen) && ((i + j + k) <= responseLength);
+                                k++)
+                            {
+                                // copy remaining data into buffer
+                                readResponse[k] = rxBuffer[i+j+k];
+                                *length = k;
+                            }
+                            i = 0;
+                        }
+                        else
+                        {
+                            // match not found, exit
+                            i = 0;
+                            *length = 0;
+                        }
+                    }
+
+                    // confirm letter by letter
+                    charNotMatch |= !(rxBuffer[i+j] == alias[j-1]);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
 
 
 
