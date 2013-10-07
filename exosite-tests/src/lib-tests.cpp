@@ -19,9 +19,9 @@ static http_parser_settings parser_settings = {0};
 #define TEST_MODEL "aModel"
 #define TEST_VENDOR "aVendor"
 
-
-
-
+char * validTestcik = "abcdef1234abcdef1234abcdef1234abcdef1234";
+char * invalidTestcik_nonHexChar = "@abcdef1234abcdef1234abcdef1234abcdef124";
+char * invalidTestcik_short = "abcdef1234abcdef1234abcdef1234abcdef123";
 class ExoLibCleanState : public ::testing::Test 
 {
 protected:
@@ -65,18 +65,15 @@ protected:
 // a general idea
 TEST_F(ExoLibCleanState, isCIKValid)
 {
-    char * testcik = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    uint8_t results = exosite_isCIKValid(testcik);
+    uint8_t results = exosite_isCIKValid(validTestcik);
     EXPECT_EQ(1,results);
 
     // check if a non hexadecimal char causes check to fail
-    testcik = "@abcdef1234abcdef1234abcdef1234abcdef124";
-    results = exosite_isCIKValid(testcik);
+    results = exosite_isCIKValid(invalidTestcik_nonHexChar);
     EXPECT_EQ(0,results);
 
     // check if a less then 40 char causes check to fail
-    testcik = "abcdef1234abcdef1234abcdef1234abcdef123";
-    results = exosite_isCIKValid(testcik);
+    results = exosite_isCIKValid(invalidTestcik_short);
     EXPECT_EQ(0,results);
 
     // cik may not be stored as a null terminated string, so we don't want to 
@@ -88,24 +85,23 @@ TEST_F(ExoLibCleanState, isCIKValid)
 TEST_F(ExoLibCleanState, cikStartEmpty)
 {
      
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    char emptyBuffer[41];
     // make sure that we start up with an empty cik
-    exosite_getCIK(testcik);
-    EXPECT_STREQ("",testcik);
+    exosite_getCIK(emptyBuffer);
+    EXPECT_STREQ("",emptyBuffer);
 }
 
 TEST_F(ExoLibCleanState, cikSetTest)
 {
     // set cik 
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    exosite_setCIK(testcik);
+    exosite_setCIK(validTestcik);
 
     // retrieve cik
     char newcik[41] = "";
     exosite_getCIK(newcik);
 
     // make sure they match
-    EXPECT_STREQ(testcik, newcik);
+    EXPECT_STREQ(validTestcik, newcik);
 }
 
 
@@ -115,13 +111,11 @@ TEST_F(ExoLibCleanState, cikSetTest)
 TEST_F(ExoLibCleanState, provisionActivateRequest)
 {
     strcpy(nvm->uuid,"123456789");
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    exosite_setCIK(testcik);
+    exosite_setCIK(validTestcik);
 
-    const char * vendor = "aVendor";
-    const char * model = "aModel";
+    
     EXO_STATE resp;
-    resp = exosite_init(vendor, model);
+    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
     
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
@@ -140,9 +134,9 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
     // build expected body
     char expected_body[255] = {0};
     strcpy(expected_body,"vendor=");
-    strcat(expected_body,vendor);
+    strcat(expected_body,TEST_VENDOR);
     strcat(expected_body,"&model=");
-    strcat(expected_body,model);
+    strcat(expected_body,TEST_MODEL);
     strcat(expected_body,"&sn=");
     strcat(expected_body,nvm->uuid);
 
@@ -163,20 +157,17 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
 
 TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
 {
-    const char * returned_cik = "abcdef1234abcdef1234abcdef1234abcdef1234";
+    
     strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
-    strcat(nvm->readFromBuffer,returned_cik);
+    strcat(nvm->readFromBuffer,validTestcik);
 
     nvm->readFromBufferLen = strlen(nvm->readFromBuffer);
     // we received a 200 response, which means we received a valid cik
     strcpy(nvm->uuid,"123456789");
     
-    
 
-    const char * vendor = "aVendor";
-    const char * model = "aModel";
     EXO_STATE resp;
-    resp = exosite_init(vendor, model);
+    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
 
     // Init should have been successful
     EXPECT_EQ(EXO_STATE_INIT_COMPLETE,resp);
@@ -186,7 +177,7 @@ TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
     exosite_getCIK(newcik);
 
     // We should have our new cik
-    EXPECT_STREQ(returned_cik, newcik);
+    EXPECT_STREQ(validTestcik, newcik);
     
 }
 
@@ -195,13 +186,102 @@ TEST_F(ExoLibCleanState, readRequest)
 {
     // Checks that the read request is properly formatted
     strcpy(nvm->uuid,"123456789");
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    exosite_setCIK(testcik);
+    exosite_setCIK(validTestcik);
 
-    const char * vendor = "aVendor";
-    const char * model = "aModel";
+    
     EXO_STATE respa;
-    respa = exosite_init(vendor, model);
+    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
+
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
+
+    uint8_t respR;
+
+    message out_msg = {0};
+    setMsg(&out_msg);
+
+    http_parser_init(&parser, HTTP_REQUEST);
+
+
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+
+    char responseBuffer[128] = {'\0'};
+    uint16_t resLength = 0;
+    respR = exosite_read("testAlias&anotherAlias", responseBuffer,128, &resLength);
+
+    // build expected body
+    char expected_body[255] = {0};
+    strcpy(expected_body,"");
+
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
+
+    // check cik is correct
+    EXPECT_STREQ(validTestcik, out_msg.headers[1][1]);
+
+    // Check body is what we want
+    EXPECT_STREQ(expected_body, out_msg.body);
+
+    // check request url is correct
+    EXPECT_STREQ("/onep:v1/stack/alias?testAlias&anotherAlias", out_msg.request_url);
+
+    // Check body size is correct
+    uint16_t body_length = strlen(expected_body);
+    EXPECT_EQ( body_length, out_msg.body_size);
+}
+
+TEST_F(ExoLibCleanState, read_200Response_goodFormat)
+{
+    // checks that we properly process a valid read response
+    strcpy(nvm->uuid,"123456789");
+    exosite_setCIK(validTestcik);
+
+
+    uint8_t resp;
+    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+
+    // We didn't set a response, so we should receive a NO_RESPONSE
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
+
+    message out_msg = {0};
+    setMsg(&out_msg);
+
+    http_parser_init(&parser, HTTP_REQUEST);
+
+    const char * xoResponse = "HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\ntestAlias=5&anotherAlias=here";
+    strcpy(nvm->readFromBuffer, xoResponse);
+
+    nvm->readFromBufferLen = strlen(xoResponse);
+
+    char responseBuffer[128] = {'\0'};
+    uint16_t resLength = 0;
+    resp = exosite_read("testAlias&anotherAlias", responseBuffer,128, &resLength);
+
+   
+
+    size_t parsed;
+    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
+
+    // Did parse correctly
+    EXPECT_TRUE(parsed);
+
+    // build expected body
+    char * expected_response = "testAlias=5&anotherAlias=here";
+
+    // Check response is the value we responded with
+    EXPECT_STREQ(expected_response,responseBuffer);
+
+}
+
+TEST_F(ExoLibCleanState, readSingleRequest)
+{
+    // Checks that the read request is properly formatted
+    strcpy(nvm->uuid,"123456789");
+    exosite_setCIK(validTestcik);
+
+
+    EXO_STATE respa;
+    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
@@ -228,7 +308,7 @@ TEST_F(ExoLibCleanState, readRequest)
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
     // check cik is correct
-    EXPECT_STREQ(testcik,out_msg.headers[1][1]);
+    EXPECT_STREQ(validTestcik,out_msg.headers[1][1]);
 
     // Check body is what we want
     EXPECT_STREQ(expected_body,out_msg.body);
@@ -241,17 +321,14 @@ TEST_F(ExoLibCleanState, readRequest)
     EXPECT_EQ( body_length, out_msg.body_size);
 }
 
-TEST_F(ExoLibCleanState, read_200Response_goodFormat)
+TEST_F(ExoLibCleanState, readSingle_200Response_goodFormat)
 {
     // checks that we properly process a valid read response
     strcpy(nvm->uuid,"123456789");
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    exosite_setCIK(testcik);
+    exosite_setCIK(validTestcik);
 
-    const char * vendor = "aVendor";
-    const char * model = "aModel";
     uint8_t resp;
-    resp = exosite_init(vendor, model);
+    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
@@ -268,9 +345,9 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
 
     char responseBuffer[128] = {'\0'};
     uint16_t resLength = 0;
-    resp = exosite_read("testAlias", responseBuffer,128, &resLength);
+    resp = exosite_readSingle("testAlias", responseBuffer,128, &resLength);
 
-   
+
 
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
@@ -279,7 +356,7 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
     EXPECT_TRUE(parsed);
 
     // build expected body
-    char * expected_response = "testAlias=5";
+    char * expected_response = "5";
 
     // Check response is the value we responded with
     EXPECT_STREQ(expected_response,responseBuffer);
@@ -289,13 +366,11 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
 TEST_F(ExoLibCleanState, writeRequest)
 {
     // Checks that the write request is properly formatted
-    char testcik[41] = "abcdef1234abcdef1234abcdef1234abcdef1234";
-    exosite_setCIK(testcik);
+    exosite_setCIK(validTestcik);
 
-    const char * vendor = "aVendor";
-    const char * model = "aModel";
+
     EXO_STATE respa;
-    respa = exosite_init(vendor, model);
+    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
@@ -320,7 +395,7 @@ TEST_F(ExoLibCleanState, writeRequest)
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
     // check cik is correct
-    EXPECT_STREQ(testcik,out_msg.headers[1][1]);
+    EXPECT_STREQ(validTestcik,out_msg.headers[1][1]);
 
     // Check body is what we want
     EXPECT_STREQ(writeInfo,out_msg.body);
