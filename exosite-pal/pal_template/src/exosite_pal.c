@@ -212,6 +212,14 @@ uint8_t exoPal_getUuid(char * read_buffer)
     return 0;
 }
 
+/*!
+ * \brief memcpy implementation
+ */
+uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length)
+{
+
+return 0;	 	    
+}
 
 /*!
  * \brief returns the length of the null terminated string
