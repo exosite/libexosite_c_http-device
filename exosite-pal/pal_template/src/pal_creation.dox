@@ -7,6 +7,8 @@
  software.  There are existing ports for the PAL for the following platforms:
  
  - Windows
+ - Novatel/renesas-rl78g14
+ 
  
  Although the exosite libraries can be used on any platform, they are tailored
  to embedded applications, because of this, it is limited to only opening
@@ -16,18 +18,21 @@
  In order to create a PAL for a specific platform, your PAL needs to implement
  the following functions:
  
- - exoHAL_strlen()
- - exoHAL_tcpSocketClose()
- - exoHAL_tcpSocketOpen()
- - exoHAL_socketWrite()
- - exoHAL_socketRead()
- - exoHal_setCik()
- - exoHal_getCik()
- - exoHal_getModel()
- - exoHal_getVendor()
+ - exoPal_setCik()
+ - exoPal_getCik()
+ - exoPal_getModel()
+ - exoPal_getVendor()
+ - exoPal_getUuid()
+ - exoPal_tcpSocketClose()
+ - exoPal_tcpSocketOpen()
+ - exoPal_socketRead()
+ - exoPal_socketWrite()
+ - exoPal_itoa()
+ - exoPal_strlen()
+ - exoPal_memcpy()
  
  Detailed information of what is required of each of these fuctions can be found
- in the documentation of the exosite_hal.c
+ in the documentation of the exosite_pal.c
  
  
 */
