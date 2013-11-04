@@ -237,7 +237,8 @@ EXO_STATE exosite_activate()
                 else
                 {
                     // copy cik into mem.
-                    exoPal_setCik(&rxBuffer[i + 1]);
+                    exoPal_setCik(&exoPal_rxBuffer[i + 1]);
+                    exoPal_getCik(cikBuffer);
                     retVal = EXO_STATE_VALID_CIK;
                     i = 0;
                 }
@@ -246,7 +247,7 @@ EXO_STATE exosite_activate()
     }
     else if (exosite_checkResponse(rxBuffer, "409"))
     {
-        // TODO: validate the cik instead of checking the first char for '\0'
+    	exoPal_getCik(cikBuffer);
         
         if (exosite_isCIKValid(cikBuffer))
         {
@@ -312,7 +313,7 @@ uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
 void exosite_setCIK(char * pCIK)
 {
     exoPal_setCik((char *)pCIK);
-
+    exoPal_memcpy(cikBuffer, pCIK, CIK_LENGTH);
     return;
 }
 
