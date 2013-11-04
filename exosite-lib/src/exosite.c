@@ -209,6 +209,8 @@ EXO_STATE exosite_activate()
     exoPal_socketRead( rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
+
+    int i;
     if (responseLen == 0)
     {
         // if we didn't receive any data from the modem
@@ -219,7 +221,7 @@ EXO_STATE exosite_activate()
         // we received a CIK.
 
         //find first '\n' char from end of response
-        for (int i = responseLen; i > 0; i--)
+        for ( i = responseLen; i > 0; i--)
         {
             if (rxBuffer[i] == '\n')
             {
@@ -485,19 +487,19 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
 
     exosite_disconnect();
-
+    int i,j;
     // 204 "No content"
     if (exosite_checkResponse(rxBuffer, "200"))
     {
         //find first '\n' char from end of response
-        for (int i = responseLength; i > 0; i--)
+        for (i = responseLength; i > 0; i--)
         {
             
             // find last \n
             if (rxBuffer[i] == '\n')
             {
-                
-                for (int j = i; j < responseLength; j++)
+                // copy http body into readResponse buffer
+                for (j = i; j < responseLength; j++)
                 {
                     readResponse[j-i] = rxBuffer[j + 1];
                 }
@@ -583,18 +585,20 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
     exosite_disconnect();
-
-    // 204 "No content"
-    if (exosite_checkResponse(rxBuffer, "200"))
+    int16_t i;
+    uint16_t j;
+    uint16_t k;
+    // if we received a 200
+    if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
         //find first '\n' char from end of response
-        for (int i = responseLength; i > 0; i--)
+        for (i = responseLength; i > 0; i--)
         {
             // find last \n
             if (rxBuffer[i] == '\n')
             {
                 uint8_t charNotMatch = 0;
-                for (uint16_t j = 1; (j <= i) && i > 0; j++)
+                for ( j = 1; (j <= i) && i > 0; j++)
                 {
                     // If we're at the end of the inputted string?
                     if (alias[j-1] == '\0')
@@ -605,7 +609,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
                             // move j passed the '='
                             j++;
 
-                            for (uint16_t k = 0;
+                            for (k = 0;
                                 (k <= buflen) && ((i + j + k) <= responseLength);
                                 k++)
                             {
@@ -686,7 +690,8 @@ uint8_t exosite_checkResponse(char * response, const char * code)
     // assumes will always be before the 15th char
     // assumes first char isn't a ' '
     uint8_t spaceFound = 0;
-    for (int i = 1; (i < 15) && (spaceFound == 0); i++)
+    int16_t i;
+    for (i = 1; (i < 15) && (spaceFound == 0); i++)
     {
         if (response[i] == ' ')
         {
