@@ -43,7 +43,7 @@ static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
 static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
-static const char STR_ACCEPT[] = "\r\nAccept: application/x-www-form-urlencoded; charset=utf-8";
+static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CRLF[] = "\r\n";
 
