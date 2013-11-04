@@ -50,9 +50,7 @@ to Exosite.  It is used to prevent exosite_strlen from overrunning.
 If you are have a need to increase string length, you can freely adjust
 this number up to uint16_t*/
 
-/*!< This defines the size of the rx buffer in exosite.c.  This buffer is used
-to place incoming data from the modem in.*/
-#define RX_BUFFER_SIZE                         512
+
 
 
 // ENUMS

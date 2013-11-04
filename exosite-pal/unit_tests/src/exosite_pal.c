@@ -37,6 +37,12 @@
 #include "string.h"
 #include "stdio.h"
 
+
+/*!
+ * Buffer for rx data
+ */
+char  exoPal_rxBuffer[RX_BUFFER_SIZE];
+
 /*!
  * Used to track how far into the rx buffer we are
  */

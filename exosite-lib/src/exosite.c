@@ -62,7 +62,6 @@ static char vendorBuffer[MAX_VENDOR_LENGTH];
 static char modelBuffer[MAX_MODEL_LENGTH];
 static char uuidBuffer[MAX_UUID_LENGTH];
 
-static char rxBuffer[RX_BUFFER_SIZE];
 
 /*!
  * Used to determine if there is currently an open socket.  This value is 1 if 
@@ -206,7 +205,7 @@ EXO_STATE exosite_activate()
 
     uint16_t responseLen;
     
-    exoPal_socketRead( rxBuffer, RX_BUFFER_SIZE, &responseLen);
+    exoPal_socketRead( exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
 
@@ -216,14 +215,14 @@ EXO_STATE exosite_activate()
         // if we didn't receive any data from the modem
         retVal = EXO_STATE_NO_RESPONSE;
     }
-    else if (exosite_checkResponse(rxBuffer, "200"))
+    else if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
         // we received a CIK.
 
         //find first '\n' char from end of response
         for ( i = responseLen; i > 0; i--)
         {
-            if (rxBuffer[i] == '\n')
+            if (exoPal_rxBuffer[i] == '\n')
             {
                 // check that we're where we think we should be.
                 if ((responseLen-i - 1) != CIK_LENGTH)
@@ -245,7 +244,7 @@ EXO_STATE exosite_activate()
             }
         }
     }
-    else if (exosite_checkResponse(rxBuffer, "409"))
+    else if (exosite_checkResponse(exoPal_rxBuffer, "409"))
     {
     	exoPal_getCik(cikBuffer);
         
@@ -262,7 +261,7 @@ EXO_STATE exosite_activate()
             retVal = EXO_STATE_VALID_CIK;
         }
     }
-    else if (exosite_checkResponse(rxBuffer, "401"))
+    else if (exosite_checkResponse(exoPal_rxBuffer, "401"))
     {
         // RW error
         retVal = EXO_STATE_R_W_ERROR;
@@ -397,13 +396,13 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
 
     uint16_t responseLength = 0;
     // get response
-    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
 
     // 204 "No content"
-    if (exosite_checkResponse(rxBuffer, "204"))
+    if (exosite_checkResponse(exoPal_rxBuffer, "204"))
     {
        return 0;
     }
@@ -484,25 +483,25 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
     uint16_t responseLength = 0;
     // get response
-    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
     int i,j;
     // 204 "No content"
-    if (exosite_checkResponse(rxBuffer, "200"))
+    if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
         //find first '\n' char from end of response
         for (i = responseLength; i > 0; i--)
         {
             
-            // find last \n
-            if (rxBuffer[i] == '\n')
+            // if we found the '\n' before we hit the beginning of the buffer
+            if (exoPal_rxBuffer[i] == '\n')
             {
                 // copy http body into readResponse buffer
                 for (j = i; j < responseLength; j++)
                 {
-                    readResponse[j-i] = rxBuffer[j + 1];
+                    readResponse[j-i] = exoPal_rxBuffer[j + 1];
                 }
                 
                 // exit out
@@ -583,7 +582,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
 
     uint16_t responseLength = 0;
     // get response
-    exoPal_socketRead(rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
     exosite_disconnect();
     int16_t i;
@@ -595,16 +594,16 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
         //find first '\n' char from end of response
         for (i = responseLength; i > 0; i--)
         {
-            // find last \n
-            if (rxBuffer[i] == '\n')
+            if (exoPal_rxBuffer[i] == '\n')
             {
+                // '\n' found
                 uint8_t charNotMatch = 0;
                 for ( j = 1; (j <= i) && i > 0; j++)
                 {
                     // If we're at the end of the inputted string?
                     if (alias[j-1] == '\0')
                     {
-                        // if all chars match, we found the key
+                        // if all chars of our requested alias match, we found the key
                         if (!charNotMatch)
                         {
                             // move j passed the '='
@@ -615,7 +614,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
                                 k++)
                             {
                                 // copy remaining data into buffer
-                                readResponse[k] = rxBuffer[i+j+k];
+                                readResponse[k] = exoPal_rxBuffer[i+j+k];
                                 *length = k;
                             }
                             i = 0;
@@ -629,7 +628,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
                     }
 
                     // confirm letter by letter
-                    charNotMatch |= !(rxBuffer[i+j] == alias[j-1]);
+                    charNotMatch |= !(exoPal_rxBuffer[i+j] == alias[j-1]);
                 }
             }
         }
