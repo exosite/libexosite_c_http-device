@@ -50,7 +50,7 @@ char nvm_cik[CIK_LENGTH];
 static int curSocketID = -1;
 
 #pragma DATA_SECTION(exoPal_rxBuffer, ".FRAM_DATA")
-char  exoPal_rxBuffer[RX_BUFFER_SIZE];
+char exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 //SlSockAddrIn_t Addr = {0};
 
@@ -72,7 +72,7 @@ static uint32_t ip = 0xADFFD11c; //1p
 //!
 //! @param  void
 //!
-//! @return Success or Failure.            
+//! @return Success or Failure.
 //!
 //
 //*****************************************************************************
@@ -80,8 +80,9 @@ unsigned long exoPal_GetHostIP()
 {
     unsigned long status = 0;
 
-    status = sl_DnsGetHostByName(EXOSITE_URL, sizeof(EXOSITE_URL), 
-                                 SL_AF_INET, &ip);
+    status = sl_DnsGetHostByName(   EXOSITE_URL,
+                                    sizeof(EXOSITE_URL),
+                                    SL_AF_INET, &ip);
     //Addr.sin_addr.s_addr = sl_Htonl(ip);
     if (status == 0)
     {
@@ -123,38 +124,38 @@ uint8_t exoPal_tcpSocketClose()
  */
 uint8_t exoPal_tcpSocketOpen()
 {
-	int SockIDorError = 0;
-	int LenorError = 0;
+    int SockIDorError = 0;
+    int LenorError = 0;
 
-	SlSockAddrIn_t  Addr;
-	int AddrSize;
+    SlSockAddrIn_t Addr;
+    int AddrSize;
 
-	Addr.sin_family = SL_AF_INET;
-	Addr.sin_port = sl_Htons(80);
+    Addr.sin_family = SL_AF_INET;
+    Addr.sin_port = sl_Htons(80);
 
-	//Change the DestinationIP endianity , to big endian
-	Addr.sin_addr.s_addr = sl_Htonl(ip);
+    //Change the DestinationIP endianity , to big endian
+    Addr.sin_addr.s_addr = sl_Htonl(ip);
 
-	AddrSize = sizeof(SlSockAddrIn_t);
+    AddrSize = sizeof(SlSockAddrIn_t);
 
-	SockIDorError = sl_Socket(SL_AF_INET,SL_SOCK_STREAM, 0);
-	if( SockIDorError < 0 )
-	{
-		//CLI_Write((unsigned char *)"Error creating socket\n\r\n\r");
-		return 1;
-	}
+    SockIDorError = sl_Socket(SL_AF_INET,SL_SOCK_STREAM, 0);
+    if( SockIDorError < 0 )
+    {
+        //CLI_Write((unsigned char *)"Error creating socket\n\r\n\r");
+        return 1;
+    }
 
 
-	LenorError = sl_Connect(SockIDorError, ( SlSockAddr_t *)&Addr, AddrSize);
-	if( LenorError < 0 )
-	{
-		// error
-		//CLI_Write((unsigned char *)"Error connecting to socket\n\r\n\r");
-		return 2;
-	}
-	curSocketID = SockIDorError;
-	return 0;//success, connection created
-    
+    LenorError = sl_Connect(SockIDorError, ( SlSockAddr_t *)&Addr, AddrSize);
+    if( LenorError < 0 )
+    {
+        // error
+        //CLI_Write((unsigned char *)"Error connecting to socket\n\r\n\r");
+        return 2;
+    }
+    curSocketID = SockIDorError;
+    return 0; //success, connection created
+
 
 }
 
@@ -187,7 +188,7 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
         // error
         return 1;
     }
-        
+
     return 0;
 }
 
@@ -214,7 +215,7 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
     {
         return 1;
     }
-    
+
     *responseLength = recv(curSocketID, buffer, bufferSize,0);
     // read from socket
     return 0;
@@ -235,7 +236,7 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
 uint8_t exoPal_setCik(const char * cik)
 {
     // write cik to nvm
-	memcpy(nvm_cik,cik,CIK_LENGTH);
+    memcpy(nvm_cik,cik,CIK_LENGTH);
     return 0;
 }
 
@@ -253,7 +254,7 @@ uint8_t exoPal_setCik(const char * cik)
 uint8_t exoPal_getCik(char * read_buffer)
 {
     // retrieve cik from nvm
-	memcpy(read_buffer,nvm_cik,CIK_LENGTH);
+    memcpy(read_buffer,nvm_cik,CIK_LENGTH);
     return 0;
 }
 
@@ -261,7 +262,7 @@ uint8_t exoPal_getCik(char * read_buffer)
 /*!
  * \brief Retrieves the device model
  *
- * This can either be stored in nvm, or hardcoded into this function.  In most 
+ * This can either be stored in nvm, or hardcoded into this function.  In most
  * cases, you will want to hardcode this value
  *
  *
@@ -274,7 +275,7 @@ uint8_t exoPal_getCik(char * read_buffer)
  */
 uint8_t exoPal_getModel(char * read_buffer)
 {
-	exoPal_memcpy(read_buffer,"test",sizeof("test"));
+    exoPal_memcpy(read_buffer,"test",sizeof("test"));
     return 0;
 }
 
@@ -282,7 +283,7 @@ uint8_t exoPal_getModel(char * read_buffer)
 /*!
  * \brief Retrieves the device vendor
  *
- * This can either be stored in nvm, or hardcoded into this function.  In most 
+ * This can either be stored in nvm, or hardcoded into this function.  In most
  * cases, you will want to hardcode this value
  *
  *
@@ -295,7 +296,7 @@ uint8_t exoPal_getModel(char * read_buffer)
  */
 uint8_t exoPal_getVendor(char * read_buffer)
 {
-	exoPal_memcpy(read_buffer,"chiefmarley",sizeof("chiefmarley"));
+    exoPal_memcpy(read_buffer,"chiefmarley",sizeof("chiefmarley"));
     return 0;
 }
 
@@ -314,18 +315,18 @@ uint8_t exoPal_getVendor(char * read_buffer)
  */
 uint8_t exoPal_getUuid(char * read_buffer)
 {
-	uint8_t mac[6];
+    uint8_t mac[6];
 
-	SL_GET_MAC_ADDRESS(mac);
-	int8_t i;
-	read_buffer[12] = '\0';
-	for (i = 5; i >= 0; i--)
-	{
-		read_buffer[i * 2 + 1] = "0123456789ABCDEF"[mac[i] & 0x0F];
-		read_buffer[(i * 2)] = "0123456789ABCDEF"[(mac[i] >> 4) & 0x0F];
-	}
+    SL_GET_MAC_ADDRESS(mac);
+    int8_t i;
+    read_buffer[12] = '\0';
+    for (i = 5; i >= 0; i--)
+    {
+        read_buffer[i * 2 + 1] = "0123456789ABCDEF"[mac[i] & 0x0F];
+        read_buffer[(i * 2)] = "0123456789ABCDEF"[(mac[i] >> 4) & 0x0F];
+    }
 
-	return 0;
+    return 0;
 }
 
 /*!
@@ -333,20 +334,20 @@ uint8_t exoPal_getUuid(char * read_buffer)
  */
 uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length)
 {
-	memcpy(dst,src,length);
-	return 0;
+    memcpy(dst,src,length);
+    return 0;
 }
 
 /*!
  * \brief returns the length of the null terminated string
  *
- * This can link to a strlen elsewhere in your code, or you can write 
+ * This can link to a strlen elsewhere in your code, or you can write
  * your own.
  *
  * \param[in] s String whose length you want to check
  *
  * \return Length of the string \a s, not including the null terminator.
- * 
+ *
  * \warning It is up to the user to make sure that strlen doesn't overrun.
  *          (e.g. pass a non null terminated string)
  */
@@ -362,7 +363,8 @@ void reverse(char s[])
     int i, j;
     char c;
 
-    for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+    for (i = 0, j = strlen(s)-1; i<j; i++, j--)
+    {
         c = s[i];
         s[i] = s[j];
         s[j] = c;
@@ -372,7 +374,7 @@ void reverse(char s[])
 /*!
  * \brief Gets the decimal ascii representation of an integer
  *
- * 
+ *
  *
  * \param[in] value Number that you want a string representation of
  * \param[in] buf Buffer to place results
@@ -382,18 +384,20 @@ void reverse(char s[])
  */
 uint8_t exoPal_itoa(int n, char* s, uint8_t bufSize)
 {
-	int i, sign;
+    int i, sign;
 
-	 if ((sign = n) < 0)  /* record sign */
-		 n = -n;          /* make n positive */
-	 i = 0;
-	 do {       /* generate digits in reverse order */
-		 s[i++] = n % 10 + '0';   /* get next digit */
-	 } while ((n /= 10) > 0);     /* delete it */
-	 if (sign < 0)
-		 s[i++] = '-';
-	 s[i] = '\0';
-	 reverse(s);
-	 return i;
+    if ((sign = n) < 0)   /* record sign */
+        n = -n;           /* make n positive */
+    i = 0;
+    do          /* generate digits in reverse order */
+    {
+        s[i++] = n % 10 + '0';    /* get next digit */
+    }
+    while ((n /= 10) > 0);        /* delete it */
+    if (sign < 0)
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
+    return i;
 }
 
