@@ -64,7 +64,7 @@ static char uuidBuffer[MAX_UUID_LENGTH];
 
 
 /*!
- * Used to determine if there is currently an open socket.  This value is 1 if 
+ * Used to determine if there is currently an open socket.  This value is 1 if
  * we have an open socket, else 0.
  */
 static uint8_t isSocketOpen = 0;
@@ -76,9 +76,9 @@ static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
  * \brief Reset the cik to ""
  *
  * The following code would reset the contents of the cik to be an empty string.
- \code{.c}
- exosite_resetCik();
- \endcode
+   \code{.c}
+   exosite_resetCik();
+   \endcode
  *
  * \return Returns 0 if successful, else error code
  * \sa
@@ -97,10 +97,10 @@ uint8_t exosite_resetCik()
  * \brief  Initializes the Exosite libraries and attempts to activate the
  *          with Exosite
  *
- * This **MUST** be called before any other exosite library calls are called. 
+ * This **MUST** be called before any other exosite library calls are called.
  *
  * Assumes that the modem is setup and ready to make a socket connection.
- * This will fail if activation fails.  After initialization, this function 
+ * This will fail if activation fails.  After initialization, this function
  * calls exosite_activate
  *
  * \param[in] vendor Pointer to string containing vendor name
@@ -138,7 +138,7 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
 /*!
  * \brief  Makes a provisioning request to Exosite.
  *
- * 
+ *
  *
  * \return The devices activation status
  */
@@ -160,15 +160,15 @@ EXO_STATE exosite_activate()
     uint8_t uuidLength = exoPal_strlen(uuidBuffer);
 
     // get body length
-    uint16_t bodyLength =   sizeof(STR_VENDOR) - 1 + 
-                            sizeof(STR_MODEL) - 1 + 
-                            sizeof(STR_SN) - 1;
+    uint16_t bodyLength = sizeof(STR_VENDOR) - 1 +
+                          sizeof(STR_MODEL) - 1 +
+                          sizeof(STR_SN) - 1;
     bodyLength += vendorLength + modelLength + uuidLength;
 
     // assume content length will never be over 9999 bytes
     char contentLengthStr[5];
     uint8_t len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
- 
+
 
     exosite_connect();
 
@@ -182,7 +182,7 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
-        // send content type header
+    // send content type header
     exoPal_socketWrite(STR_CONTENT, sizeof(STR_CONTENT) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
@@ -201,12 +201,12 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(uuidBuffer, uuidLength);
 
 
-    
+
     EXO_STATE retVal = EXO_STATE_CONNECTION_ERROR;
-    
+
 
     uint16_t responseLen;
-    
+
     exoPal_socketRead( exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
@@ -248,20 +248,20 @@ EXO_STATE exosite_activate()
     }
     else if (exosite_checkResponse(exoPal_rxBuffer, "409"))
     {
-    	exoPal_getCik(cikBuffer);
-        
+        exoPal_getCik(cikBuffer);
+
         if (exosite_isCIKValid(cikBuffer))
         {
-        	// If we receive a 409 and we do have a valid CIK, we will
-			// assume we are good to go.
-			retVal = EXO_STATE_VALID_CIK;
+            // If we receive a 409 and we do have a valid CIK, we will
+            // assume we are good to go.
+            retVal = EXO_STATE_VALID_CIK;
 
         }
         else
         {
-        	// if we don't have a CIK in nvm and we receive a 409
-			// The device isn't enabled in the dashboard
-			retVal = EXO_STATE_DEVICE_NOT_ENABLED;
+            // if we don't have a CIK in nvm and we receive a 409
+            // The device isn't enabled in the dashboard
+            retVal = EXO_STATE_DEVICE_NOT_ENABLED;
 
         }
     }
@@ -281,7 +281,7 @@ EXO_STATE exosite_activate()
  *
  * Checks that the first 40 chars of `cik` are valid, lowercase hexadecimal bytes.
  *
- * 
+ *
  *
  * \param[in] cik array of CIK_LENGTH bytes
  *
@@ -341,7 +341,7 @@ void exosite_getCIK(char * cik)
  *  \brief  Writes data to Exosite
  *
  * Writes the data in writeData to Exosite.  The data is written as the body of
- * a POST request to Exosite's `/onep:v1/stack/alias request`.  
+ * a POST request to Exosite's `/onep:v1/stack/alias request`.
  *
  * Below is how you would write a value of `5` to the `myAlias` alias.
  * \code{.c}
@@ -379,7 +379,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // send Host header
     exoPal_socketWrite(STR_HOST, sizeof(STR_HOST) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    
+
     // send cik header
     exoPal_socketWrite(STR_CIK_HEADER, sizeof(STR_CIK_HEADER) - 1);
     exoPal_socketWrite(cikBuffer, sizeof(cikBuffer));
@@ -408,7 +408,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // 204 "No content"
     if (exosite_checkResponse(exoPal_rxBuffer, "204"))
     {
-       return 0;
+        return 0;
     }
     else
     {
@@ -422,23 +422,23 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
  *  \brief  Reads data from Exosite
  *
  * Allows the reading of for reading data from the Exosite platform.  The alias
- * variable can include one, or multiple alias names.  For example, if you 
- * included they must be separated by a '&'.  
+ * variable can include one, or multiple alias names.  For example, if you
+ * included they must be separated by a '&'.
  *
  * For example, if you want to read from a single alias, you would set the alias
- * parameter to `"myAliasName"`.  If you wanted to read from multiple alias', you 
+ * parameter to `"myAliasName"`.  If you wanted to read from multiple alias', you
  * would set the alias parameter to `"myAliasName&myOtherAliasName"`.
  *
- * If the read is successful, the value returned in readResponse will be the 
- * body of the HTTP response, and will be in this format 
+ * If the read is successful, the value returned in readResponse will be the
+ * body of the HTTP response, and will be in this format
  * `"myAliasName=someValue&myOtherAliasName=23"`.
  *
- \code{.c}
- exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
- // After this call, the readBuffer would look something like "myAlias=3". The 
- // length variable would be updated with the length of the response string, in this
- // case, 9.
- \endcode
+   \code{.c}
+   exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
+   // After this call, the readBuffer would look something like "myAlias=3". The
+   // length variable would be updated with the length of the response string, in this
+   // case, 9.
+   \endcode
  *
  * \param[in] alias Name/s of data source/s alias to read from
  * \param[out] readResponse buffer to place read response in
@@ -483,7 +483,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    
+
 
     uint16_t responseLength = 0;
     // get response
@@ -498,7 +498,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
         //find first '\n' char from end of response
         for (i = responseLength; i > 0; i--)
         {
-            
+
             // if we found the '\n' before we hit the beginning of the buffer
             if (exoPal_rxBuffer[i] == '\n')
             {
@@ -507,7 +507,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
                 {
                     readResponse[j-i] = exoPal_rxBuffer[j + 1];
                 }
-                
+
                 // exit out
                 i = 0;
             }
@@ -519,25 +519,25 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
 
 
- /*!
+/*!
  *  \brief  Reads data from Exosite
  *
  * Reads a singel alias from the Exosite One Platform.  The alias
- * variable can only include one alias name.  
+ * variable can only include one alias name.
  *
- * For example, if you want to read from the `myAlias` alias, you would set the 
- * alias parameter to `"myAliasName"`.  
+ * For example, if you want to read from the `myAlias` alias, you would set the
+ * alias parameter to `"myAliasName"`.
  *
- * If the read is successful, the value returned in readResponse will be the 
+ * If the read is successful, the value returned in readResponse will be the
  * value of your alias.  These will always be strings.  Even if your data source
  * contains a numeric value, you must convert it to an integer before using it.
  *
- \code{.c}
- exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
- // After this call, the readBuffer would look something like this: "3". The 
- // length variable would be updated with the length of the response string, in this
- // case, 1.
- \endcode
+   \code{.c}
+   exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
+   // After this call, the readBuffer would look something like this: "3". The
+   // length variable would be updated with the length of the response string, in this
+   // case, 1.
+   \endcode
  *
  * \param[in] alias Name/s of data source/s alias to read from
  * \param[out] readResponse buffer to place read response in
@@ -582,7 +582,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
-    
+
 
     uint16_t responseLength = 0;
     // get response
@@ -614,8 +614,8 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
                             j++;
 
                             for (k = 0;
-                                (k <= buflen) && ((i + j + k) <= responseLength);
-                                k++)
+                                 (k <= buflen) && ((i + j + k) <= responseLength);
+                                 k++)
                             {
                                 // copy remaining data into buffer
                                 readResponse[k] = exoPal_rxBuffer[i+j+k];
@@ -646,7 +646,7 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
 /*!
  * \brief Connects to Exosite
  *
- * This would typically be a call to open a socket 
+ * This would typically be a call to open a socket
  *
  * \return Returns a 0 if socket was successfully opened, else returns the
  *          error code
@@ -657,14 +657,14 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
 uint8_t exosite_connect(void)
 {
     // open socket to exosite
-    
+
     return exoPal_tcpSocketOpen();
 }
 
 /*!
  * \brief Connects to Exosite
  *
- * This would typically be a call to close a socket 
+ * This would typically be a call to close a socket
  *
  * \return Returns a 0 if socket was successfully close, else returns the
  *          error code
