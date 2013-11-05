@@ -503,11 +503,13 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
             if (exoPal_rxBuffer[i] == '\n')
             {
                 // copy http body into readResponse buffer
-                for (j = i; j < responseLength; j++)
+                for (j = i; j < (responseLength - 1); j++)
                 {
                     readResponse[j-i] = exoPal_rxBuffer[j + 1];
                 }
 
+                // add null teminator at end of string
+                readResponse[j-i] = '\0';
                 // exit out
                 i = 0;
             }
