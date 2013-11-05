@@ -87,7 +87,9 @@ static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
  */
 uint8_t exosite_resetCik()
 {
+
     exoPal_setCik("");
+    cikBuffer[0] = '\0';
     return 0;
 }
 
