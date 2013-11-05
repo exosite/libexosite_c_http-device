@@ -239,7 +239,7 @@ EXO_STATE exosite_activate()
                 {
                     // copy cik into mem.
                     exoPal_setCik(&exoPal_rxBuffer[i + 1]);
-                    exoPal_getCik(cikBuffer);
+                    exoPal_memcpy(cikBuffer, &exoPal_rxBuffer[i + 1], CIK_LENGTH);
                     retVal = EXO_STATE_VALID_CIK;
                     i = 0;
                 }
