@@ -37,6 +37,7 @@
 #include <CmdLib/novatel_cdma.h>
 
 
+char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 /*!
  * \brief Closes a tcp socket
