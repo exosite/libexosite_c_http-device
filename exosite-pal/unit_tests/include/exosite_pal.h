@@ -62,7 +62,7 @@ extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 // functions for export
 
 
-
+void exoPal_init();
 uint8_t exoPal_setCik(const char * read_buffer);
 uint8_t exoPal_getCik(char * read_buffer);
 uint8_t exoPal_getModel(char * read_buffer);

@@ -81,7 +81,21 @@ uint8_t exoPal_tcpSocketOpen()
     
 }
 
+/*!
+ * \brief
+ *
+ * Any HW or SW initialization should be performed in here
+ *
+ * This function is meant to perform any one time initialization and/or setup.
+ * This will be called everytime Exosite_init is called.  An example use for
+ * this function would be to perform a DNS lookup of m2.exosite.com
+ *
+ */
+void exoPal_init()
+{
+    return;
 
+}
 
 
 /*!

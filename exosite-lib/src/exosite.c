@@ -113,6 +113,9 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
     // reset state
     initState = EXO_STATE_NOT_COMPLETE;
     uint8_t retStatus = 0;
+
+    exoPal_init();
+
     // get cik and uuid and any other nvm stored data, into ram.
     retStatus |= exoPal_getCik(cikBuffer);
     retStatus |= exoPal_getUuid(uuidBuffer);
