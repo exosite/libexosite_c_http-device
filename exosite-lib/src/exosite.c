@@ -446,7 +446,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
  * \param[in] alias Name/s of data source/s alias to read from
  * \param[out] readResponse buffer to place read response in
  * \param[in] buflen length of buffer
- * \param[out] length data placed into readResponse
+ * \param[out] length Length of data placed into readResponse
  *
  * \return Error code if fail, else 0
  *
@@ -527,7 +527,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 /*!
  *  \brief  Reads data from Exosite
  *
- * Reads a singel alias from the Exosite One Platform.  The alias
+ * Reads a single alias from the Exosite One Platform.  The alias
  * variable can only include one alias name.
  *
  * For example, if you want to read from the `myAlias` alias, you would set the
@@ -538,7 +538,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
  * contains a numeric value, you must convert it to an integer before using it.
  *
    \code{.c}
-   exosite_read("myAlias", readBuffer, lenOfReadBuffer, retLen);
+   exosite_readSingle("myAlias", readBuffer, lenOfReadBuffer, retLen);
    // After this call, the readBuffer would look something like this: "3". The
    // length variable would be updated with the length of the response string, in this
    // case, 1.

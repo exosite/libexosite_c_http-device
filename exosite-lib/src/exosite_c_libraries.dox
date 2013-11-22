@@ -12,12 +12,10 @@ specific platform, you can use Exosite as your cloud platform in as little as
 two lines of code!
 
 \code{.c}
-exosite_init()
-exosite_write("temperature=82",sizeof("temperature=82"))
+exosite_init("myVendor","myModel");
+exosite_write("temperature=82",strlen("temperature=82"));
 \endcode
 
-You can read the \ref pal_creation page for more detailed information in 
-developing the PAL, 
 
 The Exosite libraries are platform agnostic, but will require the 
 implementation of a platform abstraction layer(PAL).  This PAL will be
@@ -65,56 +63,62 @@ files should never need any modification from the end user.
 
 \subsection exosite_pal exosite-pal
 exosite-pal serves as an interface between an individual devices hardware
-and the Exosite Core code.  These files (exosite_pal.c exosite_pal.h )will need
-modification (\ref pal_creation page) for different hardware platfoms.
+and the exosite-lib code.  These files (exosite_pal.c exosite_pal.h )will need
+modification (\ref pal_creation page) for creating PALs for different hardware 
+platforms.
 
 
 \section gettingStarted  Getting Started
 The Exosite C Libraries assume that your device has the ability to open a socket
-and send/receive data on that socket.  The library is limited to only a 
-single Exosite connection at a time.
+and send/receive data on that socket.  The library is limited to a single 
+Exosite connection at a time.
 
 In order to use the Exosite libraries on your hardware, you will need to create
-the PAL.  The easiest way to do this is to go through exosite_pal.c and fill
-in the functions.  The purpose of each function is well documented and should
-provide all the information required to write your own hardware specific code.
+the PAL.  The easiest way to do this is to go through the template 
+exosite_pal.c and fill in the functions.  The purpose of each function is well
+documented and should provide all the information required to write your own 
+hardware specific code.
 
-\section using_nvm Using NVM
-The libraries allow the use of NVM, or programatically setting individual
-data elements.  The following variables need to be kept in NVM, or your
-PAL must be able to get them from the hardware, or they must be hardcoded.
+\section using_nvm Use of Non-volatile Memory (NVM)
+The PAL will require at least one piece of data to be stored in (NVM).  This 
+is the devices CIK.  It is given to the device when it provisions itself with
+the Exosite platform.  
 
-- Exosite CIK -- A unique identifier on the exosite platform
-- Vendor name -- Vendor of your device, as defined be Exosite
-- Model name -- Model of your device, as defined by Exosite
-- Device UUID -- Unique identifier of your device, as defined by vendor/model
 
 \section communicating_with_exosite Communicating With Exosite
-At the beginning of your application code, you must call the exosite_init()
-function.  This pulls any data stored in flash, into RAM.  
-
-\todo more info on this.
-
+At the beginning of your application code, you must call the exosite_init().
 The exosite_init() function initializes some things in local memory and then
 attempts to activate your device with Exosite.  Be sure to check for the return
-codes and make sure you receive a VALID_CIK response.  If not, the rest of your
-calls to Exosite won't be successful.
+codes and make sure you receive a EXO_STATE_INIT_COMPLETE response.  If not, 
+the rest of your calls to Exosite won't be successful.
 
-After your communications with Exosite have been initialized, you can now read
-and write to Exosite data sources using the exosite_read() and exosite_write()
-functions.
+After exosite_init has successfully completed, you can now read and write to 
+Exosite datasources using the exosite_read() and exosite_write() functions.
 
-Example communications:
+Example Exosite Write:
 \code
 EXOSITE_DEVICE_ACTIVATION_STATE activation_results;
 activation_results = exosite_init(vendorStr, modelStr);
 if (activation_results == EXO_STATE_INIT_COMPLETE)
 {
-    char * dataToWrite = "Hello"
-    char * exositeDataAlias = "greetings"
-    exosite_write(exositeDataAlias, dataToWrite);
+    char * dataToWrite = "greetings=Hello";
+    exosite_write(dataToWrite, strlen(dataToWrite));
 }
 
+\endcode
+
+Example Exosite Read:
+\code
+EXOSITE_DEVICE_ACTIVATION_STATE activation_results;
+activation_results = exosite_init(vendorStr, modelStr);
+if (activation_results == EXO_STATE_INIT_COMPLETE)
+{
+    char readBuffer[BUF_LENGTH];
+    uint16_t retLen;
+    exosite_readSingle("myAlias", readBuffer, BUF_LENGTH, retLen);
+    // If the call is successful, the string within readBuffer will contain
+    // the latest value of the "myALias" datasource.
+}
 
 \endcode
 
