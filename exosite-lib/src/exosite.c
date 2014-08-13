@@ -544,7 +544,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
         //find first '\n' char from end of response
-        for (i = responseLength; i > 0; i--)
+        for (i = responseLength - 1; i > 0; i--)
         {
 
             // if we found the '\n' before we hit the beginning of the buffer
