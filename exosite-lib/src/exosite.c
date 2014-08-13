@@ -41,10 +41,12 @@ static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
 static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
 static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
+static const char STR_RPC_URL[] = "POST /onep:v1/rpc/process";
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
+static const char STR_CONTENT_JSON[] = "Content-Type: application/json; charset=utf-8";
 static const char STR_CRLF[] = "\r\n";
 
 // local functions
@@ -644,6 +646,68 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     }
 
     return 0;
+}
+
+
+
+/*!
+ * @brief  Makes a request to the Exosite RPC API
+ *
+ *
+ * @param requestBody Full json rpc request string
+ * @param requestLength Length of json request string
+ * 
+ * @return int32_t 
+ */
+int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength)
+{
+    char contentLengthStr[5];
+    uint16_t responseLength = 0;
+    // connect to exosite
+    uint8_t connection_status = exosite_connect();
+    // assume content length will never be over 9999 bytes
+    
+    uint8_t len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
+    // return error message if connect failed.
+    if (connection_status != 0)
+    {
+        return connection_status;
+    }
+
+    // send request
+    exoPal_socketWrite(STR_RPC_URL, sizeof(STR_RPC_URL)-1);
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send Host header
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send content type header
+    exoPal_socketWrite(STR_CONTENT_JSON, sizeof(STR_CONTENT_JSON)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send accept header
+    exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send content length header
+    exoPal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH)-1);
+    exoPal_socketWrite(contentLengthStr, len_of_contentLengthStr);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send body
+    exoPal_socketWrite(requestBody, requestLength);
+
+    exoPal_sendingComplete();
+    
+    // get response
+    exoPal_socketRead(responseBuffer, responseBufferLength, &responseLength);
+
+    exosite_disconnect();
+    return responseLength;
+
 }
 
 
