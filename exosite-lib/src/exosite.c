@@ -74,6 +74,8 @@ static uint8_t isSocketOpen = 0;
 
 static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
 
+static int32_t exosite_getBody(char *response, char **bodyStart, int32_t *bodyLength);
+
 /*!
  * \brief Reset the cik to ""
  *
@@ -231,30 +233,22 @@ EXO_STATE exosite_activate()
     else if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
         // we received a CIK.
-
-        //find first '\n' char from end of response
-        for ( i = responseLen; i > 0; i--)
+        char * bodyStart;
+        int32_t bodyLength = 0;
+        int32_t response;
+        response = exosite_getBody(exoPal_rxBuffer, &bodyStart, &bodyLength);
+        if (response < 0)
         {
-            if (exoPal_rxBuffer[i] == '\n')
-            {
-                // check that we're where we think we should be.
-                if ((responseLen-i - 1) != CIK_LENGTH)
-                {
-                    // the data after the '\n' did not equal the length
-                    // of the CIK.  An error of some sorts occurred
-                    retVal = EXO_STATE_CONNECTION_ERROR;
-                    // end this loop and return our error
-                    i = 0;
-                }
-                else
-                {
-                    // copy cik into mem.
-                    exoPal_setCik(&exoPal_rxBuffer[i + 1]);
-                    exoPal_memcpy(cikBuffer, &exoPal_rxBuffer[i + 1], CIK_LENGTH);
-                    retVal = EXO_STATE_VALID_CIK;
-                    i = 0;
-                }
-            }
+            // some error getting the body
+            return EXO_STATE_CONNECTION_ERROR;
+        }
+        if ((exosite_isCIKValid(bodyStart)) && (bodyLength == CIK_LENGTH))
+        {
+            // got a valid cik in the response
+            exoPal_setCik(bodyStart);
+            exoPal_memcpy(cikBuffer, bodyStart, CIK_LENGTH);
+            retVal = EXO_STATE_VALID_CIK;
+            i = 0;
         }
     }
     else if (exosite_checkResponse(exoPal_rxBuffer, "409"))
@@ -286,7 +280,43 @@ EXO_STATE exosite_activate()
 
 }
 
-
+static int32_t exosite_getBody(char *response, char **bodyStart, int32_t *bodyLength)
+{
+    // find content length
+    char* strStart;
+    char* charAfterContentLengthValue = 0;
+    char cr[] = "\r";
+    char httpBodyToken[] = "\r\n\r\n";
+    // find start of content length header
+    strStart = exoPal_strstr(response, STR_CONTENT_LENGTH);
+    if (strStart <= 0)
+    {
+        return -1;
+    }
+    strStart = strStart + sizeof(STR_CONTENT_LENGTH) - 1;
+    // get \r and set to '\0' for atoi
+    charAfterContentLengthValue = exoPal_strstr(strStart, cr);
+    if (charAfterContentLengthValue <= 0)
+    {
+        return -2;
+    }
+    if (charAfterContentLengthValue != 0)
+    {
+        // temporarily null terminate the content length
+        *charAfterContentLengthValue = '\0';
+        *bodyLength = exoPal_atoi(strStart);
+        *charAfterContentLengthValue = '\r';
+        
+        strStart = exoPal_strstr(strStart, httpBodyToken);
+        if (strStart <= 0)
+        {
+            return -3;
+        }
+        *bodyStart = strStart + sizeof(httpBodyToken)-1;
+    }
+    printf("out");
+    return 0;
+}
 /*!
  * \brief Checks if the given cik is valid
  *
