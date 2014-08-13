@@ -212,8 +212,8 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(modelBuffer, modelLength);
     exoPal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
     exoPal_socketWrite(uuidBuffer, uuidLength);
-
-
+   
+    exoPal_sendingComplete();
 
     retVal = EXO_STATE_CONNECTION_ERROR;
 
@@ -441,6 +441,8 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // send body
     exoPal_socketWrite(writeData, length);
 
+    exoPal_sendingComplete();
+    
     responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
@@ -529,6 +531,7 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
+    exoPal_sendingComplete();
 
     responseLength = 0;
     // get response
@@ -635,7 +638,8 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
-
+    exoPal_sendingComplete();
+    
     responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
