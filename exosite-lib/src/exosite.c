@@ -112,9 +112,10 @@ uint8_t exosite_resetCik()
  */
 EXO_STATE exosite_init(const char * vendor, const char *model)
 {
+    uint8_t retStatus = 0;
     // reset state
     initState = EXO_STATE_NOT_COMPLETE;
-    uint8_t retStatus = 0;
+    
 
     exoPal_init();
 
@@ -149,7 +150,13 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
  */
 EXO_STATE exosite_activate()
 {
-
+    // assume content length will never be over 9999 bytes
+    char contentLengthStr[5];
+    uint8_t len_of_contentLengthStr;
+    EXO_STATE retVal;
+    uint16_t responseLen;
+    int i;
+    
     // Try and activate device with Exosite, four possible cases:
     // * We don't have a stored CIK and receive a 200 response with a CIK
     //    * Means device was enabled and this was our first connection
@@ -159,7 +166,7 @@ EXO_STATE exosite_activate()
     //     *  Device has already been activated and has a valid CIK
     // * We have a stored CIK and receive a 401 response
     //    * R/W error
-
+    
     uint8_t vendorLength = exoPal_strlen(vendorBuffer);
     uint8_t modelLength = exoPal_strlen(modelBuffer);
     uint8_t uuidLength = exoPal_strlen(uuidBuffer);
@@ -170,9 +177,8 @@ EXO_STATE exosite_activate()
                           sizeof(STR_SN) - 1;
     bodyLength += vendorLength + modelLength + uuidLength;
 
-    // assume content length will never be over 9999 bytes
-    char contentLengthStr[5];
-    uint8_t len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
+    
+    len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
 
 
     exosite_connect();
@@ -207,16 +213,16 @@ EXO_STATE exosite_activate()
 
 
 
-    EXO_STATE retVal = EXO_STATE_CONNECTION_ERROR;
+    retVal = EXO_STATE_CONNECTION_ERROR;
 
 
-    uint16_t responseLen;
+    
 
     exoPal_socketRead( exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
 
-    int i;
+    
     if (responseLen == 0)
     {
         // if we didn't receive any data from the modem
@@ -361,6 +367,10 @@ void exosite_getCIK(char * cik)
  */
 uint8_t exosite_write(const char * writeData, uint16_t length)
 {
+    // assume content length won't be greater than 9999.
+    char contentLengthStr[5];
+    uint8_t len_of_contentLengthStr;
+    uint16_t responseLength;
 
     // connect to exosite
     uint8_t connection_status = exosite_connect();
@@ -371,10 +381,8 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
         return connection_status;
     }
 
-    // assume content length won't be greater than 9999.
-    char contentLengthStr[5];
 
-    uint8_t len_of_contentLengthStr = exoPal_itoa((int)length, contentLengthStr, 5);
+    len_of_contentLengthStr = exoPal_itoa((int)length, contentLengthStr, 5);
 
     // send request
     exoPal_socketWrite(STR_WRITE_URL, sizeof(STR_WRITE_URL) - 1);
@@ -403,7 +411,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     // send body
     exoPal_socketWrite(writeData, length);
 
-    uint16_t responseLength = 0;
+    responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
@@ -455,6 +463,8 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
  */
 uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length)
 {
+    uint16_t responseLength;
+    int i,j;
     // connect to exosite
     uint8_t connection_status = exosite_connect();
 
@@ -490,13 +500,13 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
 
-    uint16_t responseLength = 0;
+    responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
-    int i,j;
+    
     // 204 "No content"
     if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
@@ -556,6 +566,11 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
  */
 uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length)
 {
+    uint16_t responseLength;
+    int16_t i;
+    uint16_t j;
+    uint16_t k;
+    
     // connect to exosite
     uint8_t connection_status = exosite_connect();
 
@@ -591,14 +606,12 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF) - 1);
 
 
-    uint16_t responseLength = 0;
+    responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
     exosite_disconnect();
-    int16_t i;
-    uint16_t j;
-    uint16_t k;
+    
     // if we received a 200
     if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
