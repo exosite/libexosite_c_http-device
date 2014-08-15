@@ -35,16 +35,17 @@
 #include "exosite_pal.h"
 #include "exosite.h"
 
-
+static const char STR_TIMESTAMP_URL[] = "GET /timestamp ";
 static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
 static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
 static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
 static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
-static const char STR_RPC_URL[] = "POST /onep:v1/rpc/process";
+static const char STR_RPC_URL[] = "POST /onep:v1/rpc/process ";
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
+static const char STR_ACCEPT_JSON[] = "Accept: application/json; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT_JSON[] = "Content-Type: application/json; charset=utf-8";
 static const char STR_CRLF[] = "\r\n";
@@ -74,7 +75,7 @@ static uint8_t isSocketOpen = 0;
 
 static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
 
-static int32_t exosite_getBody(char *response, char **bodyStart, int32_t *bodyLength);
+int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength);
 
 /*!
  * \brief Reset the cik to ""
@@ -157,7 +158,7 @@ EXO_STATE exosite_activate()
     uint8_t len_of_contentLengthStr;
     EXO_STATE retVal;
     uint16_t responseLen;
-    int i;
+    
     
     // Try and activate device with Exosite, four possible cases:
     // * We don't have a stored CIK and receive a 200 response with a CIK
@@ -248,7 +249,6 @@ EXO_STATE exosite_activate()
             exoPal_setCik(bodyStart);
             exoPal_memcpy(cikBuffer, bodyStart, CIK_LENGTH);
             retVal = EXO_STATE_VALID_CIK;
-            i = 0;
         }
     }
     else if (exosite_checkResponse(exoPal_rxBuffer, "409"))
@@ -280,7 +280,7 @@ EXO_STATE exosite_activate()
 
 }
 
-static int32_t exosite_getBody(char *response, char **bodyStart, int32_t *bodyLength)
+int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength)
 {
     // find content length
     char* strStart;
@@ -312,9 +312,8 @@ static int32_t exosite_getBody(char *response, char **bodyStart, int32_t *bodyLe
         {
             return -3;
         }
-        *bodyStart = strStart + sizeof(httpBodyToken)-1;
+        *bodyStart = (char *)(strStart + sizeof(httpBodyToken)-1);
     }
-    printf("out");
     return 0;
 }
 /*!
@@ -695,6 +694,45 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     return 0;
 }
 
+int8_t exosite_getTimestamp(int32_t * timestamp)
+{
+    char contentLengthStr[5];
+    char * bodyStart;
+    int16_t responseLength = 0;
+    int32_t status;
+    uint8_t connection_status;
+    char temp;
+    connection_status = exosite_connect();
+    exoPal_socketWrite(STR_TIMESTAMP_URL, sizeof(STR_TIMESTAMP_URL)-1);
+    exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+
+    // send Host header
+    exoPal_socketWrite(STR_HOST, sizeof(STR_HOST)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+    exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
+    
+    exoPal_sendingComplete();
+    
+    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exosite_disconnect();
+    
+    status = exosite_getBody(exoPal_rxBuffer, &bodyStart, &responseLength);
+    
+    if (status < 0 )
+    {
+        return -1;
+    }
+    
+    temp = bodyStart[responseLength];
+    bodyStart[responseLength] = '\0';
+    
+    *timestamp = exoPal_atoi(bodyStart);
+    bodyStart[responseLength] = temp;
+    
+    return 0;
+    
+}
 
 
 /*!
@@ -735,7 +773,7 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
 
     // send accept header
-    exoPal_socketWrite(STR_ACCEPT, sizeof(STR_ACCEPT)-1);
+    exoPal_socketWrite(STR_ACCEPT_JSON, sizeof(STR_ACCEPT_JSON)-1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
 
     // send content length header

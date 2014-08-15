@@ -81,8 +81,9 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
 int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength);
-void exoPal_sendingComplete(void);
 
+int8_t exosite_getTimestamp(int32_t * timestamp);
+int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength);
 
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
 void exosite_setCIK(char * pCIK);
