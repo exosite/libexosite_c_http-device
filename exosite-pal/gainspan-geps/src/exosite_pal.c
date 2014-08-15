@@ -80,19 +80,23 @@ uint8_t exoPal_tcpSocketClose()
 uint8_t exoPal_tcpSocketOpen()
 {
     struct sockaddr_in tServ_addr;
+    
+    int32_t sockStatus = 0;
     exoPal_txBufCounter = 0;
     
     tServ_addr.sin_family = AF_INET;
     tServ_addr.sin_port = htons(80);
-    tServ_addr.sin_addr.s_addr = htonl(0xC0A8037B);//exoPal_ip;//htonl(0xC0A80339);//
+    tServ_addr.sin_addr.s_addr = exoPal_ip;// htonl(0xC0A80339);//htonl(0xC0A8037B)/* vm */;//
     
     
     // do stuff to open a socket
     SockDes = socket(AF_INET, SOCK_STREAM, 0 );
     printf("[EXOPAL] Socket Create\r\n");
     /* set the tServ_addr socket structure and connect*/
-    connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
-    printf("[EXOPAL] Socket Connected?\r\n");
+    sockStatus = connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
+    
+    printf("[EXOPAL] Socket Connected?: %d\r\n", sockStatus);
+    
     return 0;
     
 }
@@ -168,7 +172,7 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
     
     response = recv(SockDes, buffer, bufferSize,0);
     printf("[EXOPAL] Received %d Bytes\r\n", response);
-    //printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
+    printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
     //for(i = 100; ((i - 100) < response); i += 100)
     //{
     //    printf("%.*s", 100,buffer + i);
@@ -198,7 +202,8 @@ uint8_t exoPal_setCik(const char * cik)
     printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
     boss_app_setCik(cik);
     
-    // TODO: write cik to nvm
+    // write to nvm
+    GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, CIK_LENGTH, (void *)cik);
     return 0;
 }
 
@@ -291,7 +296,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
  * @return void
  */void exoPal_sendingComplete()
 {
-    printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
+    printf("[EXOPAL] Sending");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
     printf("[EXOPAL] Done Sending\r\n");
 }
