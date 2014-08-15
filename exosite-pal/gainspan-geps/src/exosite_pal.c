@@ -34,13 +34,19 @@
 *****************************************************************************/
 
 #include "exosite_pal.h"
-#include "gsn_includes.h"
+#include "config/app_config_private.h"
+#include "exosite.h"
 
 static int32_t SockDes;
 
 char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 char exoPal_txBuffer[1024];
 uint16_t exoPal_txBufCounter = 0;
+
+ttUserIpAddress exoPal_ip = 0;
+
+static char hostname[] = "boss-controls-dev.m2.exosite.com";
+
 
 /*!
  * \brief Closes a tcp socket
@@ -55,6 +61,7 @@ uint8_t exoPal_tcpSocketClose()
 {
     // do stuff to close socket
     tfClose(SockDes);
+    printf("[EXOPAL] socket closed\r\n");
     SockDes = -1;
     return 0;
 }
@@ -77,14 +84,15 @@ uint8_t exoPal_tcpSocketOpen()
     
     tServ_addr.sin_family = AF_INET;
     tServ_addr.sin_port = htons(80);
-    tServ_addr.sin_addr.s_addr = htonl(0xC0A80339);
+    tServ_addr.sin_addr.s_addr = htonl(0xC0A8037B);//exoPal_ip;//htonl(0xC0A80339);//
+    
     
     // do stuff to open a socket
     SockDes = socket(AF_INET, SOCK_STREAM, 0 );
-    printf("[boss] Socket Create\r\n");
+    printf("[EXOPAL] Socket Create\r\n");
     /* set the tServ_addr socket structure and connect*/
     connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
-    printf("[boss] Socket Connecte?\r\n");
+    printf("[EXOPAL] Socket Connected?\r\n");
     return 0;
     
 }
@@ -132,6 +140,10 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
     return 0;
 }
 
+char * exoPal_getHostName()
+{
+    return hostname;
+}
 
 /*!
  * \brief
@@ -152,9 +164,16 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     int32_t response;
+    int i = 0;
+    
     response = recv(SockDes, buffer, bufferSize,0);
-    printf("responseLen: %d", response);
-    printf("response: %.*s", response,buffer);
+    printf("[EXOPAL] Received %d Bytes\r\n", response);
+    //printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
+    //for(i = 100; ((i - 100) < response); i += 100)
+    //{
+    //    printf("%.*s", 100,buffer + i);
+    //}
+    printf("\r\n");
     if (response >= 0)
     {
         *responseLength = response;
@@ -176,7 +195,10 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
  */
 uint8_t exoPal_setCik(const char * cik)
 {
-    // write cik to nvm
+    printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
+    boss_app_setCik(cik);
+    
+    // TODO: write cik to nvm
     return 0;
 }
 
@@ -193,8 +215,10 @@ uint8_t exoPal_setCik(const char * cik)
  */
 uint8_t exoPal_getCik(char * read_buffer)
 {
-    // retrieve cik from nvm
-    strcpy(read_buffer, "1234567890123456789012345678901234567890");
+    GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, CIK_LENGTH, read_buffer);
+    boss_app_setCik(read_buffer);
+    
+    printf("[EXOPAL] Retrieved cik: %.*s\r\n", CIK_LENGTH, read_buffer);
     return 0;
 }
 
@@ -256,7 +280,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
 {
     GSN_FACT_DFLT_ELEMENT_T *ptSN;
     ptSN = GsnFactDflt_ElementGet(GSN_FACT_DFLT_BOSS_SN);
-    strcpy(read_buffer, ptSN->pVal);
+    strcpy(read_buffer, (const char *)ptSN->pVal);
     return 0;
 }
 
@@ -267,7 +291,9 @@ uint8_t exoPal_getUuid(char * read_buffer)
  * @return void
  */void exoPal_sendingComplete()
 {
+    printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
+    printf("[EXOPAL] Done Sending\r\n");
 }
 
 /*!
@@ -275,8 +301,8 @@ uint8_t exoPal_getUuid(char * read_buffer)
  */
 uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length)
 {
-
-return 0;	 	    
+    memcpy(dst,src,length);
+    return 0;
 }
 
 /*!
@@ -313,7 +339,9 @@ void reverse(char s[])
 
 int32_t exoPal_atoi(char* val)
 {
-	return atoi(val);
+    int32_t temp;
+    temp = atoi(val);
+    return temp;
 }
 
 char* exoPal_strstr(const char *in, const char *str)
