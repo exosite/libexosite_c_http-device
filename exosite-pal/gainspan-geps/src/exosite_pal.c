@@ -288,6 +288,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
     GSN_FACT_DFLT_ELEMENT_T *ptSN;
     ptSN = GsnFactDflt_ElementGet(GSN_FACT_DFLT_BOSS_SN);
     strcpy(read_buffer, (const char *)ptSN->pVal);
+    printf("[EXOPAL] Retrieved SN: %s\r\n", read_buffer);
     return 0;
 }
 
@@ -298,7 +299,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
  * @return void
  */void exoPal_sendingComplete()
 {
-    printf("[EXOPAL] Sending");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
+    printf("[EXOPAL] Sending: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
     printf("[EXOPAL] Done Sending\r\n");
 }
