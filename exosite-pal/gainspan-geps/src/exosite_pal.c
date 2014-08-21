@@ -98,6 +98,10 @@ uint8_t exoPal_tcpSocketOpen()
     sockStatus = connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
     
     printf("[EXOPAL] Socket Connected?: %d\r\n", sockStatus);
+    if (sockStatus != 0)
+    {
+        return -1;
+    }
     
     return 0;
     
