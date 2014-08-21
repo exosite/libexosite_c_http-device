@@ -35,7 +35,9 @@
 
 #include "exosite_pal.h"
 #include "config/app_config_private.h"
-#include "exosite.h"
+//#include "exosite.h"
+
+#define PAL_CIK_LENGTH 40
 
 static int32_t SockDes;
 
@@ -203,7 +205,7 @@ uint8_t exoPal_setCik(const char * cik)
     boss_app_setCik(cik);
     
     // write to nvm
-    GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, CIK_LENGTH, (void *)cik);
+    GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, (void *)cik);
     return 0;
 }
 
@@ -220,10 +222,10 @@ uint8_t exoPal_setCik(const char * cik)
  */
 uint8_t exoPal_getCik(char * read_buffer)
 {
-    GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, CIK_LENGTH, read_buffer);
+    GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
     boss_app_setCik(read_buffer);
     
-    printf("[EXOPAL] Retrieved cik: %.*s\r\n", CIK_LENGTH, read_buffer);
+    printf("[EXOPAL] Retrieved cik: %.*s\r\n", PAL_CIK_LENGTH, read_buffer);
     return 0;
 }
 
