@@ -294,7 +294,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
     char randArr[6];
     ptMAC = GsnFactDflt_MacGet();
     
-    sprintf(read_buffer, "A1-%02x%02x%02x-%02x%02x%02x-xxxxx", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
+    sprintf(read_buffer, "A1-%02X%02X%02X-%02X%02X%02X-xxxxx", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
     
     //Get "random" portion of serial number
     pFactDfltElmnt = GsnFactDflt_ElementGet(GSN_FACT_DFLT_PROV_PASSPHRASE_ID);
