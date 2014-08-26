@@ -41,7 +41,7 @@
 // defines
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
 to place incoming data from the modem in.*/
-#define RX_BUFFER_SIZE                         1024
+#define RX_BUFFER_SIZE                         2048
 
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
