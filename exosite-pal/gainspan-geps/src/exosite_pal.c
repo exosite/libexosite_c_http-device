@@ -294,16 +294,17 @@ uint8_t exoPal_getUuid(char * read_buffer)
     char randArr[6];
     ptMAC = GsnFactDflt_MacGet();
     
-    sprintf(read_buffer, "A1-%02X%02X%02X-%02X%02X%02X-xxxxx", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
+    sprintf(read_buffer, "XX-%02X%02X%02X-%02X%02X%02X-xxxxx", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
     
     //Get "random" portion of serial number
     pFactDfltElmnt = GsnFactDflt_ElementGet(GSN_FACT_DFLT_PROV_PASSPHRASE_ID);
     if(pFactDfltElmnt != NULL)
     {
-        //  Copy 5 bytes
-        memcpy( read_buffer + 17, pFactDfltElmnt->pVal, 5);
-
-
+        // Copy model type
+        memcpy( read_buffer, pFactDfltElmnt->pVal, 2);
+        
+        // Copy 5 bytes (to salt the serial number)
+        memcpy( read_buffer + 17, pFactDfltElmnt->pVal + 3, 5);
     }
     
     printf("[EXOPAL] Retrieved SN: %s\r\n", read_buffer);
