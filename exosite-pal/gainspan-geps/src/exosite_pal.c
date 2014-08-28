@@ -205,12 +205,20 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
  */
 uint8_t exoPal_setCik(const char * cik)
 {
+    int32_t rtn;
+    
     printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
     boss_app_setCik(cik);
     
     // write to nvm
-    GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, (void *)cik);
-    return 0;
+    rtn = GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, (void *)cik);
+    
+    if (rtn)
+    {
+        printf("[EXOPAL] *** CIK write to NVM failed: %d\r\n", rtn);
+    }
+    
+    return rtn;
 }
 
 
@@ -226,11 +234,22 @@ uint8_t exoPal_setCik(const char * cik)
  */
 uint8_t exoPal_getCik(char * read_buffer)
 {
-    GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
-    boss_app_setCik(read_buffer);
+    int32_t read;
     
-    printf("[EXOPAL] Retrieved cik: %.*s\r\n", PAL_CIK_LENGTH, read_buffer);
-    return 0;
+    rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
+    boss_app_setCik(read_buffer);
+
+    if (rtn)
+    {
+        printf("[EXOPAL] *** CIK read from NVM failed: %d\r\n", rtn);
+    }
+    else
+    {
+        
+        printf("[EXOPAL] Retrieved cik: %.*s\r\n", PAL_CIK_LENGTH, read_buffer);
+    }
+
+    return rtn;
 }
 
 
