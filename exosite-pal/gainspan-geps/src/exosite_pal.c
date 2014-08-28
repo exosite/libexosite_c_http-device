@@ -234,7 +234,7 @@ uint8_t exoPal_setCik(const char * cik)
  */
 uint8_t exoPal_getCik(char * read_buffer)
 {
-    int32_t read;
+    int32_t rtn;
     
     rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
     boss_app_setCik(read_buffer);
