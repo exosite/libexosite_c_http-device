@@ -42,7 +42,7 @@
 static int32_t SockDes;
 
 char  exoPal_rxBuffer[RX_BUFFER_SIZE];
-char exoPal_txBuffer[1024];
+char exoPal_txBuffer[TX_BUFFER_SIZE];
 uint16_t exoPal_txBufCounter = 0;
 
 ttUserIpAddress exoPal_ip = 0;
@@ -143,9 +143,20 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
         // triedt to write with socket closed
         return -1;
     }
+    
+    if((exoPal_txBufCounter + len) > TX_BUFFER_SIZE)
+    {
+        // tried to write more data than the buffer could hold, send out
+        // existing buffer and start over.
+        printf("[EXO PAL] tx buffer full sending and flushing");
+        exoPal_sendingComplete();
+        exoPal_txBufCounter = 0;
+    }
+    
     memcpy(exoPal_txBuffer + exoPal_txBufCounter, buffer, len);
     exoPal_txBufCounter += len;
-
+    
+    
     
     return 0;
 }

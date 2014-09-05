@@ -43,6 +43,10 @@
 to place incoming data from the modem in.*/
 #define RX_BUFFER_SIZE                         2048
 
+/*!< This defines the size of the tx buffer in the PAL.  This buffer is used
+to batch data before it is sent out.*/
+#define TX_BUFFER_SIZE                         1024
+
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 // functions for export
