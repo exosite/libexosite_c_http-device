@@ -280,7 +280,18 @@ uint8_t exoPal_getCik(char * read_buffer)
  */
 uint8_t exoPal_getModel(char * read_buffer)
 {
-    strcpy(read_buffer, "smart_plug");
+    
+    char uuidBuffer[sizeof("xx-xxxxxx-xxxxxx-xxxxx")];
+    exoPal_getUuid(uuidBuffer);
+    
+    if (uuidBuffer[0] == 'A')
+    {
+        strcpy(read_buffer, "smart_plug");
+    }
+    else
+    {
+        strcpy(read_buffer, "smart_plug_220");
+    }
     return 0;
 }
 
