@@ -190,10 +190,10 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
     response = recv(SockDes, buffer, bufferSize,0);
     printf("[EXOPAL] Received %d Bytes\r\n", response);
     printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
-    //for(i = 100; ((i - 100) < response); i += 100)
-    //{
-    //    printf("%.*s", 100,buffer + i);
-    //}
+    for(i = 100; ((i - 100) < response); i += 100)
+    {
+        printf("%.*s", 100,buffer + i);
+    }
     printf("\r\n");
     if (response >= 0)
     {
