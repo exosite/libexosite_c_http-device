@@ -401,6 +401,12 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     uint8_t len_of_contentLengthStr;
     uint16_t responseLength;
 
+    if(!exosite_isCIKValid(cikBuffer))
+    {
+        // tried to write without a valid CIK
+        return -99;
+    }
+    
     // connect to exosite
     uint8_t connection_status = exosite_connect();
 
@@ -496,6 +502,13 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 {
     uint16_t responseLength;
     int i,j;
+    
+    if(!exosite_isCIKValid(cikBuffer))
+    {
+        // tried to read without a valid CIK
+        return -99;
+    }
+    
     // connect to exosite
     uint8_t connection_status = exosite_connect();
 
@@ -602,6 +615,12 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     int16_t i;
     uint16_t j;
     uint16_t k;
+    
+    if(!exosite_isCIKValid(cikBuffer))
+    {
+        // tried to read without a valid CIK
+        return -99;
+    }
     
     // connect to exosite
     uint8_t connection_status = exosite_connect();
@@ -748,6 +767,13 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
 {
     char contentLengthStr[5];
     uint16_t responseLength = 0;
+    
+    if(!exosite_isCIKValid(cikBuffer))
+    {
+        // tried to write without a valid CIK
+        return -99;
+    }
+    
     // connect to exosite
     uint8_t connection_status = exosite_connect();
     // assume content length will never be over 9999 bytes
