@@ -400,7 +400,8 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     char contentLengthStr[5];
     uint8_t len_of_contentLengthStr;
     uint16_t responseLength;
-
+    uint8_t connection_status;
+    
     if(!exosite_isCIKValid(cikBuffer))
     {
         // tried to write without a valid CIK
@@ -408,7 +409,7 @@ uint8_t exosite_write(const char * writeData, uint16_t length)
     }
     
     // connect to exosite
-    uint8_t connection_status = exosite_connect();
+    connection_status = exosite_connect();
 
     // return error message if connect failed.
     if (connection_status != 0)
@@ -502,15 +503,16 @@ uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 {
     uint16_t responseLength;
     int i,j;
+    uint8_t connection_status;
     
     if(!exosite_isCIKValid(cikBuffer))
     {
-        // tried to read without a valid CIK
+        // tried to write without a valid CIK
         return -99;
     }
     
     // connect to exosite
-    uint8_t connection_status = exosite_connect();
+    connection_status = exosite_connect();
 
     // return error message if connect failed.
     if (connection_status != 0)
@@ -615,15 +617,16 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     int16_t i;
     uint16_t j;
     uint16_t k;
+    uint8_t connection_status;
     
     if(!exosite_isCIKValid(cikBuffer))
     {
-        // tried to read without a valid CIK
+        // tried to write without a valid CIK
         return -99;
     }
     
     // connect to exosite
-    uint8_t connection_status = exosite_connect();
+    connection_status = exosite_connect();
 
     // return error message if connect failed.
     if (connection_status != 0)
@@ -767,6 +770,8 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
 {
     char contentLengthStr[5];
     uint16_t responseLength = 0;
+    uint8_t connection_status;
+    uint8_t len_of_contentLengthStr;
     
     if(!exosite_isCIKValid(cikBuffer))
     {
@@ -775,10 +780,11 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     }
     
     // connect to exosite
-    uint8_t connection_status = exosite_connect();
+    connection_status = exosite_connect();
+    
     // assume content length will never be over 9999 bytes
     
-    uint8_t len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
+    len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
     // return error message if connect failed.
     if (connection_status != 0)
     {
