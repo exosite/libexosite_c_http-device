@@ -73,7 +73,7 @@ uint8_t exoPal_tcpSocketClose();
 uint8_t exoPal_tcpSocketOpen();
 uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
 uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
-void exoPal_sendingComplete();
+int32_t exoPal_sendingComplete();
 
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
 int32_t exoPal_atoi(char* val);

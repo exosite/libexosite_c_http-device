@@ -379,12 +379,14 @@ uint8_t exoPal_getUuid(char * read_buffer)
  * @brief  Used to do any operations before 
  *
  * 
- * @return void
- */void exoPal_sendingComplete()
+ * @return Returns 0 if successful, else error code
+ */
+int32_t exoPal_sendingComplete()
 {
     //printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
     
    //printf("[EXOPAL] Done Sending\r\n");
+    return 0;
 }
 
 /*!

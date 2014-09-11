@@ -76,9 +76,9 @@ typedef enum EXOSITE_DEVICE_STATE_tag
 EXO_STATE exosite_activate();
 EXO_STATE exosite_init(const char *vendor, const char *model);
 
-uint8_t exosite_write(const char * writeData, uint16_t length);
-uint8_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * responseSize);
-uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
+int32_t exosite_write(const char * writeData, uint16_t length);
+int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * responseSize);
+int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
 int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength);
 
