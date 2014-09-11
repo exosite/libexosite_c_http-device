@@ -36,6 +36,7 @@
 #include "exosite_pal.h"
 #include "config/app_config_private.h"
 //#include "exosite.h"
+#include "gsn_otafu.h"
 
 #define PAL_CIK_LENGTH 40
 
@@ -199,6 +200,67 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
     {
         *responseLength = response;
     }
+    return 0;
+
+}
+
+
+/*!
+ * \brief
+ *
+ * Reads data from a socket and loads into into External Flash for an OTAFU
+ *
+ * \param[in] bufferSize Size of buffer
+ * \param[out] buffer Buffer received data will be written to
+ * \param[out] responseLength amount of data received from modem
+ *
+ *
+ * \sa exoPal_socketWrite
+ *
+ * \note len must be greater than sizeof(buffer)
+ *
+ * \return 0 if successful, else error code
+ */
+uint8_t exoPal_socketReadFw( char * buffer, 
+                                uint16_t bufferSize, 
+                                uint16_t * responseLength, 
+                                GSN_EXTFLASH_FWUP_CTX *pCtx,
+                                GSN_FWUP_ID_T app)
+{
+    int32_t response;
+    int i = 0;
+    char * bodyStart;
+    int32_t bodyOffset;
+    response = recv(SockDes, buffer, bufferSize,0);
+    
+    i += response;
+    
+    
+    bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
+    
+    bodyOffset = bodyStart - buffer;
+    
+    printf("[EXOPAL] body start at %d \r\n", bodyOffset);
+    
+    GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), response - bodyOffset, app);
+    // load to flash
+    while ((response == bufferSize) && (response > 0))
+    {
+        
+        // read
+        response = recv(SockDes, buffer, bufferSize,0);
+        i += response;
+        
+        // load to flash
+        GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, response, app);
+    }
+    printf("[EXOPAL] Received %d Bytes\r\n", i);
+    //GsnFwupExtFlash_DwndEnd
+    if (response >= 0)
+    {
+        *responseLength = response;
+    }
+
     return 0;
 
 }
