@@ -36,6 +36,7 @@
 #include "exosite_pal.h"
 #include "string.h"
 #include "stdio.h"
+#include "stdlib.h"
 
 
 /*!
@@ -124,6 +125,10 @@ uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
     
 }
 
+int32_t exoPal_atoi(char* val)
+{
+	return atoi(val);
+}
 
 /*!
  * \brief A function to copy from one place in memory to another
@@ -370,5 +375,46 @@ uint8_t exoPal_getUuid(char * read_buffer)
     return mem_nvm.retVal_getUuid;
 }
 
+/*!
+ * @brief  Used to do any operations before 
+ *
+ * 
+ * @return void
+ */void exoPal_sendingComplete()
+{
+    //printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
+    
+   //printf("[EXOPAL] Done Sending\r\n");
+}
 
+/*!
+ * \brief memcpy implementation
+ */
+uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length)
+{
+    memcpy(dst,src,length);
+    return 0;
+}
 
+char* exoPal_strstr(const char *in, const char *str)
+{
+	char c;
+	size_t len;
+
+	c = *str++;
+	if (!c)
+		return (char *) in;	// Trivial empty string case
+
+	len = strlen(str);
+	do {
+		char sc;
+
+		do {
+			sc = *in++;
+			if (!sc)
+				return (char *) 0;
+		} while (sc != c);
+	} while (strncmp(in, str, len) != 0);
+
+	return (char *) (in - 1);
+}

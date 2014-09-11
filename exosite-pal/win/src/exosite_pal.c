@@ -33,7 +33,7 @@
 *
 *****************************************************************************/
 //#include "exosite.h"
-#include "exosite_hal.h"
+#include "exosite_pal.h"
 
 
 #include <winsock.h>
