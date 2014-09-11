@@ -389,14 +389,7 @@ int32_t exoPal_sendingComplete()
     return 0;
 }
 
-/*!
- * \brief memcpy implementation
- */
-uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length)
-{
-    memcpy(dst,src,length);
-    return 0;
-}
+
 
 char* exoPal_strstr(const char *in, const char *str)
 {
