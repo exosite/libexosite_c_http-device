@@ -236,7 +236,7 @@ EXO_STATE exosite_activate()
     {
         // we received a CIK.
         char * bodyStart;
-        int32_t bodyLength = 0;
+        uint16_t bodyLength = 0;
         int32_t response;
         response = exosite_getBody(exoPal_rxBuffer, &bodyStart, &bodyLength);
         if (response < 0)
@@ -291,7 +291,7 @@ EXO_STATE exosite_activate()
  * 
  * @return int32_t 0 if successful, else negative
  */
-int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength)
+int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
 {
     // find content length
     char* strStart;
