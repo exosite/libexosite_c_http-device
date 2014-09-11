@@ -719,7 +719,6 @@ uint8_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
 
 int8_t exosite_getTimestamp(int32_t * timestamp)
 {
-    char contentLengthStr[5];
     char * bodyStart;
     uint16_t responseLength = 0;
     int32_t status;
