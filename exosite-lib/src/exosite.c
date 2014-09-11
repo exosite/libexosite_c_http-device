@@ -75,7 +75,8 @@ static uint8_t isSocketOpen = 0;
 
 static EXO_STATE initState = EXO_STATE_NOT_COMPLETE;
 
-int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength);
+int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
+
 
 /*!
  * \brief Reset the cik to ""
@@ -235,7 +236,7 @@ EXO_STATE exosite_activate()
     {
         // we received a CIK.
         char * bodyStart;
-        int32_t bodyLength = 0;
+        uint16_t bodyLength = 0;
         int32_t response;
         response = exosite_getBody(exoPal_rxBuffer, &bodyStart, &bodyLength);
         if (response < 0)
@@ -280,7 +281,7 @@ EXO_STATE exosite_activate()
 
 }
 
-int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength)
+int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
 {
     // find content length
     char* strStart;
@@ -720,7 +721,7 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
 {
     char contentLengthStr[5];
     char * bodyStart;
-    int16_t responseLength = 0;
+    uint16_t responseLength = 0;
     int32_t status;
     uint8_t connection_status;
     char temp;
