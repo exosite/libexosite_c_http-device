@@ -281,6 +281,16 @@ EXO_STATE exosite_activate()
 
 }
 
+
+/*!
+ * @brief  Sets bodyStart to point to the start of the http body
+ *
+ * @param response [in] Full http response with headers
+ * @param bodyStart [out] Will be updated to point at the start of the http body
+ * @param bodyLength [out] Length of the body
+ * 
+ * @return int32_t 0 if successful, else negative
+ */
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
 {
     // find content length
@@ -317,6 +327,7 @@ int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
     }
     return 0;
 }
+
 /*!
  * \brief Checks if the given cik is valid
  *
@@ -738,6 +749,13 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     return 0;
 }
 
+/*!
+ * @brief  Retrieves the timestamp from m2.exosite.com/timestamp
+ *
+ * @param timestamp Timestamp retrieved from Exosite
+ * 
+ * @return int8_t Returns negative error code if failed, else returns 0
+ */
 int8_t exosite_getTimestamp(int32_t * timestamp)
 {
     char * bodyStart;
