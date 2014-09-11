@@ -356,12 +356,14 @@ uint8_t exoPal_getUuid(char * read_buffer)
  * @brief  Used to do any operations before 
  *
  * 
- * @return void
- */void exoPal_sendingComplete()
+ * @return 0 if successful
+ */
+int32_t exoPal_sendingComplete()
 {
     printf("[EXOPAL] Sending: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
     printf("[EXOPAL] Done Sending\r\n");
+    return 0;
 }
 
 /*!
