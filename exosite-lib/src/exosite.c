@@ -328,7 +328,7 @@ int32_t exosite_getBody(char *response, char **bodyStart, int16_t *bodyLength)
     }
     return 0;
 }
-/*!
+
 
 /*!
  * \brief Checks if the given cik is valid
