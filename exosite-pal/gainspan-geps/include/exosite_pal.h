@@ -66,8 +66,7 @@ uint8_t exoPal_itoa(int value, char* str, uint8_t radix);
 uint16_t exoPal_strlen(const char *s);
 uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length);
 char* exoPal_strstr(const char *in, const char *str);
-uint16_t exoPal_fletcher_checksum(uint8_t *src, uint16_t length);
-void exoPal_sendingComplete(void);
+int32_t exoPal_sendingComplete(void);
 char * exoPal_getHostName();
 
 extern ttUserIpAddress exoPal_ip;

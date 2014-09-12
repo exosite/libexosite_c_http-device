@@ -158,7 +158,7 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
 TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
 {
     
-    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nContent-Length: 40\r\n\r\n");
     strcat(nvm->readFromBuffer,validTestcik);
 
     nvm->readFromBufferLen = strlen(nvm->readFromBuffer);

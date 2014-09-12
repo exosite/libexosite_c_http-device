@@ -73,9 +73,12 @@ uint8_t exoPal_tcpSocketClose();
 uint8_t exoPal_tcpSocketOpen();
 uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
 uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
+int32_t exoPal_sendingComplete();
 
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
+int32_t exoPal_atoi(char* val);
 uint16_t exoPal_strlen(const char *s);
+char* exoPal_strstr(const char *str, const char *target);
 void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 
 // unit test specific stuffs
