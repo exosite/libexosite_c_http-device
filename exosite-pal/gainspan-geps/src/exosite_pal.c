@@ -435,6 +435,38 @@ char* exoPal_strstr(const char *in, const char *str)
 	return (char *) (in - 1);
 }
 
+
+/*!
+ * \brief Computes a 16-bit fletcher checksum on an 8-bit data stream
+ *
+ *
+ *
+ * \param[in] *p pointer to incoming data stream
+ * \param[in] len length of data stream
+
+ * \return 16-bit fletcher checksum
+ */
+// 16-bit fletcher checksum calculator
+
+// http://tools.ietf.org/html/rfc1146
+uint16_t exoPal_fletcher_checksum(uint8_t *src, uint16_t length)
+{
+	uint16_t a = 0;
+	uint16_t b = 0;
+    
+    printf("Checksum %04x:%d\r\n", src, length);
+    
+	for (; length; length--)
+	{
+		a += *src;
+        b += a;
+        printf("%02x:%04x\r\n", *src, b);
+        src++;
+	}
+    
+	return (b);
+}
+
 /*!
  * \brief Gets the decimal ascii representation of an integer
  *
