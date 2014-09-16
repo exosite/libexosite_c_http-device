@@ -119,7 +119,6 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
     uint8_t retStatus = 0;
     // reset state
     initState = EXO_STATE_NOT_COMPLETE;
-    
 
     exoPal_init();
 
