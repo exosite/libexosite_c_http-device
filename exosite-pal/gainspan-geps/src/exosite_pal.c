@@ -238,6 +238,11 @@ uint8_t exoPal_socketReadFw( char * buffer,
     
     bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
     
+    if ((bodyStart < buffer) || (bodyStart > (buffer + bufferSize)))
+    {
+        return 1;
+    }
+    
     bodyOffset = bodyStart - buffer;
     
     printf("[EXOPAL] body start at %d \r\n", bodyOffset);
