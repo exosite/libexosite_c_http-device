@@ -424,7 +424,7 @@ int32_t exoPal_sendingComplete()
 {
     printf("[EXOPAL] Sending: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
-    printf("[EXOPAL] Done Sending\r\n");
+    printf("\r\n[EXOPAL] Done Sending\r\n");
     return 0;
 }
 
