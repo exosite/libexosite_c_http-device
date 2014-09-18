@@ -260,14 +260,12 @@ EXO_STATE exosite_activate()
             // If we receive a 409 and we do have a valid CIK, we will
             // assume we are good to go.
             retVal = EXO_STATE_VALID_CIK;
-
         }
         else
         {
             // if we don't have a CIK in nvm and we receive a 409
             // The device isn't enabled in the dashboard
             retVal = EXO_STATE_DEVICE_NOT_ENABLED;
-
         }
     }
     else if (exosite_checkResponse(exoPal_rxBuffer, "401"))
