@@ -639,16 +639,17 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
 {
     uint16_t responseLength;
     int16_t i;
-    uint16_t j;
-    uint16_t k;
+    uint32_t status;
     uint8_t connection_status;
     int32_t results = 0;
-    if(!exosite_isCIKValid(cikBuffer))
+    char *bodyStart;
+
+    if (!exosite_isCIKValid(cikBuffer))
     {
         // tried to write without a valid CIK
         return -99;
     }
-    
+
     // connect to exosite
     connection_status = exosite_connect();
 
@@ -684,61 +685,43 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
 
     results |= exoPal_sendingComplete();
-    
+
     if (results != 0)
     {
         exosite_disconnect();
         return results;
     }
-    
+
     responseLength = 0;
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
     exosite_disconnect();
-    
+
     // if we received a 200
     if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
-        //find first '\n' char from end of response
-        for (i = responseLength; i > 0; i--)
+
+        status = exosite_getBody(exoPal_rxBuffer, &bodyStart, &responseLength);
+
+        if (status != 0)
         {
-            if (exoPal_rxBuffer[i] == '\n')
+            return -100;
+        }
+        // find '='
+        for (i = 0; i < responseLength; i++)
+        {
+            if (bodyStart[i] == '=')
             {
-                // '\n' found
-                uint8_t charNotMatch = 0;
-                for ( j = 1; (j <= i) && i > 0; j++)
+                if ((i + 1) == responseLength)
                 {
-                    // If we're at the end of the inputted string?
-                    if (alias[j-1] == '\0')
-                    {
-                        // if all chars of our requested alias match, we found the key
-                        if (!charNotMatch)
-                        {
-                            // move j passed the '='
-                            j++;
-
-                            for (k = 0;
-                                 (k <= buflen) && ((i + j + k) <= responseLength);
-                                 k++)
-                            {
-                                // copy remaining data into buffer
-                                readResponse[k] = exoPal_rxBuffer[i+j+k];
-                                *length = k;
-                            }
-                            i = 0;
-                        }
-                        else
-                        {
-                            // match not found, exit
-                            i = 0;
-                            *length = 0;
-                        }
-                    }
-
-                    // confirm letter by letter
-                    charNotMatch |= !(exoPal_rxBuffer[i+j] == alias[j-1]);
+                    // no data
+                    *length = 0;
                 }
+                // found the equals, copy remaining into readResponse
+                exoPal_memcpy(readResponse, bodyStart + i + 1, responseLength - i - 1);
+                *length = responseLength - i - 1;
+                i = responseLength;
             }
         }
     }
