@@ -94,11 +94,11 @@ uint8_t exoPal_tcpSocketOpen()
     
     // do stuff to open a socket
     SockDes = socket(AF_INET, SOCK_STREAM, 0 );
-    printf("[EXOPAL] Socket Create\r\n");
+    printf("[EXOPAL] Creating socket\r\n");
     /* set the tServ_addr socket structure and connect*/
     sockStatus = connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
     
-    printf("[EXOPAL] Socket Connected?: %d\r\n", sockStatus);
+    printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
         return -1;
@@ -145,11 +145,12 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
         return -1;
     }
     
+    
     if((exoPal_txBufCounter + len) > TX_BUFFER_SIZE)
     {
         // tried to write more data than the buffer could hold, send out
         // existing buffer and start over.
-        printf("[EXO PAL] tx buffer full sending and flushing");
+        printf("[EXO PAL] tx buffer full, sending and flushing");
         exoPal_sendingComplete();
         exoPal_txBufCounter = 0;
     }
@@ -193,7 +194,14 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
     printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
     for(i = 100; (i < response); i += 100)
     {
-        printf("%.*s", 100,buffer + i);
+        if ((response - i) < 100)
+        {
+            printf("%.*s", response - i,buffer + i);
+        }
+        else
+        {
+            printf("%.*s", 100,buffer + i);
+        }
     }
     printf("\r\n");
     if (response >= 0)
