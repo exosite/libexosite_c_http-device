@@ -302,7 +302,7 @@ uint8_t exoPal_socketReadFw( char * buffer,
         // read
         response = recv(SockDes, buffer, bufferSize,0);
         i += response;
-        
+        printf("*");
         // yup, I'm busy waiting.
         while(j++ < 100000);
         
