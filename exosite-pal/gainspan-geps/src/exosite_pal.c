@@ -239,6 +239,11 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int i = 0;
     char * bodyStart;
     int32_t bodyOffset;
+    uint8_t spaceFound = 0;
+    int16_t j;
+    char validResponseCode[] = "200";
+    int32_t validResponse = 0;
+    
     response = recv(SockDes, buffer, bufferSize,0);
     
     i += response;
@@ -251,7 +256,41 @@ uint8_t exoPal_socketReadFw( char * buffer,
         return 1;
     }
     
+    
+    ////////////// Check HTTP Response code ////////////////////
+    // get start second ' ' separate column
+    // assumes will always be before the 15th char
+    // assumes first char isn't a ' '
+    for (j = 1; (j < 15) && (spaceFound == 0); j++)
+    {
+        if (buffer[j] == ' ')
+        {
+            spaceFound = j + 1;
+        }
+    }
+    if (spaceFound > 0)
+    {
+        // If we found a ' ', try to match the code
+        if (validResponseCode[0] == buffer[spaceFound] && validResponseCode[1] == buffer[spaceFound + 1] && validResponseCode[2] == buffer[spaceFound + 2])
+        {
+            validResponse = 1;
+        }
+    }
+
+    if (validResponse == 0)
+    {
+        // not a valid response
+        printf("[EXOPAL] FW Read Failed\r\n");
+        printf("[EXOPAL] Response: %s\r\n", buffer);
+        return 2;
+    }
+    ////////////////////////////////////////////////////////////////
+    
+    
     bodyOffset = bodyStart - buffer;
+    
+    printf("[EXOPAL] Headers: %.*s \r\n", 115, buffer);
+    printf("%.*s \r\n", 115, buffer + 115);
     
     printf("[EXOPAL] body start at %d \r\n", bodyOffset);
     
@@ -259,10 +298,13 @@ uint8_t exoPal_socketReadFw( char * buffer,
     // load to flash
     while ((response == bufferSize) && (response > 0))
     {
-        
+        int32_t j = 0;
         // read
         response = recv(SockDes, buffer, bufferSize,0);
         i += response;
+        
+        // yup, I'm busy waiting.
+        while(j++ < 100000);
         
         // load to flash
         GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, response, app);
