@@ -477,7 +477,22 @@ uint8_t exoPal_getUuid(char * read_buffer)
  */
 int32_t exoPal_sendingComplete()
 {
-    printf("[EXOPAL] Sending: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer);
+    int32_t i = 0;
+    printf("[EXOPAL] Sending: ");
+    
+    for(i = 0; (i < exoPal_txBufCounter); i += 100)
+    {
+        if ((exoPal_txBufCounter - i) < 100)
+        {
+            printf("%.*s", exoPal_txBufCounter - i, exoPal_txBuffer + i);
+        }
+        else
+        {
+            printf("%.*s", 100, exoPal_txBuffer + i);
+        }
+    }
+    printf("\r\n");
+       
     send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
     printf("\r\n[EXOPAL] Done Sending\r\n");
     return 0;
