@@ -38,6 +38,8 @@
 //#include "exosite.h"
 #include "gsn_otafu.h"
 
+#include "main\app_main_ctx.h"
+
 #define PAL_CIK_LENGTH 40
 
 static int32_t SockDes;
@@ -106,6 +108,81 @@ uint8_t exoPal_tcpSocketOpen()
     
     return 0;
     
+}
+
+
+
+uint32_t exoPal_bossBroadcast()
+{
+    static int32_t heartBeatSocket = -1;
+    const char * res;
+    struct sockaddr_in tServ_addr;
+    char ipAddrStr[16];
+    GSN_NWIF_IP_CONFIG_T nwParams;
+    uint8_t *ptMAC;
+    
+    char heartbeatPacket[] = "HB:XX.XX.XX.XX.XX.XX\r\n{\"ip\": \"xxx.xxx.xxx.xxx\"}"; // max size of string
+                                            // we'll truncate off if ip
+                                            // isn't full size.
+    int8_t startofIp = 30;  // chars in heartbeatPacket where IP starts
+    int8_t startofMac = 3; // chars in heartbeatPacket where MAC starts
+    int8_t endofMac = 20;
+    int32_t packetLength = 0;
+    int32_t sockStatus = 0;
+    
+    // get mac
+    ptMAC = GsnFactDflt_MacGet();
+    
+    // copy mac into string
+    sprintf(heartbeatPacket + startofMac, "%02X.%02X.%02X.%02X.%02X.%02X", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
+    
+    //  remove null terminate and put in the \r 
+    heartbeatPacket[endofMac] = '\r';
+    
+    tServ_addr.sin_family = AF_INET;
+    tServ_addr.sin_port = htons(8257);
+    
+     // Get IP config info
+    GsnNwIf_IpConfigGet(&appCtx.appSmCtx.ncm.appNwIf.nwIf, &nwParams);
+
+    // copy ip string into heartbeatPacket
+    res = inet_ntop(AF_INET, &nwParams.ipAddr, heartbeatPacket + startofIp, 16);
+    
+    if (res == NULL)
+    {
+        // Error in getting IP string
+        printf("[EXOPAL] Error in getting IP string\r\n");
+        return -1;
+    }
+    
+    // get end of ipAddr
+    packetLength = strlen(heartbeatPacket);
+    // tack on the end of the json
+    strcpy(heartbeatPacket + packetLength, "\"}");
+    
+    // set broadcast address for our current subnet
+    tServ_addr.sin_addr.s_addr = nwParams.ipAddr | ~nwParams.subnetMask;
+    //printf("[boss] broadcast IP: %u\r\n", nwParams.ipAddr | ~nwParams.subnetMask);
+    //printf("[boss] broadcast packet: %s\r\n", heartbeatPacket);
+    
+    if (heartBeatSocket == -1)
+    {
+        // Open socket if it wasn't already
+        heartBeatSocket = socket(AF_INET, SOCK_DGRAM, 0 );
+        printf("[EXOPAL] Creating socket\r\n");
+       
+    }
+    printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
+    if (heartBeatSocket == -1)
+    {
+        printf("[EXOPAL] Error creating socket\r\n");
+        return -2;
+    }
+    
+    // send heartbeat
+    sendto(heartBeatSocket, heartbeatPacket,strlen(heartbeatPacket),0,(struct sockaddr *)&tServ_addr, sizeof(struct sockaddr_in));
+    
+    return 0;
 }
 
 
