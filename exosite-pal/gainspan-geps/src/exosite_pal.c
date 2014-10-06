@@ -51,7 +51,7 @@ uint16_t exoPal_txBufCounter = 0;
 ttUserIpAddress exoPal_ip = 0;
 
 static char hostname[] = "boss-controls-dev.m2.exosite.com";
-
+static char ContentLengthStr[] = "Content-Length: ";
 
 /*!
  * \brief Closes a tcp socket
@@ -289,6 +289,46 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * respon
 
 }
 
+/*!
+ * @brief  Gets the content length of an http request.
+ *
+ * @param response [in] HTTP headers string
+ * @param bodyLength [out] Length of the body
+ * 
+ * @return int32_t 0 if successful, else negative
+ */
+int32_t exopal_getContentLength(char *response, int32_t *bodyLength)
+{
+    // find content length
+    char* strStart;
+    char* charAfterContentLengthValue = 0;
+    char cr[] = "\r";
+    // find start of content length header
+    strStart = exoPal_strstr(response, ContentLengthStr);
+    if (strStart <= 0)
+    {
+        return -1;
+    }
+    strStart = strStart + sizeof(ContentLengthStr) - 1;
+    // get \r and set to '\0' for atoi
+    charAfterContentLengthValue = exoPal_strstr(strStart, cr);
+    if (charAfterContentLengthValue <= 0)
+    {
+        return -2;
+    }
+    if (charAfterContentLengthValue != 0)
+    {
+        
+        // temporarily null terminate the content length
+        *charAfterContentLengthValue = '\0';
+        printf("[EXOPAL] atoi: %s\r\n", strStart);
+        *bodyLength = exoPal_atoi(strStart);
+        *charAfterContentLengthValue = '\r';
+       
+    }
+    return 0;
+}
+
 
 /*!
  * \brief
@@ -315,6 +355,8 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int32_t response;
     int i = 0;
     char * bodyStart;
+    int32_t contentLength = 0;
+    int32_t contentLengthRes = 0;
     int32_t bodyOffset;
     uint8_t spaceFound = 0;
     int16_t j;
@@ -328,6 +370,7 @@ uint8_t exoPal_socketReadFw( char * buffer,
     
     bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
     
+    // bodyStart was outside the range of buffer.
     if ((bodyStart < buffer) || (bodyStart > (buffer + bufferSize)))
     {
         return 1;
@@ -363,6 +406,13 @@ uint8_t exoPal_socketReadFw( char * buffer,
     }
     ////////////////////////////////////////////////////////////////
     
+    contentLengthRes = exopal_getContentLength(buffer, &contentLength);
+    
+    if (contentLengthRes < 0)
+    {
+        // Error getting content length
+        return 3;
+    }
     
     bodyOffset = bodyStart - buffer;
     
@@ -380,12 +430,23 @@ uint8_t exoPal_socketReadFw( char * buffer,
         response = recv(SockDes, buffer, bufferSize,0);
         i += response;
         printf("*");
-        // yup, I'm busy waiting.
-        while(j++ < 100000);
+        
+        // yup, I'm busy waiting.  If we could get a timeout on the recv, we
+        // wouldn't need this, but this lets us wait till we likely have data 
+        // for recv to get.  without this, recv would come back early with no
+        // data and we wouldn't get our entire packet.
+        while(j++ < 300000);
         
         // load to flash
         GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, response, app);
     }
+    
+    if (contentLength != (i - bodyOffset))
+    {
+        printf("[EXOPAL] ERROR: Content length does not equal bytes downloaded.\r\n", i);
+        return 4;
+    }
+    
     printf("[EXOPAL] Received %d Bytes\r\n", i);
     //GsnFwupExtFlash_DwndEnd
     if (response >= 0)
