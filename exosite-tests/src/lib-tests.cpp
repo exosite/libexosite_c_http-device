@@ -338,7 +338,7 @@ TEST_F(ExoLibCleanState, readSingle_200Response_goodFormat)
 
     http_parser_init(&parser, HTTP_REQUEST);
 
-    const char * xoResponse = "HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\ntestAlias=5";
+    const char * xoResponse = "HTTP/1.1 200 OK\r\nContent-Length: 11\r\n\r\ntestAlias=5";
     strcpy(nvm->readFromBuffer, xoResponse);
 
     nvm->readFromBufferLen = strlen(xoResponse);
