@@ -121,7 +121,7 @@ uint32_t exoPal_bossBroadcast()
     GSN_NWIF_IP_CONFIG_T nwParams;
     uint8_t *ptMAC;
     
-    char heartbeatPacket[] = "HB:XX.XX.XX.XX.XX.XX\r\n{\"ip\": \"xxx.xxx.xxx.xxx\"}"; // max size of string
+    char heartbeatPacket[] = "HB:XXXXXXXXXXXX\r\n{\"ip\": \"xxx.xxx.xxx.xxx\"}"; // max size of string
                                             // we'll truncate off if ip
                                             // isn't full size.
     int8_t startofIp = 30;  // chars in heartbeatPacket where IP starts
@@ -134,7 +134,7 @@ uint32_t exoPal_bossBroadcast()
     ptMAC = GsnFactDflt_MacGet();
     
     // copy mac into string
-    sprintf(heartbeatPacket + startofMac, "%02X.%02X.%02X.%02X.%02X.%02X", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
+    sprintf(heartbeatPacket + startofMac, "%02X%02X%02X%02X%02X%02X", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
     
     //  remove null terminate and put in the \r 
     heartbeatPacket[endofMac] = '\r';
