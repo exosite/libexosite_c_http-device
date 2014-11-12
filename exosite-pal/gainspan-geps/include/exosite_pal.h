@@ -36,7 +36,12 @@
 #ifndef EXOSITE_HAL_H
 #define EXOSITE_HAL_H
 #include <stdint.h>
+
+#ifndef WIN32
 #include "gsn_includes.h"
+#else
+#include "geps_pal.h"
+#endif
 
 // defines
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
@@ -68,6 +73,7 @@ uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length);
 char* exoPal_strstr(const char *in, const char *str);
 int32_t exoPal_sendingComplete(void);
 char * exoPal_getHostName();
+int32_t exoPal_atoi(char* val);
 
 extern ttUserIpAddress exoPal_ip;
 

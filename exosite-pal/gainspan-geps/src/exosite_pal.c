@@ -34,11 +34,17 @@
 *****************************************************************************/
 
 #include "exosite_pal.h"
+#include "boss_app.h"
+
+#ifndef WIN32
 #include "config/app_config_private.h"
 //#include "exosite.h"
 #include "gsn_otafu.h"
 
 #include "main\app_main_ctx.h"
+#else
+#include "geps_pal.h"
+#endif
 
 #define PAL_CIK_LENGTH 40
 
@@ -65,9 +71,11 @@ static char ContentLengthStr[] = "Content-Length: ";
 uint8_t exoPal_tcpSocketClose()
 {
     // do stuff to close socket
+#ifndef WIN32
     tfClose(SockDes);
     printf("[EXOPAL] socket closed\r\n");
     SockDes = -1;
+#endif
     return 0;
 }
 
@@ -84,7 +92,8 @@ uint8_t exoPal_tcpSocketClose()
  */
 uint8_t exoPal_tcpSocketOpen()
 {
-    struct sockaddr_in tServ_addr;
+#ifndef WIN32
+struct sockaddr_in tServ_addr;
     
     int32_t sockStatus = 0;
     exoPal_txBufCounter = 0;
@@ -105,8 +114,9 @@ uint8_t exoPal_tcpSocketOpen()
     {
         return -1;
     }
-    
+#endif   
     return 0;
+
     
 }
 
@@ -114,7 +124,8 @@ uint8_t exoPal_tcpSocketOpen()
 
 uint32_t exoPal_bossBroadcast()
 {
-    static int32_t heartBeatSocket = -1;
+#ifndef WIN32
+static int32_t heartBeatSocket = -1;
     const char * res;
     struct sockaddr_in tServ_addr;
     char ipAddrStr[16];
@@ -181,7 +192,7 @@ uint32_t exoPal_bossBroadcast()
     
     // send heartbeat
     sendto(heartBeatSocket, heartbeatPacket,strlen(heartbeatPacket),0,(struct sockaddr *)&tServ_addr, sizeof(struct sockaddr_in));
-    
+#endif    
     return 0;
 }
 
@@ -352,6 +363,8 @@ uint8_t exoPal_socketReadFw( char * buffer,
                                 GSN_EXTFLASH_FWUP_CTX *pCtx,
                                 GSN_FWUP_ID_T app)
 {
+#ifndef WIN32
+
     int32_t response;
     int i = 0;
     char * bodyStart;
@@ -453,7 +466,7 @@ uint8_t exoPal_socketReadFw( char * buffer,
     {
         *responseLength = response;
     }
-
+#endif
     return 0;
 
 }
@@ -471,8 +484,10 @@ uint8_t exoPal_socketReadFw( char * buffer,
  */
 uint8_t exoPal_setCik(const char * cik)
 {
+ 
     int32_t rtn;
-    
+#ifndef WIN32
+
     printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
     boss_app_setCik(cik);
     
@@ -483,6 +498,7 @@ uint8_t exoPal_setCik(const char * cik)
     {
         printf("[EXOPAL] *** CIK write to NVM failed: %d\r\n", rtn);
     }
+#endif
     
     return rtn;
 }
@@ -502,7 +518,10 @@ uint8_t exoPal_getCik(char * read_buffer)
 {
     int32_t rtn;
     
-    rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
+#ifndef WIN32
+    rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);  
+#endif // !WIN32
+
     boss_app_setCik(read_buffer);
 
     if (rtn)
@@ -585,6 +604,7 @@ uint8_t exoPal_getVendor(char * read_buffer)
  */
 uint8_t exoPal_getUuid(char * read_buffer)
 {
+#ifndef WIN32
     uint8_t *ptMAC;
     GSN_FACT_DFLT_ELEMENT_T *pFactDfltElmnt;
     char randArr[6];
@@ -604,6 +624,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
     }
     
     printf("[EXOPAL] Retrieved SN: %s\r\n", read_buffer);
+#endif
     return 0;
 }
 
