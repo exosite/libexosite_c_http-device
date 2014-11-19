@@ -498,6 +498,8 @@ uint8_t exoPal_setCik(const char * cik)
     {
         printf("[EXOPAL] *** CIK write to NVM failed: %d\r\n", rtn);
     }
+#else
+    rtn = 0;
 #endif
     
     return rtn;
