@@ -135,9 +135,9 @@ static int32_t heartBeatSocket = -1;
     char heartbeatPacket[] = "HB:XXXXXXXXXXXX\r\n{\"ip\": \"xxx.xxx.xxx.xxx\"}"; // max size of string
                                             // we'll truncate off if ip
                                             // isn't full size.
-    int8_t startofIp = 30;  // chars in heartbeatPacket where IP starts
+    int8_t startofIp = 25;  // chars in heartbeatPacket where IP starts
     int8_t startofMac = 3; // chars in heartbeatPacket where MAC starts
-    int8_t endofMac = 20;
+    int8_t endofMac = 15;
     int32_t packetLength = 0;
     int32_t sockStatus = 0;
     
