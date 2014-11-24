@@ -47,6 +47,8 @@
 #endif
 
 #define PAL_CIK_LENGTH 40
+#define READ_FW_ATTEMPTS 15 // Number of times to attempt getting data from socket
+                            // before assuming it's broken
 
 static int32_t SockDes;
 
@@ -375,6 +377,8 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int16_t j;
     char validResponseCode[] = "200";
     int32_t validResponse = 0;
+    int32_t recvSize = bufferSize;
+    int32_t remainingDataBytes;
     
     response = recv(SockDes, buffer, bufferSize,0);
     
@@ -436,22 +440,43 @@ uint8_t exoPal_socketReadFw( char * buffer,
     
     GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), response - bodyOffset, app);
     // load to flash
-    while ((response == bufferSize) && (response > 0))
+
+
+    remainingDataBytes = contentLength - (i - bodyOffset);
+
+    // This will lock up if for some reason the download is interrupted and we
+    // are unable to download the full update.  In that case, the watchdog
+    // should kick us and we can start over.  
+    while (response > 0)
     {
-        int32_t j = 0;
-        // read
-        response = recv(SockDes, buffer, bufferSize,0);
+        int32_t dataInBuf;
+        remainingDataBytes = contentLength - (i - bodyOffset);
+        // wait till we have some data 
+        dataInBuf = recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+
+        // Peek at buffer till we have some data ready to receive.
+        while((dataInBuf < remainingDataBytes) && (dataInBuf != bufferSize))
+        {
+            dataInBuf = recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+            if (dataInBuf < 0)
+            {
+                printf("[EXOPAL] recv err");
+            }
+        }
+        
+       
+        // read data from socket
+        response = recv(SockDes, buffer, bufferSize, MSG_DONTWAIT);
         i += response;
         printf("*");
         
-        // yup, I'm busy waiting.  If we could get a timeout on the recv, we
-        // wouldn't need this, but this lets us wait till we likely have data 
-        // for recv to get.  without this, recv would come back early with no
-        // data and we wouldn't get our entire packet.
-        while(j++ < 300000);
-        
         // load to flash
         GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, response, app);
+
+        if (i >= contentLength + bodyOffset)
+        {
+            break;
+        }
     }
     
     if (contentLength != (i - bodyOffset))
