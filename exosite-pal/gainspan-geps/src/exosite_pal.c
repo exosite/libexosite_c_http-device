@@ -173,8 +173,11 @@ static int32_t heartBeatSocket = -1;
     
     // get end of ipAddr
     packetLength = strlen(heartbeatPacket);
-    // tack on the end of the json
-    strcpy(heartbeatPacket + packetLength, "\"}");
+
+    // put port on packet, hardcoded to 80
+    strcpy(heartbeatPacket + packetLength, "\",\"port\":80}");
+
+   
     
     // set broadcast address for our current subnet
     tServ_addr.sin_addr.s_addr = nwParams.ipAddr | ~nwParams.subnetMask;
