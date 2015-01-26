@@ -134,15 +134,14 @@ static int32_t heartBeatSocket = -1;
     GSN_NWIF_IP_CONFIG_T nwParams;
     uint8_t *ptMAC;
     
-    char heartbeatPacket[] = "HB:XXXXXXXXXXXX\r\n{\"ip\": \"xxx.xxx.xxx.xxx\"}"; // max size of string
+    char heartbeatPacket[] = "HB:XXXXXXXXXXXX\r\n{\"ip\":\"xxx.xxx.xxx.xxx\"}"; // max size of string
                                             // we'll truncate off if ip
                                             // isn't full size.
-    int8_t startofIp = 25;  // chars in heartbeatPacket where IP starts
+    int8_t startofIp = 24;  // chars in heartbeatPacket where IP starts
     int8_t startofMac = 3; // chars in heartbeatPacket where MAC starts
     int8_t endofMac = 15;
     int32_t packetLength = 0;
     int32_t sockStatus = 0;
-    
     // get mac
     ptMAC = GsnFactDflt_MacGet();
     
@@ -159,14 +158,18 @@ static int32_t heartBeatSocket = -1;
     GsnNwIf_IpConfigGet(&appCtx.appSmCtx.ncm.appNwIf.nwIf, &nwParams);
 
     // copy ip string into heartbeatPacket
-    res = inet_ntop(AF_INET, &nwParams.ipAddr, heartbeatPacket + startofIp, 16);
+    //res = inet_ntop(AF_INET, &nwParams.ipAddr, heartbeatPacket + startofIp, 16);
     
-    if (res == NULL)
-    {
-        // Error in getting IP string
-        printf("[EXOPAL] Error in getting IP string\r\n");
-        return -1;
-    }
+    sprintf(heartbeatPacket + startofIp, "%08x", htonl(nwParams.ipAddr));
+
+    //sprintf()
+
+    //if (res == NULL)
+    //{
+    //    // Error in getting IP string
+    //    printf("[EXOPAL] Error in getting IP string\r\n");
+    //    return -1;
+    //}
     
     // get end of ipAddr
     packetLength = strlen(heartbeatPacket);
