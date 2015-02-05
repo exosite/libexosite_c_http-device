@@ -744,6 +744,12 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
     uint8_t connection_status;
     char temp;
     connection_status = exosite_connect();
+    
+    if (connection_status != 0)
+    {
+        return connection_status;
+    }
+    
     exoPal_socketWrite(STR_TIMESTAMP_URL, sizeof(STR_TIMESTAMP_URL)-1);
     exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP)-1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
