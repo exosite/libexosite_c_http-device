@@ -52,8 +52,10 @@
 
 static int32_t SockDes;
 
+// The rxbuffer is also going to be used to buffer tx data before it is sent
 char  exoPal_rxBuffer[RX_BUFFER_SIZE];
-char exoPal_txBuffer[TX_BUFFER_SIZE];
+
+
 uint16_t exoPal_txBufCounter = 0;
 
 ttUserIpAddress exoPal_ip = 0;
@@ -251,7 +253,7 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
         exoPal_txBufCounter = 0;
     }
     
-    memcpy(exoPal_txBuffer + exoPal_txBufCounter, buffer, len);
+    memcpy(exoPal_rxBuffer + exoPal_txBufCounter, buffer, len);
     exoPal_txBufCounter += len;
     
     
@@ -676,16 +678,16 @@ int32_t exoPal_sendingComplete()
     {
         if ((exoPal_txBufCounter - i) < 100)
         {
-            printf("%.*s", exoPal_txBufCounter - i, exoPal_txBuffer + i);
+            printf("%.*s", exoPal_txBufCounter - i, exoPal_rxBuffer + i);
         }
         else
         {
-            printf("%.*s", 100, exoPal_txBuffer + i);
+            printf("%.*s", 100, exoPal_rxBuffer + i);
         }
     }
     printf("\r\n");
        
-    send(SockDes, exoPal_txBuffer, exoPal_txBufCounter, 0);
+    send(SockDes, exoPal_rxBuffer, exoPal_txBufCounter, 0);
     printf("\r\n[EXOPAL] Done Sending\r\n");
     return 0;
 }
