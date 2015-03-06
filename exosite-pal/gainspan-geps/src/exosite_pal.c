@@ -520,7 +520,7 @@ uint8_t exoPal_setCik(const char * cik)
 #ifndef WIN32
 
     printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
-    boss_app_setCik(cik);
+    boss_exosite_cloud_setCik(cik);
     
     // write to nvm
     rtn = GsnNvds_Write(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, (void *)cik);
@@ -555,7 +555,7 @@ uint8_t exoPal_getCik(char * read_buffer)
     rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);  
 #endif // !WIN32
 
-    boss_app_setCik(read_buffer);
+    boss_exosite_cloud_setCik(read_buffer);
 
     if (rtn)
     {
