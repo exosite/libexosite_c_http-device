@@ -158,6 +158,7 @@ EXO_STATE exosite_activate()
     uint8_t len_of_contentLengthStr;
     EXO_STATE retVal;
     uint16_t responseLen;
+    uint8_t connection_status;
     
     
     // Try and activate device with Exosite, four possible cases:
@@ -184,8 +185,13 @@ EXO_STATE exosite_activate()
     len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
 
 
-    exosite_connect();
+    connection_status = exosite_connect();
 
+    // return error message if connect failed.
+    if (connection_status != 0)
+    {
+        return EXO_STATE_CONNECTION_ERROR;
+    }
 
     // send request
     exoPal_socketWrite(STR_ACTIVATE_URL, sizeof(STR_ACTIVATE_URL) - 1);
