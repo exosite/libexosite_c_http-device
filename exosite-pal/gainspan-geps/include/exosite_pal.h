@@ -46,7 +46,7 @@
 // defines
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
 to place incoming data from the modem in.*/
-#define RX_BUFFER_SIZE                         2048
+#define RX_BUFFER_SIZE                         1024
 
 /*!< This defines the size of the tx buffer in the PAL.  This buffer is used
 to batch data before it is sent out.*/

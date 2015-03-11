@@ -36,6 +36,10 @@
 #include "exosite_pal.h"
 #include "boss_app.h"
 
+#ifdef GSN_SSL_CLIENT_SUPPORT
+#include "gsn_ssl.h"
+#endif
+
 #ifndef WIN32
 #include "config/app_config_private.h"
 //#include "exosite.h"
@@ -63,6 +67,11 @@ ttUserIpAddress exoPal_ip = 0;
 static char hostname[] = "boss-controls-dev.m2.exosite.com";
 static char ContentLengthStr[] = "Content-Length: ";
 
+#ifdef GSN_SSL_CLIENT_SUPPORT
+GSN_SSL_CONN_T Ssl;
+GSN_SSL_CONN_PARAMS_T params;
+#endif
+
 /*!
  * \brief Closes a tcp socket
  *
@@ -76,9 +85,13 @@ uint8_t exoPal_tcpSocketClose()
 {
     // do stuff to close socket
 #ifndef WIN32
+#ifdef GSN_SSL_CLIENT_SUPPORT
+    GsnSsl_Close(&Ssl);
+#endif
     tfClose(SockDes);
     printf("[EXOPAL] socket closed\r\n");
     SockDes = -1;
+
 #endif
     return 0;
 }
@@ -103,8 +116,13 @@ struct sockaddr_in tServ_addr;
     exoPal_txBufCounter = 0;
     
     tServ_addr.sin_family = AF_INET;
+#ifdef GSN_SSL_CLIENT_SUPPORT
+    tServ_addr.sin_port = htons(443);
+#else
     tServ_addr.sin_port = htons(80);
-    tServ_addr.sin_addr.s_addr = exoPal_ip;// htonl(0xC0A80339);//htonl(0xC0A8037B)/* vm */;//
+#endif
+    //C0A80A8A debian vm
+    tServ_addr.sin_addr.s_addr = exoPal_ip;//htonl(0xC0A80A88);//Desktop htonl(0xC0A80A8A);// htonl(0xC0A80339);//htonl(0xC0A8037B)/* vm */;//
     
     
     // do stuff to open a socket
@@ -118,6 +136,17 @@ struct sockaddr_in tServ_addr;
     {
         return -1;
     }
+
+#ifdef GSN_SSL_CLIENT_SUPPORT
+    params.caCertLen = 0;
+
+    sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
+    printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
+    if (sockStatus != 0)
+    {
+        return -2;
+    }
+#endif
 #endif   
     return 0;
 
@@ -282,12 +311,34 @@ char * exoPal_getHostName()
  *
  * \return 0 if successful, else error code
  */
-uint8_t exoPal_socketRead( char * buffer, uint16_t bufferSize, uint16_t * responseLength)
+uint8_t exoPal_socketRead(char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     int32_t response;
     int i = 0;
+    int32_t dataLen= 0;
     
-    response = recv(SockDes, buffer, bufferSize,0);
+#ifdef GSN_SSL_CLIENT_SUPPORT
+#warning Why the hell are you casting a uint16 to a uint32?!
+    uint8_t *rxbuf;
+
+    response = GsnSsl_DataReceive(&Ssl,SockDes, &rxbuf, &dataLen, 10);
+
+    if (response == GSN_FAILURE)
+    {
+        return 101;
+    }
+    else
+    {
+        printf("[EXOPAL] Received %d Bytes\r\n", dataLen);
+        response = dataLen;
+    }
+    memmove(buffer,rxbuf, dataLen);
+    GsnSsl_Free(rxbuf);
+
+#else
+    response = recv(SockDes, buffer, bufferSize, 0);
+#endif
+
     printf("[EXOPAL] Received %d Bytes\r\n", response);
     printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
     for(i = 100; (i < response); i += 100)
@@ -672,6 +723,9 @@ uint8_t exoPal_getUuid(char * read_buffer)
 int32_t exoPal_sendingComplete()
 {
     int32_t i = 0;
+    char *outBuf;
+    uint32_t len = 0;
+
     printf("[EXOPAL] Sending: ");
     
     for(i = 0; (i < exoPal_txBufCounter); i += 100)
@@ -686,8 +740,19 @@ int32_t exoPal_sendingComplete()
         }
     }
     printf("\r\n");
-       
+    
+#ifdef GSN_SSL_CLIENT_SUPPORT
+    GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
+    send(SockDes, outBuf, len, 0);
+    GsnSsl_Free((uint8_t *)outBuf);
+
+#else
     send(SockDes, exoPal_rxBuffer, exoPal_txBufCounter, 0);
+#endif
+
+    
+
+    
     printf("\r\n[EXOPAL] Done Sending\r\n");
     return 0;
 }
