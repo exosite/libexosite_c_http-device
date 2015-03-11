@@ -98,7 +98,7 @@ uint8_t exoPal_tcpSocketOpen()
 {
 #ifndef WIN32
 struct sockaddr_in tServ_addr;
-    
+
     int32_t sockStatus = 0;
     exoPal_txBufCounter = 0;
     
@@ -112,7 +112,7 @@ struct sockaddr_in tServ_addr;
     printf("[EXOPAL] Creating socket\r\n");
     /* set the tServ_addr socket structure and connect*/
     sockStatus = connect(SockDes, ( struct sockaddr* )&tServ_addr, sizeof( tServ_addr ));
-    
+
     printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
