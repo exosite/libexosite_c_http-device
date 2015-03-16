@@ -572,6 +572,8 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     }
 
     responseLength = 0;
+    *length = 0;
+
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
@@ -693,6 +695,8 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     }
 
     responseLength = 0;
+    *length = 0;
+
     // get response
     exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
@@ -713,11 +717,6 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
         {
             if (bodyStart[i] == '=')
             {
-                if ((i + 1) == responseLength)
-                {
-                    // no data
-                    *length = 0;
-                }
                 // found the equals, copy remaining into readResponse
                 exoPal_memcpy(readResponse, bodyStart + i + 1, responseLength - i - 1);
                 *length = responseLength - i - 1;
