@@ -162,17 +162,19 @@ struct sockaddr_in tServ_addr;
     printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
-        return -1;
+        return 1;
     }
 
 #ifdef GSN_SSL_CLIENT_SUPPORT
     params.caCertLen = 0;
 
+#warning docs says this should be 1 if valid, but appears to return zero if valid...
     sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
     printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
-        return -2;
+        printf("[EXOPAL] Returning error\r\n");
+        return 2;
     }
 #endif
 #endif   
