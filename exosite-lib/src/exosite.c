@@ -814,6 +814,11 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     // connect to exosite
     connection_status = exosite_connect();
     
+    if (connection_status != 0)
+    {
+        return connection_status;
+    }
+
     // assume content length will never be over 9999 bytes
     
     len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
