@@ -603,6 +603,14 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
             }
         }
     }
+    else if (exosite_checkResponse(exoPal_rxBuffer, "204"))
+    {
+        return 0;
+    }
+    else
+    {
+        return -150;
+    }
 
     return 0;
 }
@@ -724,8 +732,17 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
             }
         }
     }
+    else if (exosite_checkResponse(exoPal_rxBuffer, "204"))
+    {
+        return 0;
+    }
+    else
+    {
+        return -150;
+    }
 
     return 0;
+
 }
 
 /*!
