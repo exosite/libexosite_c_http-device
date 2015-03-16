@@ -96,6 +96,34 @@ uint8_t exoPal_tcpSocketClose()
     return 0;
 }
 
+int32_t exoPal_recv(int32_t socketDescriptor, char * bufferPtr, int bufferLength, int flags)
+{
+    int32_t response;
+    int32_t dataLen= 0;
+#ifdef GSN_SSL_CLIENT_SUPPORT
+#warning Why the hell are you casting a uint16 to a uint32 ? !
+    uint8_t *rxbuf;
+
+    response = GsnSsl_DataReceive(&Ssl, SockDes, &rxbuf, &dataLen, 10);
+
+    if (response == GSN_FAILURE)
+    {
+        printf("[EXOPAL] Error receiving: %d\r\n", response);
+        return -101;
+    }
+    else
+    {
+        printf("[EXOPAL] Received %d Bytes\r\n", dataLen);
+        response = dataLen;
+    }
+    memmove(bufferPtr, rxbuf, dataLen);
+    GsnSsl_Free(rxbuf);
+
+#else
+    response = recv(socketDescriptor, bufferPtr, bufferLength, flags);
+#endif
+    return response;
+}
 
 /*!
  * \brief Opens a tcp socket
@@ -317,27 +345,13 @@ uint8_t exoPal_socketRead(char * buffer, uint16_t bufferSize, uint16_t * respons
     int i = 0;
     int32_t dataLen= 0;
     
-#ifdef GSN_SSL_CLIENT_SUPPORT
-#warning Why the hell are you casting a uint16 to a uint32?!
-    uint8_t *rxbuf;
 
-    response = GsnSsl_DataReceive(&Ssl,SockDes, &rxbuf, &dataLen, 10);
+    response = exoPal_recv(SockDes, buffer, bufferSize, 0);
 
-    if (response == GSN_FAILURE)
+    if (response < 0)
     {
-        return 101;
+        return response;
     }
-    else
-    {
-        printf("[EXOPAL] Received %d Bytes\r\n", dataLen);
-        response = dataLen;
-    }
-    memmove(buffer,rxbuf, dataLen);
-    GsnSsl_Free(rxbuf);
-
-#else
-    response = recv(SockDes, buffer, bufferSize, 0);
-#endif
 
     printf("[EXOPAL] Received %d Bytes\r\n", response);
     printf("[EXOPAL] Contents:\r\n%.*s", 100,buffer);
@@ -439,9 +453,13 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int32_t recvSize = bufferSize;
     int32_t remainingDataBytes;
     
-    response = recv(SockDes, buffer, bufferSize,0);
+    recvSize = exoPal_recv(SockDes, buffer, bufferSize,0);
+    if (recvSize < 0)
+    {
+        return 5;
+    }
     
-    i += response;
+    i += recvSize;
     
     
     bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
@@ -497,7 +515,7 @@ uint8_t exoPal_socketReadFw( char * buffer,
     
     printf("[EXOPAL] body start at %d \r\n", bodyOffset);
     
-    GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), response - bodyOffset, app);
+    GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
     // load to flash
 
 
@@ -506,17 +524,25 @@ uint8_t exoPal_socketReadFw( char * buffer,
     // This will lock up if for some reason the download is interrupted and we
     // are unable to download the full update.  In that case, the watchdog
     // should kick us and we can start over.  
-    while (response > 0)
+    while (recvSize > 0)
     {
         int32_t dataInBuf;
         remainingDataBytes = contentLength - (i - bodyOffset);
         // wait till we have some data 
-        dataInBuf = recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+        dataInBuf = exoPal_recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+        if (dataInBuf < 0)
+        {
+            return 7;
+        }
 
         // Peek at buffer till we have some data ready to receive.
         while((dataInBuf < remainingDataBytes) && (dataInBuf != bufferSize))
         {
-            dataInBuf = recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+            dataInBuf = exoPal_recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
+            if (recvSize < 0)
+            {
+                return 8;
+            }
             if (dataInBuf < 0)
             {
                 printf("[EXOPAL] recv err");
@@ -525,12 +551,16 @@ uint8_t exoPal_socketReadFw( char * buffer,
         
        
         // read data from socket
-        response = recv(SockDes, buffer, bufferSize, MSG_DONTWAIT);
-        i += response;
+        recvSize = exoPal_recv(SockDes, buffer, bufferSize, MSG_DONTWAIT);
+        if (recvSize < 0)
+        {
+            return 6;
+        }
+        i += recvSize;
         printf("*");
         
         // load to flash
-        GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, response, app);
+        GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, recvSize, app);
 
         if (i >= contentLength + bodyOffset)
         {
@@ -546,9 +576,9 @@ uint8_t exoPal_socketReadFw( char * buffer,
     
     printf("[EXOPAL] Received %d Bytes\r\n", i);
     //GsnFwupExtFlash_DwndEnd
-    if (response >= 0)
+    if (recvSize >= 0)
     {
-        *responseLength = response;
+        *responseLength = recvSize;
     }
 #endif
     return 0;
