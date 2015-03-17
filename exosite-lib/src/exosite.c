@@ -838,11 +838,7 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     // assume content length will never be over 9999 bytes
     
     len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
-    // return error message if connect failed.
-    if (connection_status != 0)
-    {
-        return connection_status;
-    }
+
 
     // send request
     results |= exoPal_socketWrite(STR_RPC_URL, sizeof(STR_RPC_URL)-1);
