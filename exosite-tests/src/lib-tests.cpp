@@ -203,11 +203,17 @@ TEST_F(ExoLibCleanState, readRequest)
     http_parser_init(&parser, HTTP_REQUEST);
 
 
-    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\ntestAlias=123&anotherAlias=456");
+    nvm->readFromBufferLen = strlen("HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\ntestAlias=123&anotherAlias=456");
 
     char responseBuffer[128] = {'\0'};
     uint16_t resLength = 0;
     respR = exosite_read("testAlias&anotherAlias", responseBuffer,128, &resLength);
+
+    // Check response body is correct.
+    EXPECT_EQ(strlen("testAlias=123&anotherAlias=456"), resLength);
+    EXPECT_STREQ("testAlias=123&anotherAlias=456", responseBuffer);
+    
 
     // build expected body
     char expected_body[255] = {0};
@@ -257,7 +263,11 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
     uint16_t resLength = 0;
     resp = exosite_read("testAlias&anotherAlias", responseBuffer,128, &resLength);
 
-   
+      // Check response body is correct.
+    EXPECT_EQ(strlen("testAlias=5&anotherAlias=here"), resLength);
+    EXPECT_STREQ("testAlias=5&anotherAlias=here", responseBuffer);
+
+
 
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);

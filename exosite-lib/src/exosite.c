@@ -604,6 +604,7 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
                 // add null teminator at end of string
                 readResponse[j-i] = '\0';
+                *length = j - i;
                 // exit out
                 i = 0;
             }
