@@ -79,13 +79,14 @@ GSN_SSL_CONN_PARAMS_T params;
 static int32_t openSock()
 {
     int32_t sockStatus = 0;
+#ifndef WIN32
     struct sockaddr_in tServ_addr;
     // if we try to open when we think we already have one open, try to close it.
     if (SockDes != -1)
     {
         closeSock();
     }
-#ifndef WIN32
+
     
 
     
