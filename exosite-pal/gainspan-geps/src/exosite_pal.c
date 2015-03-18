@@ -210,14 +210,15 @@ uint8_t exoPal_tcpSocketOpen()
     if (SockDes == -1)
     {
         printf("Opening socket\r\n");
-        openSock();
+        return openSock();
     }
     else
     {
         printf("socket already open\r\n");
         // assume socket is already open.
+        return 0;
     }
-
+    
     
 }
 
