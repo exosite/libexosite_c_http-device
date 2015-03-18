@@ -123,7 +123,9 @@ static int32_t openSock()
     printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
-        printf("[EXOPAL] Returning error\r\n");
+        // Something happened in the ssl open, close it and try again next time.
+        printf("[EXOPAL] Returning error: %d\r\n", sockStatus);
+        closeSock();
         return 2;
     }
 #endif
