@@ -171,6 +171,12 @@ int32_t exoPal_recv(int32_t socketDescriptor, char * bufferPtr, int bufferLength
 {
     int32_t response;
     int32_t dataLen= 0;
+
+    if (SockDes < 0)
+    {
+        return -100;
+    }
+
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #warning Why the hell are you casting a uint16 to a uint32 ? !
     uint8_t *rxbuf;
@@ -389,10 +395,13 @@ uint8_t exoPal_socketRead(char * buffer, uint16_t bufferSize, uint16_t * respons
     int32_t dataLen= 0;
     
 
+
     response = exoPal_recv(SockDes, buffer, bufferSize, 0);
 
     if (response < 0)
     {
+        printf("[EXOPAL] Closing socket, error receiving %d\r\n", response);
+        closeSock();
         return response;
     }
 
