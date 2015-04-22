@@ -76,6 +76,12 @@ GSN_SSL_CONN_PARAMS_T params;
 #endif
 
 
+#ifdef WIN32
+char cikBuffer[40];
+int32_t txBufCounter = 0;
+char txBuffer[4096];
+#endif
+
 static int32_t openSock()
 {
     int32_t sockStatus = 0;
@@ -170,7 +176,8 @@ static int32_t closeSock()
 int32_t exoPal_recv(int32_t socketDescriptor, char * bufferPtr, int bufferLength, int flags)
 {
     int32_t response;
-    int32_t dataLen= 0;
+    uint32_t dataLen= 0;
+    uint8_t *rxbuf;
 
     if (SockDes < 0)
     {
@@ -179,7 +186,7 @@ int32_t exoPal_recv(int32_t socketDescriptor, char * bufferPtr, int bufferLength
 
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #warning Why the hell are you casting a uint16 to a uint32 ? !
-    uint8_t *rxbuf;
+    
 
     response = GsnSsl_DataReceive(&Ssl, SockDes, &rxbuf, &dataLen, 10);
 
@@ -361,7 +368,10 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
     
     memcpy(exoPal_rxBuffer + exoPal_txBufCounter, buffer, len);
     exoPal_txBufCounter += len;
-    
+#else
+    memcpy(txBuffer + txBufCounter, buffer, len);
+    txBufCounter += len;
+#endif
     
     
     return 0;
@@ -654,7 +664,7 @@ uint8_t exoPal_setCik(const char * cik)
     int32_t rtn;
 #ifndef WIN32
 
-    printf("[EXOPAL] Setting cik: %.*s\r\n", 40, cik);
+    printf("[EXOPAL] Setting cik: %.*s\r\n", CIK_LENGTH, cik);
     boss_exosite_cloud_setCik(cik);
     
     // write to nvm
@@ -665,6 +675,7 @@ uint8_t exoPal_setCik(const char * cik)
         printf("[EXOPAL] *** CIK write to NVM failed: %d\r\n", rtn);
     }
 #else
+    memcpy(cikBuffer, cik, CIK_LENGTH);
     rtn = 0;
 #endif
     
