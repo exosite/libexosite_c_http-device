@@ -34,7 +34,7 @@
 *****************************************************************************/
 
 #include "exosite_pal.h"
-#include "boss_app.h"
+#include "exosite.h"
 
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #include "gsn_ssl.h"
@@ -52,6 +52,8 @@
 
 // Set to 1 if you want to try and keep a socket open.
 #define KEEP_SOCKET_OPEN 1
+
+#define FW_READ_CHUNK_BYTES 512
 
 #define PAL_CIK_LENGTH 40
 #define READ_FW_ATTEMPTS 15 // Number of times to attempt getting data from socket
@@ -348,6 +350,7 @@ void exoPal_init()
  */
 uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 {
+#ifndef WIN32
     // check if socket is open
     if (SockDes == -1)
     {
@@ -469,11 +472,69 @@ int32_t exopal_getContentLength(char *response, int32_t *bodyLength)
         
         // temporarily null terminate the content length
         *charAfterContentLengthValue = '\0';
-        printf("[EXOPAL] atoi: %s\r\n", strStart);
         *bodyLength = exoPal_atoi(strStart);
         *charAfterContentLengthValue = '\r';
        
     }
+    return 0;
+}
+
+extern const char content_request_str[];
+
+int32_t makeRequestForNextRange(int32_t startingpoint, int32_t length, char * baseName, int32_t baseNameLength, GSN_FWUP_ID_T fwApp)
+{
+    char modelStr[MAX_MODEL_LENGTH + 1];
+    char vendorStr[MAX_VENDOR_LENGTH + 1];
+    char * hostName;
+ 
+    char cik[PAL_CIK_LENGTH];
+
+
+    // assumes max size of range header would be "bytes=aaaaa-bbbbb"
+    char rangeHeader[20];
+
+    exoPal_getCik(cik);
+
+    hostName = exoPal_getHostName();
+    exoPal_getVendor(vendorStr);
+
+    exoPal_getModel(modelStr);
+
+    exoPal_socketWrite(content_request_str, strlen(content_request_str));
+    exoPal_socketWrite(vendorStr, strlen(vendorStr));
+    exoPal_socketWrite("&model=", sizeof("&model=") - 1);
+    exoPal_socketWrite(modelStr, strlen(modelStr));
+    exoPal_socketWrite("&id=", sizeof("&id=") - 1);
+
+    exoPal_socketWrite(baseName, baseNameLength);
+
+    if (fwApp == GSN_FW_APP_0)
+    {
+        exoPal_socketWrite(APP1_EXTENSION, sizeof(APP1_EXTENSION)-1);
+    }
+    else if (fwApp == GSN_FW_APP_1)
+    {
+        exoPal_socketWrite(APP2_EXTENSION, sizeof(APP2_EXTENSION)-1);
+    }
+    else
+    {
+        // passed invalid app...
+    }
+
+    exoPal_socketWrite(" HTTP/1.1", sizeof(" HTTP/1.1") - 1);
+    exoPal_socketWrite("\r\nHost: ", sizeof("\r\nHost: ") - 1);
+    exoPal_socketWrite(hostName, strlen(hostName));
+    exoPal_socketWrite("\r\nX-Exosite-CIK: ", sizeof("\r\nX-Exosite-CIK: ") - 1);
+    exoPal_socketWrite(cik, CIK_LENGTH);
+    exoPal_socketWrite("\r\nRange: ", sizeof("\r\nRange: ") - 1);
+    // - 1 since range header is inclusive.
+    sprintf((char*)rangeHeader, "bytes=%d-%d", startingpoint, startingpoint + length - 1);
+    exoPal_socketWrite(rangeHeader, strlen(rangeHeader));
+    exoPal_socketWrite("\r\n\r\n", sizeof("\r\n\r\n") - 1);
+
+
+    exoPal_sendDone(0);
+
     return 0;
 }
 
@@ -496,11 +557,12 @@ int32_t exopal_getContentLength(char *response, int32_t *bodyLength)
  */
 uint8_t exoPal_socketReadFw( char * buffer, 
                                 uint16_t bufferSize, 
-                                uint16_t * responseLength, 
                                 GSN_EXTFLASH_FWUP_CTX *pCtx,
-                                GSN_FWUP_ID_T app)
+                                GSN_FWUP_ID_T app,
+                                char * baseName,
+                                int32_t baseNameLength)
 {
-#ifndef WIN32
+
 
     int32_t response;
     int i = 0;
@@ -509,140 +571,96 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int32_t contentLengthRes = 0;
     int32_t bodyOffset;
     uint8_t spaceFound = 0;
-    int16_t j;
-    char validResponseCode[] = "200";
-    int32_t validResponse = 0;
+    int16_t j = 0;
+    int32_t k = 0;
+    char validResponseCode[] = "206";
+    char validResponseCode416[] = "416";
+    //int32_t validResponse = 0;
     int32_t recvSize = bufferSize;
-    int32_t remainingDataBytes;
-    
-    recvSize = exoPal_recv(SockDes, buffer, bufferSize,0);
-    if (recvSize < 0)
-    {
-        return 5;
-    }
-    
-    i += recvSize;
-    
-    
-    bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
-    
-    // bodyStart was outside the range of buffer.
-    if ((bodyStart < buffer) || (bodyStart > (buffer + bufferSize)))
-    {
-        return 1;
-    }
-    
-    
-    ////////////// Check HTTP Response code ////////////////////
-    // get start second ' ' separate column
-    // assumes will always be before the 15th char
-    // assumes first char isn't a ' '
-    for (j = 1; (j < 15) && (spaceFound == 0); j++)
-    {
-        if (buffer[j] == ' ')
-        {
-            spaceFound = j + 1;
-        }
-    }
-    if (spaceFound > 0)
-    {
-        // If we found a ' ', try to match the code
-        if (validResponseCode[0] == buffer[spaceFound] && validResponseCode[1] == buffer[spaceFound + 1] && validResponseCode[2] == buffer[spaceFound + 2])
-        {
-            validResponse = 1;
-        }
-    }
-
-    if (validResponse == 0)
-    {
-        // not a valid response
-        printf("[EXOPAL] FW Read Failed\r\n");
-        printf("[EXOPAL] Response: %s\r\n", buffer);
-        return 2;
-    }
-    ////////////////////////////////////////////////////////////////
-    
-    contentLengthRes = exopal_getContentLength(buffer, &contentLength);
-    
-    if (contentLengthRes < 0)
-    {
-        // Error getting content length
-        return 3;
-    }
-    
-    bodyOffset = bodyStart - buffer;
-    
-    printf("[EXOPAL] Headers: %.*s \r\n", 115, buffer);
-    printf("%.*s \r\n", 115, buffer + 115);
-    
-    printf("[EXOPAL] body start at %d \r\n", bodyOffset);
-    
-    GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
-    // load to flash
+    int32_t received416 = 0;
+    //int32_t receivedError = 0;
 
 
-    remainingDataBytes = contentLength - (i - bodyOffset);
+    makeRequestForNextRange(0, FW_READ_CHUNK_BYTES, baseName, baseNameLength, app);
 
-    // This will lock up if for some reason the download is interrupted and we
-    // are unable to download the full update.  In that case, the watchdog
-    // should kick us and we can start over.  
-    while (recvSize > 0)
+    // read 512 bytes at a time until we receive a 416 response
+    for (i = 0; received416 == 0; )
     {
-        int32_t dataInBuf;
-        remainingDataBytes = contentLength - (i - bodyOffset);
-        // wait till we have some data 
-        dataInBuf = exoPal_recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
-        if (dataInBuf < 0)
-        {
-            return 7;
-        }
-
-        // Peek at buffer till we have some data ready to receive.
-        while((dataInBuf < remainingDataBytes) && (dataInBuf != bufferSize))
-        {
-            dataInBuf = exoPal_recv(SockDes, buffer, bufferSize, MSG_PEEK | MSG_DONTWAIT);
-            if (recvSize < 0)
-            {
-                return 8;
-            }
-            if (dataInBuf < 0)
-            {
-                printf("[EXOPAL] recv err");
-            }
-        }
-        
-       
-        // read data from socket
-        recvSize = exoPal_recv(SockDes, buffer, bufferSize, MSG_DONTWAIT);
+        recvSize = exoPal_recv(SockDes, buffer, bufferSize,0);
         if (recvSize < 0)
         {
-            return 6;
+            return 5;
         }
-        i += recvSize;
-        printf("*");
-        
-        // load to flash
-        GsnOtafu_FwupContinue(pCtx, (UINT8 *)buffer, recvSize, app);
 
-        if (i >= contentLength + bodyOffset)
+        //i += recvSize;
+
+
+        bodyStart = strstr(buffer, "\r\n\r\n") + sizeof("\r\n\r\n") - 1;
+
+        // bodyStart was outside the range of buffer.
+        if ((bodyStart < buffer) || (bodyStart > (buffer + bufferSize)))
         {
-            break;
+            return 1;
         }
+
+
+        ////////////// Check HTTP Response code ////////////////////
+        // get start second ' ' separate column
+        // assumes will always be before the 15th char
+        // assumes first char isn't a ' '
+        for (j = 1; (j < 15) && (spaceFound == 0); j++)
+        {
+            if (buffer[j] == ' ')
+            {
+                spaceFound = j + 1;
+            }
+        }
+        if (spaceFound > 0)
+        {
+            bodyOffset = bodyStart - buffer;
+
+            // If we found a ' ', try to match the code
+            if (validResponseCode[0] == buffer[spaceFound] && 
+                validResponseCode[1] == buffer[spaceFound + 1] && 
+                validResponseCode[2] == buffer[spaceFound + 2])
+            {
+                //validResponse = 1;
+                printf("*");
+                i = i + FW_READ_CHUNK_BYTES;
+                GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
+                // send next request 
+                makeRequestForNextRange(i, FW_READ_CHUNK_BYTES, baseName, baseNameLength, app);
+            }
+            else if (   validResponseCode416[0] == buffer[spaceFound] && 
+                        validResponseCode416[1] == buffer[spaceFound + 1] && 
+                        validResponseCode416[2] == buffer[spaceFound + 2])
+            {
+                received416 = 1;
+                printf("[EXOPAL] Received 416\r\n");
+                GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
+            }
+            else
+            {
+                //receivedError = 1;
+                printf("[EXOPAL] Received error\r\n");
+                return 7;
+            }
+        }
+      
     }
-    
-    if (contentLength != (i - bodyOffset))
+
+
+
+      
+    if (received416 == 0)
     {
-        printf("[EXOPAL] ERROR: Content length does not equal bytes downloaded.\r\n", i);
+        printf("[EXOPAL] Didn't download full package.\r\n", i);
         return 4;
     }
     
     printf("[EXOPAL] Received %d Bytes\r\n", i);
     //GsnFwupExtFlash_DwndEnd
-    if (recvSize >= 0)
-    {
-        *responseLength = recvSize;
-    }
-#endif
+
     return 0;
 
 }
@@ -696,9 +714,13 @@ uint8_t exoPal_setCik(const char * cik)
 uint8_t exoPal_getCik(char * read_buffer)
 {
     int32_t rtn;
+    static int32_t displayOnce = 0;
     
 #ifndef WIN32
-    rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);  
+    rtn = GsnNvds_Read(APP_CFG_NVDS_NCM_BOSS_CIK_ID, 0, PAL_CIK_LENGTH, read_buffer);
+#else
+    memcpy(read_buffer, cikBuffer, CIK_LENGTH);
+    rtn = 0;
 #endif // !WIN32
 
     boss_exosite_cloud_setCik(read_buffer);
@@ -707,9 +729,10 @@ uint8_t exoPal_getCik(char * read_buffer)
     {
         printf("[EXOPAL] *** CIK read from NVM failed: %d\r\n", rtn);
     }
-    else
+    else if (displayOnce == 0)
     {
-        
+        // we're only going to display this the first time we read
+        displayOnce = 1;
         printf("[EXOPAL] Retrieved cik: %.*s\r\n", PAL_CIK_LENGTH, read_buffer);
     }
 
@@ -787,6 +810,7 @@ uint8_t exoPal_getUuid(char * read_buffer)
     uint8_t *ptMAC;
     GSN_FACT_DFLT_ELEMENT_T *pFactDfltElmnt;
     char randArr[6];
+    static int32_t displayOnce = 0;
     ptMAC = GsnFactDflt_MacGet();
     
     sprintf(read_buffer, "XX-%02X%02X%02X-%02X%02X%02X-xxxxx", ptMAC[0],ptMAC[1],ptMAC[2],ptMAC[3],ptMAC[4],ptMAC[5]);
@@ -802,48 +826,53 @@ uint8_t exoPal_getUuid(char * read_buffer)
         memcpy( read_buffer + 17, pFactDfltElmnt->pVal + 3, 5);
     }
     
-    printf("[EXOPAL] Retrieved SN: %s\r\n", read_buffer);
+    if (displayOnce == 0)
+    {
+        displayOnce = 1;
+        printf("[EXOPAL] Retrieved SN: %s\r\n", read_buffer);
+    }
 #endif
     return 0;
 }
 
-/*!
- * @brief  Used to do any operations before 
- *
- * 
- * @return 0 if successful
- */
-int32_t exoPal_sendingComplete()
+
+exoPal_sendDone(int32_t debugOutput)
 {
+#ifndef WIN32
     int32_t i = 0;
     char *outBuf;
     uint32_t len = 0;
     int32_t retVal;
     size_t retSize = 0;
-
-    printf("[EXOPAL] Sending: ");
-    
-    for(i = 0; (i < exoPal_txBufCounter); i += 100)
+    if (debugOutput)
     {
-        if ((exoPal_txBufCounter - i) < 100)
+        printf("[EXOPAL] Sending: ");
+
+        for (i = 0; (i < exoPal_txBufCounter); i += 100)
         {
-            printf("%.*s", exoPal_txBufCounter - i, exoPal_rxBuffer + i);
+            if ((exoPal_txBufCounter - i) < 100)
+            {
+                printf("%.*s", exoPal_txBufCounter - i, exoPal_rxBuffer + i);
+            }
+            else
+            {
+                printf("%.*s", 100, exoPal_rxBuffer + i);
+            }
         }
-        else
-        {
-            printf("%.*s", 100, exoPal_rxBuffer + i);
-        }
+        printf("\r\n");
     }
-    printf("\r\n");
-    
 #ifdef GSN_SSL_CLIENT_SUPPORT
     retVal = GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
-    printf("Encoding response: %d\r\n", retVal);
+    
+    if(debugOutput)
+    {
+        printf("Encoding response: %d\r\n", retVal);
+    }
     //send(SockDes, outBuf, len, 0);
     //GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
 
     retSize = send(SockDes, outBuf, len, 0);
-    
+
     if (retSize == -1)
     {
         // try opening the socket and make another attempt
@@ -856,12 +885,27 @@ int32_t exoPal_sendingComplete()
 #else
     send(SockDes, exoPal_rxBuffer, exoPal_txBufCounter, 0);
 #endif
+#else
+    txBufCounter = 0;
+#endif
+    exoPal_txBufCounter = 0;
 
-    
-
-    
-    printf("\r\n[EXOPAL] Done Sending\r\n");
+    if (debugOutput)
+    {
+        printf("\r\n[EXOPAL] Done Sending\r\n");
+    }
     return 0;
+}
+
+/*!
+ * @brief  Used to do any operations before 
+ *
+ * 
+ * @return 0 if successful
+ */
+int32_t exoPal_sendingComplete()
+{
+    return exoPal_sendDone(1);
 }
 
 /*!

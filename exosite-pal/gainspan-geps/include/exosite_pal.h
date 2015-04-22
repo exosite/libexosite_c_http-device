@@ -52,6 +52,9 @@ to place incoming data from the modem in.*/
 to batch data before it is sent out.*/
 #define TX_BUFFER_SIZE                         1024
 
+#define APP1_EXTENSION "app1.bin"
+#define APP2_EXTENSION "app2.bin"
+
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 // functions for export
@@ -76,6 +79,10 @@ char * exoPal_getHostName();
 int32_t exoPal_atoi(char* val);
 
 extern ttUserIpAddress exoPal_ip;
+
+#ifdef WIN32 // functions to test
+int32_t makeRequestForNextRange(int32_t startingpoint, int32_t length, char * baseName, int32_t baseNameLength, int32_t fwApp);
+#endif
 
 #endif
 
