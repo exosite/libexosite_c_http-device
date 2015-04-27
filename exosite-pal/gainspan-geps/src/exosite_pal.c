@@ -51,7 +51,15 @@
 #endif
 
 // Set to 1 if you want to try and keep a socket open.
-#define KEEP_SOCKET_OPEN 1
+static int32_t KEEP_SOCKET_OPEN = 1;
+
+
+// Set to 1 to enable SSL, 0 to disable it
+#ifdef GSN_SSL_CLIENT_SUPPORT
+static int32_t USE_SSL = 1;
+#else
+static int32_t USE_SSL = 0;
+#endif
 
 #define FW_READ_CHUNK_BYTES 512
 
@@ -77,6 +85,21 @@ GSN_SSL_CONN_T Ssl;
 GSN_SSL_CONN_PARAMS_T params;
 #endif
 
+void exoPal_setKeepSocketOpen(int32_t keepSocketOpen)
+{
+    KEEP_SOCKET_OPEN = keepSocketOpen;
+    if ((KEEP_SOCKET_OPEN == 1) && (SockDes != -1))
+    {
+        // close our existing socket, if it is open
+        closeSock();
+    }
+
+}
+
+void exoPal_setUseSsl(int32_t useSsl)
+{
+    USE_SSL = useSsl;
+}
 
 #ifdef WIN32
 char cikBuffer[40];
@@ -101,11 +124,14 @@ static int32_t openSock()
     exoPal_txBufCounter = 0;
 
     tServ_addr.sin_family = AF_INET;
-#ifdef GSN_SSL_CLIENT_SUPPORT
-    tServ_addr.sin_port = htons(443);
-#else
-    tServ_addr.sin_port = htons(80);
-#endif
+    if (USE_SSL == 1)
+    {
+        tServ_addr.sin_port = htons(443);
+    }
+    else
+    {
+        tServ_addr.sin_port = htons(80);
+    }
     //C0A80A8A debian vm
     tServ_addr.sin_addr.s_addr = exoPal_ip;//htonl(0xC0A80A88);//Desktop htonl(0xC0A80A8A);// htonl(0xC0A80339);//htonl(0xC0A8037B)/* vm */;//
 
@@ -123,20 +149,21 @@ static int32_t openSock()
         return 1;
     }
 
-#ifdef GSN_SSL_CLIENT_SUPPORT
-    params.caCertLen = 0;
-    printf("[EXOPAL] starting ssl\r\n");
-#warning docs says this should be 1 if valid, but appears to return zero if valid...
-    sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
-    printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
-    if (sockStatus != 0)
+    if (USE_SSL == 1)
     {
-        // Something happened in the ssl open, close it and try again next time.
-        printf("[EXOPAL] Returning error: %d\r\n", sockStatus);
-        closeSock();
-        return 2;
+        params.caCertLen = 0;
+        printf("[EXOPAL] starting ssl\r\n");
+    #warning docs says this should be 1 if valid, but appears to return zero if valid...
+        sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
+        printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
+        if (sockStatus != 0)
+        {
+            // Something happened in the ssl open, close it and try again next time.
+            printf("[EXOPAL] Returning error: %d\r\n", sockStatus);
+            closeSock();
+            return 2;
+        }
     }
-#endif
 #endif   
     return 0;
 }
@@ -164,9 +191,10 @@ uint8_t exoPal_tcpSocketClose()
 static int32_t closeSock()
 {
 #ifndef WIN32
-#ifdef GSN_SSL_CLIENT_SUPPORT
-    GsnSsl_Close(&Ssl);
-#endif
+    if (USE_SSL == 1)
+    {
+        GsnSsl_Close(&Ssl);
+    }
     tfClose(SockDes);
     printf("[EXOPAL] socket closed\r\n");
     SockDes = -1;
@@ -186,27 +214,30 @@ int32_t exoPal_recv(int32_t socketDescriptor, char * bufferPtr, int bufferLength
         return -100;
     }
 
-#ifdef GSN_SSL_CLIENT_SUPPORT
-#warning Why the hell are you casting a uint16 to a uint32 ? !
-    
-
-    response = GsnSsl_DataReceive(&Ssl, SockDes, &rxbuf, &dataLen, 10);
-
-    if (response == GSN_FAILURE)
+    if (USE_SSL == 1)
     {
-        printf("[EXOPAL] Error receiving: %d\r\n", response);
-        return -101;
+#warning Why the hell are you casting a uint16 to a uint32 ? !
+
+
+        response = GsnSsl_DataReceive(&Ssl, SockDes, &rxbuf, &dataLen, 10);
+
+        if (response == GSN_FAILURE)
+        {
+            printf("[EXOPAL] Error receiving: %d\r\n", response);
+            return -101;
+        }
+        else
+        {
+            response = dataLen;
+        }
+        memmove(bufferPtr, rxbuf, dataLen);
+        GsnSsl_Free(rxbuf);
     }
     else
     {
-        response = dataLen;
+        response = recv(socketDescriptor, bufferPtr, bufferLength, flags);
     }
-    memmove(bufferPtr, rxbuf, dataLen);
-    GsnSsl_Free(rxbuf);
 
-#else
-    response = recv(socketDescriptor, bufferPtr, bufferLength, flags);
-#endif
     return response;
 }
 
@@ -861,30 +892,34 @@ exoPal_sendDone(int32_t debugOutput)
         }
         printf("\r\n");
     }
-#ifdef GSN_SSL_CLIENT_SUPPORT
-    retVal = GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
-    
-    if(debugOutput)
+
+    if (USE_SSL == 1)
     {
-        printf("Encoding response: %d\r\n", retVal);
+
+        retVal = GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
+
+        if (debugOutput)
+        {
+            printf("Encoding response: %d\r\n", retVal);
+        }
+        //send(SockDes, outBuf, len, 0);
+        //GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
+
+        retSize = send(SockDes, outBuf, len, 0);
+
+        if (retSize == -1)
+        {
+            // try opening the socket and make another attempt
+            openSock();
+            send(SockDes, outBuf, len, 0);
+        }
+
+        GsnSsl_Free((uint8_t *)outBuf);
     }
-    //send(SockDes, outBuf, len, 0);
-    //GsnSsl_Encode(&Ssl, (uint8_t *)exoPal_rxBuffer, exoPal_txBufCounter, (uint8_t **)&outBuf, &len);
-
-    retSize = send(SockDes, outBuf, len, 0);
-
-    if (retSize == -1)
+    else
     {
-        // try opening the socket and make another attempt
-        openSock();
-        send(SockDes, outBuf, len, 0);
+        send(SockDes, exoPal_rxBuffer, exoPal_txBufCounter, 0);
     }
-
-    GsnSsl_Free((uint8_t *)outBuf);
-
-#else
-    send(SockDes, exoPal_rxBuffer, exoPal_txBufCounter, 0);
-#endif
 #else
     txBufCounter = 0;
 #endif

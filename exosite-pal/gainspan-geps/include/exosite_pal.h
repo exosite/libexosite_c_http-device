@@ -80,6 +80,9 @@ int32_t exoPal_atoi(char* val);
 
 extern ttUserIpAddress exoPal_ip;
 
+void exoPal_setKeepSocketOpen(int32_t keepSocketOpen);
+void exoPal_setUseSsl(int32_t useSsl);
+
 #ifdef WIN32 // functions to test
 int32_t makeRequestForNextRange(int32_t startingpoint, int32_t length, char * baseName, int32_t baseNameLength, int32_t fwApp);
 #endif
