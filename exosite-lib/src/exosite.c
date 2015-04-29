@@ -142,6 +142,46 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
 }
 
 
+uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * responseLength)
+{
+    int32_t response;
+    int32_t totalBodyLengthRead = 0;
+    uint16_t length = 0;
+    uint8_t results = 0;
+    char *bodyStart = 0;
+    uint16_t bodyLength = 0;
+
+    // read from socket.  This assumes that the first read attempt will return
+    // at a minimum the content length header
+    results = exoPal_socketRead(buffer, bufferSize, &length);
+
+    if (results != 0)
+    {
+        return results;
+    }
+
+    // find the start of the body.
+    response = exosite_getBody(buffer, &bodyStart, &bodyLength);
+
+    if (response != 0)
+    {
+        return response;
+    }
+    totalBodyLengthRead = length - (bodyStart - buffer);
+    // while received data < expected data as specified by the content header
+    while (totalBodyLengthRead < bodyLength)
+    {
+
+        results = exoPal_socketRead(bodyStart + totalBodyLengthRead, bufferSize, &length);
+        if (results != 0)
+        {
+            return results;
+        }
+        totalBodyLengthRead += length;
+    }
+    
+    return 0;
+}
 
 
 /*!
@@ -227,7 +267,7 @@ EXO_STATE exosite_activate()
 
     
 
-    exoPal_socketRead( exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
+    exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
 
@@ -290,7 +330,7 @@ EXO_STATE exosite_activate()
  *
  * @param response [in] Full http response with headers
  * @param bodyStart [out] Will be updated to point at the start of the http body
- * @param bodyLength [out] Length of the body
+ * @param bodyLength [out] Length of the body (As indicated by content length header)
  * 
  * @return int32_t 0 if successful, else negative
  */
@@ -474,7 +514,7 @@ int32_t exosite_write(const char * writeData, uint16_t length)
 
     responseLength = 0;
     // get response
-    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
@@ -581,7 +621,7 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     *length = 0;
 
     // get response
-    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
 
     exosite_disconnect();
@@ -713,7 +753,7 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
     *length = 0;
 
     // get response
-    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
 
     exosite_disconnect();
 
@@ -784,7 +824,7 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
     
     exoPal_sendingComplete();
     
-    exoPal_socketRead(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
+    exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
     exosite_disconnect();
     
     status = exosite_getBody(exoPal_rxBuffer, &bodyStart, &responseLength);
@@ -877,7 +917,7 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     exoPal_sendingComplete();
     
     // get response
-    exoPal_socketRead(responseBuffer, responseBufferLength, &responseLength);
+    exoPal_getResponse(responseBuffer, responseBufferLength, &responseLength);
 
     exosite_disconnect();
     return responseLength;
