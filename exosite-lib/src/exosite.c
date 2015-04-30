@@ -145,15 +145,15 @@ EXO_STATE exosite_init(const char * vendor, const char *model)
 uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * responseLength)
 {
     int32_t response;
-    int32_t totalBodyLengthRead = 0;
     uint16_t length = 0;
     uint8_t results = 0;
     char *bodyStart = 0;
     uint16_t bodyLength = 0;
 
+
     // read from socket.  This assumes that the first read attempt will return
     // at a minimum the content length header
-    results = exoPal_socketRead(buffer, bufferSize, &length);
+    results = exoPal_socketRead(buffer, bufferSize, responseLength);
 
     if (results != 0)
     {
@@ -167,17 +167,17 @@ uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * respon
     {
         return response;
     }
-    totalBodyLengthRead = length - (bodyStart - buffer);
+    
     // while received data < expected data as specified by the content header
-    while (totalBodyLengthRead < bodyLength)
+    while ((*responseLength - (bodyStart - buffer)) < bodyLength)
     {
 
-        results = exoPal_socketRead(bodyStart + totalBodyLengthRead, bufferSize, &length);
+        results = exoPal_socketRead(buffer + *responseLength, bufferSize, &length);
         if (results != 0)
         {
             return results;
         }
-        totalBodyLengthRead += length;
+        *responseLength += length;
     }
     
     return 0;
