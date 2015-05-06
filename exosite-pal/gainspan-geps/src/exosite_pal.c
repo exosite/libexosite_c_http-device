@@ -338,7 +338,7 @@ static int32_t heartBeatSocket = -1;
         printf("[EXOPAL] Creating socket\r\n");
        
     }
-    printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
+    //printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (heartBeatSocket == -1)
     {
         printf("[EXOPAL] Error creating socket\r\n");
