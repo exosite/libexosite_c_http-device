@@ -145,7 +145,7 @@ static int32_t openSock()
     printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (sockStatus != 0)
     {
-        
+        closeSock();
         return 1;
     }
 
