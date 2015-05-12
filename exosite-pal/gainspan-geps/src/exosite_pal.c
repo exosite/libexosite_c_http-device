@@ -335,13 +335,12 @@ static int32_t heartBeatSocket = -1;
     {
         // Open socket if it wasn't already
         heartBeatSocket = socket(AF_INET, SOCK_DGRAM, 0 );
-        printf("[EXOPAL] Creating socket\r\n");
+        printf("[EXOPAL] Creating udp socket\r\n");
        
     }
-    //printf("[EXOPAL] Socket create status: %d\r\n", sockStatus);
     if (heartBeatSocket == -1)
     {
-        printf("[EXOPAL] Error creating socket\r\n");
+        printf("[EXOPAL] Error creating udp socket\r\n");
         return -2;
     }
     
