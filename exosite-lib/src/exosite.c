@@ -60,6 +60,8 @@ static uint8_t exosite_checkResponse(char * response, const char * code);
 #define STR_MODEL   "&model="
 #define STR_SN      "&sn="
 
+#define MAX_RESPONSE_READ_ATTEMPTS 4
+
 static char cikBuffer[CIK_LENGTH];
 static char vendorBuffer[MAX_VENDOR_LENGTH];
 static char modelBuffer[MAX_MODEL_LENGTH];
@@ -149,6 +151,7 @@ uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * respon
     uint8_t results = 0;
     char *bodyStart = 0;
     uint16_t bodyLength = 0;
+    int32_t readAttempts = 0;
 
 
     // read from socket.  This assumes that the first read attempt will return
@@ -173,6 +176,16 @@ uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * respon
     {
 
         results = exoPal_socketRead(buffer + *responseLength, bufferSize, &length);
+        if (length == 0)
+        {
+            // this is to prevent a dangling read from hanging up the system for
+            // an extended period of time.
+            readAttempts++;
+            if (readAttempts >= MAX_RESPONSE_READ_ATTEMPTS)
+            {
+                return 20;
+            }
+        }
         if (results != 0)
         {
             return results;
