@@ -42,6 +42,7 @@
 
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #include "gsn_ssl.h"
+#include "xo_root_der.crt.c"
 #endif
 
 #ifndef WIN32
@@ -155,7 +156,8 @@ static int32_t openSock()
 
     if (USE_SSL == 1)
     {
-        params.caCertLen = 0;
+        params.caCertLen = sizeof(rootCert);
+        params.caCert = rootCert;
         printf("[EXOPAL] starting ssl\r\n");
     #warning docs says this should be 1 if valid, but appears to return zero if valid...
         sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
