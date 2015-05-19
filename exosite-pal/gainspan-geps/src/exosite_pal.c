@@ -36,6 +36,10 @@
 #include "exosite_pal.h"
 #include "exosite.h"
 
+#ifdef VALIDATE_FW_DOWNLOADS
+#include "sha1.h"
+#endif
+
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #include "gsn_ssl.h"
 #endif
@@ -577,6 +581,7 @@ int32_t makeRequestForNextRange(int32_t startingpoint, int32_t length, char * ba
  * \param[in] bufferSize Size of buffer
  * \param[out] buffer Buffer received data will be written to
  * \param[out] responseLength amount of data received from modem
+ * \param[in/out] sha_ctx sha1 ctx, initialized in here.  
  *
  *
  * \sa exoPal_socketWrite
@@ -590,7 +595,11 @@ uint8_t exoPal_socketReadFw( char * buffer,
                                 GSN_EXTFLASH_FWUP_CTX *pCtx,
                                 GSN_FWUP_ID_T app,
                                 char * baseName,
-                                int32_t baseNameLength)
+                                int32_t baseNameLength
+#ifdef VALIDATE_FW_DOWNLOADS
+                                ,SHA1_CTX *sha_ctx
+#endif
+                                )
 {
 
 
@@ -609,7 +618,9 @@ uint8_t exoPal_socketReadFw( char * buffer,
     int32_t recvSize = bufferSize;
     int32_t received416 = 0;
     //int32_t receivedError = 0;
-
+#ifdef VALIDATE_FW_DOWNLOADS
+    sha1_init(sha_ctx);
+#endif
 
     makeRequestForNextRange(0, FW_READ_CHUNK_BYTES, baseName, baseNameLength, app);
 
@@ -648,7 +659,8 @@ uint8_t exoPal_socketReadFw( char * buffer,
         if (spaceFound > 0)
         {
             bodyOffset = bodyStart - buffer;
-
+            i += recvSize - bodyOffset;
+            
             // If we found a ' ', try to match the code
             if (validResponseCode[0] == buffer[spaceFound] && 
                 validResponseCode[1] == buffer[spaceFound + 1] && 
@@ -656,8 +668,11 @@ uint8_t exoPal_socketReadFw( char * buffer,
             {
                 //validResponse = 1;
                 printf("*");
-                i = i + FW_READ_CHUNK_BYTES;
+                
                 GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
+#ifdef VALIDATE_FW_DOWNLOADS
+                sha1_update(sha_ctx, buffer + bodyOffset, recvSize - bodyOffset);
+#endif
                 // send next request 
                 makeRequestForNextRange(i, FW_READ_CHUNK_BYTES, baseName, baseNameLength, app);
             }
@@ -667,7 +682,6 @@ uint8_t exoPal_socketReadFw( char * buffer,
             {
                 received416 = 1;
                 printf("[EXOPAL] Received 416\r\n");
-                GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
             }
             else
             {
