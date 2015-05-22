@@ -46,7 +46,7 @@
 // defines
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
 to place incoming data from the modem in.*/
-#define RX_BUFFER_SIZE                         1024
+#define RX_BUFFER_SIZE                         1536
 
 /*!< This defines the size of the tx buffer in the PAL.  This buffer is used
 to batch data before it is sent out.*/
@@ -77,6 +77,7 @@ char* exoPal_strstr(const char *in, const char *str);
 int32_t exoPal_sendingComplete(void);
 char * exoPal_getHostName();
 int32_t exoPal_atoi(char* val);
+void exoPal_setXocDetails(uint8_t * p_XocFile);
 
 extern ttUserIpAddress exoPal_ip;
 

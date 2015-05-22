@@ -35,6 +35,7 @@
 
 #include "exosite_pal.h"
 #include "exosite.h"
+#include "boss_certificate.h"
 
 #ifdef VALIDATE_FW_DOWNLOADS
 #include "sha1.h"
@@ -42,7 +43,6 @@
 
 #ifdef GSN_SSL_CLIENT_SUPPORT
 #include "gsn_ssl.h"
-#include "xo_root_der.crt.c"
 #endif
 
 #ifndef WIN32
@@ -88,7 +88,27 @@ static char ContentLengthStr[] = "Content-Length: ";
 #ifdef GSN_SSL_CLIENT_SUPPORT
 GSN_SSL_CONN_T Ssl;
 GSN_SSL_CONN_PARAMS_T params;
+
+
+static uint8_t * pXocfile = 0;
+
+
+/*!
+ * @brief Function to tell the pal where the xoc file is located
+ *
+ * The xoc file contains the Exosite root certificate.  This function
+ * lets the PAL know where the xoc file is located.
+ * 
+ * @param p_xocFile Pointer to actual xoc file.
+ *
+ */
+void exoPal_setXocDetails(uint8_t * p_XocFile)
+{
+    pXocfile = p_XocFile;
+}
+
 #endif
+
 
 void exoPal_setKeepSocketOpen(int32_t keepSocketOpen)
 {
@@ -114,6 +134,7 @@ char txBuffer[4096];
 
 static int32_t openSock()
 {
+    static int32_t sslFailCount = 0;
     int32_t sockStatus = 0;
 #ifndef WIN32
     struct sockaddr_in tServ_addr;
@@ -156,14 +177,29 @@ static int32_t openSock()
 
     if (USE_SSL == 1)
     {
-        params.caCertLen = sizeof(rootCert);
-        params.caCert = rootCert;
-        printf("[EXOPAL] starting ssl\r\n");
+        if(pXocfile == 0)
+        {
+            return 3;
+        }
+
+        // set cert parameters from xocFile
+        params.caCertLen = (uint16_t)((pXocfile[XOC_CERTIFICATE_LENGTH_OFFSET] << 8) + pXocfile[XOC_CERTIFICATE_LENGTH_OFFSET + 1]);
+        params.caCert = &pXocfile[XOC_CERTIFICATE_OFFSET];
     #warning docs says this should be 1 if valid, but appears to return zero if valid...
         sockStatus = GsnSsl_Open(&Ssl, SockDes, &params);
         printf("[EXOPAL] SSL create status: %d\r\n", sockStatus);
         if (sockStatus != 0)
         {
+            sslFailCount++;
+            if (sslFailCount >=3)
+            {
+                // if ssl negotiation has failed a few times, try to get a new certificate
+                printf("[BOSS] getting certificate\r\n");
+                boss_certificate_getCertificate(exoPal_rxBuffer, RX_BUFFER_SIZE);
+
+                // reset fail count
+                sslFailCount = 0;
+            }
             // Something happened in the ssl open, close it and try again next time.
             printf("[EXOPAL] Returning error: %d\r\n", sockStatus);
             closeSock();
@@ -673,7 +709,7 @@ uint8_t exoPal_socketReadFw( char * buffer,
                 
                 GsnOtafu_FwupContinue(pCtx, (UINT8 *)(buffer + bodyOffset), recvSize - bodyOffset, app);
 #ifdef VALIDATE_FW_DOWNLOADS
-                sha1_update(sha_ctx, buffer + bodyOffset, recvSize - bodyOffset);
+                sha1_update(sha_ctx, (uint8_t *)buffer + bodyOffset, recvSize - bodyOffset);
 #endif
                 // send next request 
                 makeRequestForNextRange(i, FW_READ_CHUNK_BYTES, baseName, baseNameLength, app);
