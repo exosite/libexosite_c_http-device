@@ -192,7 +192,7 @@ uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * respon
         }
         *responseLength += length;
     }
-    
+
     return 0;
 }
 
@@ -212,8 +212,8 @@ EXO_STATE exosite_activate()
     EXO_STATE retVal;
     uint16_t responseLen;
     uint8_t connection_status;
-    
-    
+
+
     // Try and activate device with Exosite, four possible cases:
     // * We don't have a stored CIK and receive a 200 response with a CIK
     //    * Means device was enabled and this was our first connection
@@ -223,7 +223,7 @@ EXO_STATE exosite_activate()
     //     *  Device has already been activated and has a valid CIK
     // * We have a stored CIK and receive a 401 response
     //    * R/W error
-    
+
     uint8_t vendorLength = exoPal_strlen(vendorBuffer);
     uint8_t modelLength = exoPal_strlen(modelBuffer);
     uint8_t uuidLength = exoPal_strlen(uuidBuffer);
@@ -234,7 +234,7 @@ EXO_STATE exosite_activate()
                           sizeof(STR_SN) - 1;
     bodyLength += vendorLength + modelLength + uuidLength;
 
-    
+
     len_of_contentLengthStr = exoPal_itoa((int)bodyLength, contentLengthStr, 5);
 
 
@@ -272,19 +272,19 @@ EXO_STATE exosite_activate()
     exoPal_socketWrite(modelBuffer, modelLength);
     exoPal_socketWrite(STR_SN, sizeof(STR_SN) - 1);
     exoPal_socketWrite(uuidBuffer, uuidLength);
-   
+
     exoPal_sendingComplete();
 
     retVal = EXO_STATE_CONNECTION_ERROR;
 
 
-    
+
 
     exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLen);
 
     exosite_disconnect();
 
-    
+
     if (responseLen == 0)
     {
         // if we didn't receive any data from the modem
@@ -344,7 +344,7 @@ EXO_STATE exosite_activate()
  * @param response [in] Full http response with headers
  * @param bodyStart [out] Will be updated to point at the start of the http body
  * @param bodyLength [out] Length of the body (As indicated by content length header)
- * 
+ *
  * @return int32_t 0 if successful, else negative
  */
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
@@ -373,8 +373,8 @@ int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength)
         *charAfterContentLengthValue = '\0';
         *bodyLength = exoPal_atoi(strStart);
         *charAfterContentLengthValue = '\r';
-        
-        
+
+
         strStart = exoPal_strstr(strStart, httpBodyToken);
         if (strStart <= 0)
         {
@@ -406,7 +406,7 @@ uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
 
     for (i = 0; i < CIK_LENGTH; i++)
     {
-        if (!(cik[i] >= 'a' && cik[i] <= 'f' || cik[i] >= '0' && cik[i] <= '9'))
+        if (!((cik[i] >= 'a' && cik[i] <= 'f') || (cik[i] >= '0' && cik[i] <= '9')))
         {
             return 0;
         }
@@ -477,7 +477,7 @@ int32_t exosite_write(const char * writeData, uint16_t length)
         // tried to write without a valid CIK
         return -99;
     }
-    
+
     // connect to exosite
     connection_status = exosite_connect();
 
@@ -518,7 +518,7 @@ int32_t exosite_write(const char * writeData, uint16_t length)
     results |= exoPal_socketWrite(writeData, length);
 
     results |= exoPal_sendingComplete();
-    
+
     if (results != 0)
     {
         exosite_disconnect();
@@ -581,13 +581,13 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
     int i,j;
     uint8_t connection_status;
     int32_t results = 0;
-    
+
     if(!exosite_isCIKValid(cikBuffer))
     {
         // tried to write without a valid CIK
         return -99;
     }
-    
+
     // connect to exosite
     connection_status = exosite_connect();
 
@@ -638,7 +638,7 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 
 
     exosite_disconnect();
-    
+
     // 204 "No content"
     if (exosite_checkResponse(exoPal_rxBuffer, "200"))
     {
@@ -809,7 +809,7 @@ int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buf
  * @brief  Retrieves the timestamp from m2.exosite.com/timestamp
  *
  * @param timestamp Timestamp retrieved from Exosite
- * 
+ *
  * @return int8_t Returns negative error code if failed, else returns 0
  */
 int8_t exosite_getTimestamp(int32_t * timestamp)
@@ -820,12 +820,12 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
     uint8_t connection_status;
     char temp;
     connection_status = exosite_connect();
-    
+
     if (connection_status != 0)
     {
         return connection_status;
     }
-    
+
     exoPal_socketWrite(STR_TIMESTAMP_URL, sizeof(STR_TIMESTAMP_URL)-1);
     exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP)-1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
@@ -834,27 +834,27 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
     exoPal_socketWrite(STR_HOST, sizeof(STR_HOST)-1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
     exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-    
+
     exoPal_sendingComplete();
-    
+
     exoPal_getResponse(exoPal_rxBuffer, RX_BUFFER_SIZE, &responseLength);
     exosite_disconnect();
-    
+
     status = exosite_getBody(exoPal_rxBuffer, &bodyStart, &responseLength);
-    
+
     if (status < 0 )
     {
         return -1;
     }
-    
+
     temp = bodyStart[responseLength];
     bodyStart[responseLength] = '\0';
-    
+
     *timestamp = exoPal_atoi(bodyStart);
     bodyStart[responseLength] = temp;
-    
+
     return 0;
-    
+
 }
 
 
@@ -864,8 +864,8 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
  *
  * @param requestBody Full json rpc request string
  * @param requestLength Length of json request string
- * 
- * @return int32_t 
+ *
+ * @return int32_t
  */
 int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength)
 {
@@ -874,23 +874,23 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     uint8_t connection_status;
     uint8_t len_of_contentLengthStr;
     int32_t results = 0;
-    
+
     if(!exosite_isCIKValid(cikBuffer))
     {
         // tried to write without a valid CIK
         return -99;
     }
-    
+
     // connect to exosite
     connection_status = exosite_connect();
-    
+
     if (connection_status != 0)
     {
         return connection_status;
     }
 
     // assume content length will never be over 9999 bytes
-    
+
     len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
 
 
@@ -928,7 +928,7 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
 
 
     exoPal_sendingComplete();
-    
+
     // get response
     exoPal_getResponse(responseBuffer, responseBufferLength, &responseLength);
 
