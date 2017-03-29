@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
 *  exosite_hal.h - Common header for Exosite hardware adapation layer
-*  Copyright (C) 2012 Exosite LLC
+*  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
@@ -33,8 +33,8 @@
 *
 *****************************************************************************/
 
-#ifndef EXOSITE_HAL_H
-#define EXOSITE_HAL_H
+#ifndef EXOSITE_PAL_PRIVATE_H
+#define EXOSITE_PAL_PRIVATE_H
 #include <stdint.h>
 
 
@@ -45,22 +45,8 @@ to place incoming data from the modem in.*/
 
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
-// functions for export
-void exoPal_init();
-uint8_t exoPal_setCik(const char * read_buffer);
-uint8_t exoPal_getCik(char * read_buffer);
-uint8_t exoPal_getModel(char * read_buffer);
-uint8_t exoPal_getVendor(char * read_buffer);
-uint8_t exoPal_getUuid(char * read_buffer);
 
-uint8_t exoPal_tcpSocketClose();
-uint8_t exoPal_tcpSocketOpen();
-uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
-uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
-
-uint8_t exoPal_itoa(int value, char* str, uint8_t radix);
-uint16_t exoPal_strlen(const char *s);
-uint8_t exoPal_memcpy(char * dst, const char * src, uint16_t length);
+#include "exosite_pal.h"
 
 
 #endif
