@@ -36,19 +36,9 @@
 #ifndef EXOSITE_PAL_PRIVATE_H
 #define EXOSITE_PAL_PRIVATE_H
 #include <stdint.h>
-
-
-// defines
-/*!< This defines the size of the rx buffer in the PAL.  This buffer is used
-to place incoming data from the modem in.*/
-#define RX_BUFFER_SIZE                         512
-
-extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
-
-
 #include "exosite_pal.h"
 
+/* Stuff that only your implementation needs goes here. */
 
 #endif
-
-
+/* vim: set ai cin et sw=4 ts=4 : */

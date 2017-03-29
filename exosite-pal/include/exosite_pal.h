@@ -37,6 +37,13 @@
 #define EXOSITE_PAL_H
 #include <stdint.h>
 
+// defines
+/*!< This defines the size of the rx buffer in the PAL.  This buffer is used
+to place incoming data from the modem/socket in.*/
+#define RX_BUFFER_SIZE                         512
+
+extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
+
 // functions for export
 void exoPal_init();
 uint8_t exoPal_setCik(const char * read_buffer);
@@ -59,5 +66,4 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 
 
 #endif
-
-
+/* vim: set ai cin et sw=4 ts=4 : */

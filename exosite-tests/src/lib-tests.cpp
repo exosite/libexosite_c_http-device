@@ -3,6 +3,7 @@ extern "C" {
 #endif
 #include "exosite.h"
 #include "exosite_pal.h"
+#include "exosite_pal_private.h"
 #include "http_parser.h"
 
 #ifdef  __GNUC__
@@ -22,7 +23,7 @@ static http_parser_settings parser_settings = {0};
 char * validTestcik = "abcdef1234abcdef1234abcdef1234abcdef1234";
 char * invalidTestcik_nonHexChar = "@abcdef1234abcdef1234abcdef1234abcdef124";
 char * invalidTestcik_short = "abcdef1234abcdef1234abcdef1234abcdef123";
-class ExoLibCleanState : public ::testing::Test 
+class ExoLibCleanState : public ::testing::Test
 {
 protected:
     virtual void SetUp() {
@@ -76,15 +77,15 @@ TEST_F(ExoLibCleanState, isCIKValid)
     results = exosite_isCIKValid(invalidTestcik_short);
     EXPECT_EQ(0,results);
 
-    // cik may not be stored as a null terminated string, so we don't want to 
+    // cik may not be stored as a null terminated string, so we don't want to
     // check if a more then 40 char causes check to fail.
-    
+
 }
 
 // Make sure cik starts empty
 TEST_F(ExoLibCleanState, cikStartEmpty)
 {
-     
+
     char emptyBuffer[41];
     // make sure that we start up with an empty cik
     exosite_getCIK(emptyBuffer);
@@ -93,7 +94,7 @@ TEST_F(ExoLibCleanState, cikStartEmpty)
 
 TEST_F(ExoLibCleanState, cikSetTest)
 {
-    // set cik 
+    // set cik
     exosite_setCIK(validTestcik);
 
     // retrieve cik
@@ -113,18 +114,18 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
     strcpy(nvm->uuid,"123456789");
     exosite_setCIK(validTestcik);
 
-    
+
     EXO_STATE resp;
     resp = exosite_init(TEST_VENDOR, TEST_MODEL);
-    
+
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
 
     message out_msg = {0};
     setMsg(&out_msg);
-    
+
     http_parser_init(&parser, HTTP_REQUEST);
-    
+
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
@@ -140,7 +141,7 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
     strcat(expected_body,"&sn=");
     strcat(expected_body,nvm->uuid);
 
-    
+
     // Check body is what we want
     EXPECT_STREQ(expected_body,out_msg.body);
 
@@ -157,14 +158,14 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
 
 TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
 {
-    
+
     strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nContent-Length: 40\r\n\r\n");
     strcat(nvm->readFromBuffer,validTestcik);
 
     nvm->readFromBufferLen = strlen(nvm->readFromBuffer);
     // we received a 200 response, which means we received a valid cik
     strcpy(nvm->uuid,"123456789");
-    
+
 
     EXO_STATE resp;
     resp = exosite_init(TEST_VENDOR, TEST_MODEL);
@@ -178,7 +179,7 @@ TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
 
     // We should have our new cik
     EXPECT_STREQ(validTestcik, newcik);
-    
+
 }
 
 
@@ -188,7 +189,7 @@ TEST_F(ExoLibCleanState, readRequest)
     strcpy(nvm->uuid,"123456789");
     exosite_setCIK(validTestcik);
 
-    
+
     EXO_STATE respa;
     respa = exosite_init(TEST_VENDOR, TEST_MODEL);
 
@@ -213,7 +214,7 @@ TEST_F(ExoLibCleanState, readRequest)
     // Check response body is correct.
     EXPECT_EQ(strlen("testAlias=123&anotherAlias=456"), resLength);
     EXPECT_STREQ("testAlias=123&anotherAlias=456", responseBuffer);
-    
+
 
     // build expected body
     char expected_body[255] = {0};
@@ -399,7 +400,7 @@ TEST_F(ExoLibCleanState, writeRequest)
     uint16_t resLength = 0;
     respR = exosite_write(writeInfo,  strlen(writeInfo));
 
-    
+
     // Parse write request
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
@@ -420,3 +421,4 @@ TEST_F(ExoLibCleanState, writeRequest)
     // check that content length header is same as our measured body length
     EXPECT_EQ(body_length, atoi(out_msg.headers[3][1]));
 }
+// vim: set ai cin et sw=4 ts=4 :
