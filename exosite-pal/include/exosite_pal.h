@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
 *  exosite_hal.h - Common header for Exosite hardware adapation layer
-*  Copyright (C) 2012 Exosite LLC
+*  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
@@ -37,31 +37,14 @@
 #define EXOSITE_PAL_H
 #include <stdint.h>
 
-
-
 // defines
-typedef enum
-{
-    EXO_ERROR_WRITE,
-    EXO_ERROR_READ,
-    EXO_ERROR_CONNECT,
-    EXO_ERROR_UNKNOWN,
-    EXO_ERROR_END
-}ExositeErrorCodes;
-
-#define RX_TX_BUFFER_SIZE 512
-
-// defines
-
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
-to place incoming data from the modem in.*/
+to place incoming data from the modem/socket in.*/
 #define RX_BUFFER_SIZE                         512
 
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 // functions for export
-
-
 void exoPal_init();
 uint8_t exoPal_setCik(const char * read_buffer);
 uint8_t exoPal_getCik(char * read_buffer);
@@ -81,33 +64,6 @@ uint16_t exoPal_strlen(const char *s);
 char* exoPal_strstr(const char *str, const char *target);
 void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 
-// unit test specific stuffs
-struct UnitTest_storage
-{
-    char cik[40];
-    char uuid[41];
-    char vendor[21];
-    char model[21];
-    char writeToBuffer[RX_TX_BUFFER_SIZE];
-    uint16_t writeToBufferLen;
-    char readFromBuffer[RX_TX_BUFFER_SIZE];
-    uint16_t readFromBufferLen;
-    uint8_t retVal_setCik;
-    uint8_t retVal_getCik;
-    uint8_t retVal_getModel;
-    uint8_t retVal_getVendor;
-    uint8_t retVal_getUuid;
-    uint8_t retVal_tcpSocketClose;
-    uint8_t retVal_tcpSocketOpen;
-    uint8_t retVal_socketRead;
-    uint8_t retVal_socketWrite;
-
-};
-
-void * getUnitTestStorageStruct();
-
-
 
 #endif
-
-
+/* vim: set ai cin et sw=4 ts=4 : */

@@ -1,5 +1,6 @@
 include_directories(
   ../../exosite-lib/include/
+  ../../exosite-pal/include/
   ../../exosite-pal/unit_tests/include/
   )
 

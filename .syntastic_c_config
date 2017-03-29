@@ -1,0 +1,3 @@
+-Iexosite-lib/include
+-Iexosite-pal/include
+-Iexosite-pal/unit_tests/include

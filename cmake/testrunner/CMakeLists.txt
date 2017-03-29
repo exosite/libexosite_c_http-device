@@ -3,6 +3,7 @@ include_directories(
   ../../gtest-1.6.0/include
   ../../gtest-1.6.0/src
   ../../exosite-lib/include/
+  ../../exosite-pal/include/
   ../../exosite-pal/unit_tests/include/
   ../../exosite-tests/include/
 )
@@ -15,9 +16,8 @@ set(test_srcs
     ../../exosite-tests/src/lib-tests.cpp
     ../../exosite-tests/include/msg.h
     ../../exosite-tests/include/http_parser.h
-    ../../exosite-pal/unit_tests/include/exosite_pal.h
+    ../../exosite-pal/include/exosite_pal.h
     ../../exosite-lib/include/exosite.h
-    
 )
 
 IF(MSVC)

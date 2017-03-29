@@ -437,6 +437,7 @@
 # define GTEST_HAS_TR1_TUPLE 1
 #endif  // GTEST_HAS_TR1_TUPLE
 
+#define GTEST_USE_OWN_TR1_TUPLE 1
 // Determines whether Google Test's own tr1 tuple implementation
 // should be used.
 #ifndef GTEST_USE_OWN_TR1_TUPLE

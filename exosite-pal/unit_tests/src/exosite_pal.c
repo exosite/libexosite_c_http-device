@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
-*  exosite_hal.c - Exosite hardware & environmenat adapation layer.
-*  Copyright (C) 2012 Exosite LLC
+*  exosite_pal.c - Exosite hardware & environmenat adapation layer.
+*  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
@@ -34,6 +34,7 @@
 *****************************************************************************/
 //#include "exosite.h"
 #include "exosite_pal.h"
+#include "exosite_pal_private.h"
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -97,13 +98,13 @@ void * getUnitTestStorageStruct()
 uint16_t exoPal_strlen(const char *s)
 {
     return strlen(s);
-    
+
 }
 
 /*!
  * \brief Gets the decimal ascii representation of an integer
  *
- * 
+ *
  *
  * \param[in] value Number that you want a string representation of
  * \param[in] buf Buffer to place results
@@ -122,7 +123,7 @@ uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
         return 0;
     }
     return chars;
-    
+
 }
 
 int32_t exoPal_atoi(char* val)
@@ -152,7 +153,7 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length)
 /*!
  * \brief Closes a tcp socket
  *
- * 
+ *
  *
  * \param[in]
  * \param[out]
@@ -171,7 +172,7 @@ uint8_t exoPal_tcpSocketClose()
 /*!
  * \brief Opens a tcp socket
  *
- * 
+ *
  *
  * \param[in]
  * \param[out]
@@ -187,7 +188,7 @@ uint8_t exoPal_tcpSocketOpen()
         isSocketOpen = 1;
         mem_nvm.writeToBufferLen = 0;
     }
-    return mem_nvm.retVal_tcpSocketOpen;   
+    return mem_nvm.retVal_tcpSocketOpen;
 }
 
 
@@ -196,7 +197,7 @@ uint8_t exoPal_tcpSocketOpen()
 /*!
  * \brief Sends data to the open tcp socket
  *
- * 
+ *
  *
  * \param[in] buffer Data to write to socket
  * \param[in] len Length of data to write to socket
@@ -213,15 +214,15 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
         exoPal_memcpy(mem_nvm.writeToBuffer + mem_nvm.writeToBufferLen,buffer,len);
         mem_nvm.writeToBufferLen += len;
     }
-    
-    return mem_nvm.retVal_socketWrite;   
+
+    return mem_nvm.retVal_socketWrite;
 }
 
 
 /*!
  * \brief
  *
- * 
+ *
  *
  * \param[in] bufferSize Size of buffer
  * \param[out] buffer Buffer received data will be written to
@@ -245,7 +246,7 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseL
 /*!
  * \brief Delay function
  *
- * 
+ *
  *
  * \param[in] delay Delay time in ms
  *
@@ -301,7 +302,7 @@ uint8_t exoPal_setCik(const char * cik)
 /*!
  * \brief Retrieves the stored CIK
  *
- * 
+ *
  *
  * \param[out] read_buffer pointer of buffer to place results in
  *
@@ -320,7 +321,7 @@ uint8_t exoPal_getCik(char * read_buffer)
 /*!
  * \brief Retrieves the stored Model string
  *
- * 
+ *
  *
  * \param[in] read_buffer pointer of buffer to place results in
  *
@@ -339,7 +340,7 @@ uint8_t exoPal_getModel(char * read_buffer)
 /*!
  * \brief Retrieves the vendor string
  *
- * 
+ *
  *
  * \param[in] read_buffer pointer of buffer to place results in
  *
@@ -376,15 +377,15 @@ uint8_t exoPal_getUuid(char * read_buffer)
 }
 
 /*!
- * @brief  Used to do any operations before 
+ * @brief  Used to do any operations before
  *
- * 
+ *
  * @return Returns 0 if successful, else error code
  */
 int32_t exoPal_sendingComplete()
 {
     //printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
-    
+
    //printf("[EXOPAL] Done Sending\r\n");
     return 0;
 }
@@ -413,3 +414,5 @@ char* exoPal_strstr(const char *in, const char *str)
 
 	return (char *) (in - 1);
 }
+
+/* vim: set ai cin et sw=4 ts=4 : */
