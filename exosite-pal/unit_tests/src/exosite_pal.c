@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
-*  exosite_hal.c - Exosite hardware & environmenat adapation layer.
-*  Copyright (C) 2012 Exosite LLC
+*  exosite_pal.c - Exosite hardware & environmenat adapation layer.
+*  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
@@ -34,6 +34,7 @@
 *****************************************************************************/
 //#include "exosite.h"
 #include "exosite_pal.h"
+#include "exosite_pal_private.h"
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
