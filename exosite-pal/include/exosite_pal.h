@@ -66,4 +66,63 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 
 
 #endif
+#ifndef __G__P__
+#define __G__P__
+
+// Utility PAL
+uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
+int32_t exoPal_atoi(char* val);
+uint16_t exoPal_strlen(const char *s);
+char* exoPal_strstr(const char *str, const char *target);
+void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
+
+// Memory/NVRAM/Flash PAL
+uint8_t exoPal_setCik(const char * read_buffer);
+uint8_t exoPal_getCik(char * read_buffer);
+uint8_t exoPal_getProduct(char * read_buffer);
+uint8_t exoPal_getUuid(char * read_buffer);
+
+
+// Async Sockets PAL.
+typedef *(exoPal_status_cb) (exoPal_state_t *, int status);
+typedef *(exoPal_data_cb) (exoPal_state_t *, const char *data, size_t len);
+struct exoPal_ops_s {
+    exoPal_status_cb on_start_complete;
+    exoPal_status_cb on_connected; // on_socket_opened.
+    exoPal_status_cb on_send_complete;
+    exoPal_data_cb   on_recv;
+    exoPal_status_cb on_socket_closed;
+};
+typedef struct exoPal_ops_s exoPal_ops_t;
+
+enum exoPal_state_e {
+    exoPal_state_uninitalized = 0,
+};
+struct exoPal_state_s {
+    enum exoPal_state_e state;
+    exoPal_ops_t ops;
+
+    // Contents here are specific to each PAL.
+};
+typedef struct exoPal_state_s exoPal_state_t;
+
+/**
+ * 
+ * For now, assuming there is only one.  But trying to keep code written so there
+ * could be many. (that is, keep it clean)
+ */
+extern exoPal_state_t *exoPal;
+
+int exoPal_init(exoPal_state_t *state);
+int exoPal_start(exoPal_state_t *state, const char *host);
+int exoPal_stop(exoPal_state_t *state);
+
+int exoPal_tcpSocketClose(exoPal_state_t *state);
+int exoPal_tcpSocketOpen(exoPal_state_t *state);
+int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len);
+int exoPal_socketRead(exoPal_state_t *state, char *buffer, uint16_t bufSize);
+int exoPal_sendingComplete(exoPal_state_t *state);
+
+#endif /*__G__P__*/
+
 /* vim: set ai cin et sw=4 ts=4 : */
