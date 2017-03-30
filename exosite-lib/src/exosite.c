@@ -41,7 +41,9 @@ static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
 static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
 static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
+#if 0
 static const char STR_RPC_URL[] = "POST /onep:v1/rpc/process ";
+#endif
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
@@ -170,7 +172,7 @@ uint8_t exoPal_getResponse(char * buffer, uint16_t bufferSize, uint16_t * respon
     {
         return response;
     }
-    
+
     // while received data < expected data as specified by the content header
     while ((*responseLength - (bodyStart - buffer)) < bodyLength)
     {
@@ -857,7 +859,7 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
 
 }
 
-
+#if 0
 /*!
  * @brief  Makes a request to the Exosite RPC API
  *
@@ -936,7 +938,7 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
     return responseLength;
 
 }
-
+#endif
 
 
 /*!

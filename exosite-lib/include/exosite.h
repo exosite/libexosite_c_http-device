@@ -80,7 +80,9 @@ int32_t exosite_write(const char * writeData, uint16_t length);
 int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * responseSize);
 int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
+#if 0
 int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength);
+#endif
 
 int8_t exosite_getTimestamp(int32_t * timestamp);
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
