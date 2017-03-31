@@ -33,6 +33,7 @@
 *
 *****************************************************************************/
 
+#define EXOSITE_PAL_H
 #ifndef EXOSITE_PAL_H
 #define EXOSITE_PAL_H
 #include <stdint.h>
@@ -68,6 +69,8 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 #endif
 #ifndef __G__P__
 #define __G__P__
+#include <sys/types.h>
+#include <stdint.h>
 
 // Utility PAL
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
@@ -75,6 +78,9 @@ int32_t exoPal_atoi(char* val);
 uint16_t exoPal_strlen(const char *s);
 char* exoPal_strstr(const char *str, const char *target);
 void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
+void * exoPal_memset(void* dst, int c, uint16_t length);
+char * exoPal_strcpy(char* dst, const char* src, size_t len);
+char * exoPal_strcat(char* dst, const char* src, size_t len);
 
 // Memory/NVRAM/Flash PAL
 uint8_t exoPal_setCik(const char * read_buffer);
@@ -84,8 +90,11 @@ uint8_t exoPal_getUuid(char * read_buffer);
 
 
 // Async Sockets PAL.
-typedef *(exoPal_status_cb) (exoPal_state_t *, int status);
-typedef *(exoPal_data_cb) (exoPal_state_t *, const char *data, size_t len);
+typedef struct exoPal_state_s exoPal_state_t;
+typedef struct exoPal_ops_s exoPal_ops_t;
+
+typedef int (*exoPal_status_cb) (exoPal_state_t *, int status);
+typedef int (*exoPal_data_cb) (exoPal_state_t *, const char *data, size_t len);
 struct exoPal_ops_s {
     exoPal_status_cb on_start_complete;
     exoPal_status_cb on_connected; // on_socket_opened.
@@ -93,7 +102,6 @@ struct exoPal_ops_s {
     exoPal_data_cb   on_recv;
     exoPal_status_cb on_socket_closed;
 };
-typedef struct exoPal_ops_s exoPal_ops_t;
 
 enum exoPal_state_e {
     exoPal_state_uninitalized = 0,
@@ -104,14 +112,7 @@ struct exoPal_state_s {
 
     // Contents here are specific to each PAL.
 };
-typedef struct exoPal_state_s exoPal_state_t;
 
-/**
- * 
- * For now, assuming there is only one.  But trying to keep code written so there
- * could be many. (that is, keep it clean)
- */
-extern exoPal_state_t *exoPal;
 
 int exoPal_init(exoPal_state_t *state);
 int exoPal_start(exoPal_state_t *state, const char *host);

@@ -73,7 +73,10 @@ typedef enum EXOSITE_DEVICE_STATE_tag
 
 
 // PUBLIC FUNCTIONS
+#if 0
+#if 0
 EXO_STATE exosite_activate();
+#endif
 EXO_STATE exosite_init(const char *vendor, const char *model);
 
 int32_t exosite_write(const char * writeData, uint16_t length);
@@ -88,11 +91,13 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
 // internal.
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
+#endif
 
-
+#if 0
 void exosite_setCIK(char * pCIK);
 uint8_t exosite_resetCik();
 void exosite_getCIK(char * pCIK);
+#endif
 #endif
 
 
@@ -101,6 +106,7 @@ void exosite_getCIK(char * pCIK);
 
 enum Exosite_state_e {
     Exosite_State_uninitialized = 0,
+    Exosite_State_needs_start,
     Exosite_State_idle,
 
     Exosite_State_dns_lookup,
@@ -130,7 +136,23 @@ enum Exosite_state_e {
     Exosite_State_timestamp_recving,
 
 };
-typedef struct Exosite_state_s {
+typedef struct Exosite_ops_s Exosite_ops_t;
+typedef struct Exosite_state_s Exosite_state_t;
+typedef int (*exo_status_cb) (Exosite_state_t *state, int status);
+typedef int (*exo_data_cb) (Exosite_state_t *state, const char *data, size_t len);
+
+struct Exosite_ops_s {
+    exo_status_cb on_start_complete;
+    exo_status_cb on_write_complete;
+    exo_status_cb on_read_begin;
+    exo_data_cb   on_read_raw;
+    exo_data_cb   on_read_alias;
+    exo_data_cb   on_read_value;
+    exo_status_cb on_read_complete;
+    exo_status_cb on_timestamp_complete;
+};
+
+struct Exosite_state_s {
     // Private
     enum Exosite_state_e state;
 
@@ -140,26 +162,20 @@ typedef struct Exosite_state_s {
 
     // Public
     Exosite_ops_t ops;
+    exoPal_state_t *exoPal;
 
     void *context; //!< Use specific context data.
-} Exosite_state_t;
-
-typedef int (*exo_status_cb) (Exosite_state_t *state, int status);
-typedef int (*exo_data_cb) (Exosite_state_t *state, const char *data, size_t len);
-
-typedef struct Exosite_ops_s {
-    exo_status_cb on_start_complete;
-    exo_status_cb on_write_complete;
-    exo_status_cb on_read_begin;
-    exo_data_cb   on_read_raw;
-    exo_data_cb   on_read_alias;
-    exo_data_cb   on_read_value;
-    exo_status_cb on_read_complete;
-    exo_status_cb on_timestamp_complete;
-} Exosite_ops_t;
+};
 
 
-int exosite_init(Exosite_state_t *state);
+void exosite_init(Exosite_state_t *state);
+/*
+ * - call init
+ * - set pal pointer
+ * - set ops.callbacks
+ * - optionally set context.
+ * - call start
+ */
 
 int exosite_start(Exosite_state_t *state);
 
