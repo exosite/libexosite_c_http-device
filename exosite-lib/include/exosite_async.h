@@ -47,6 +47,31 @@
    If you are have a need to increase string length, you can freely adjust
    this number up to uint16_t*/
 
+/******************************************************************************/
+
+/* State machine for sending HTTP requests to Exosite HTTP-Device-API.
+ */
+
+enum exoHttp_req_e {
+    exoHttp_req_method_url = 0,
+    exoHttp_req_host,
+    exoHttp_req_cik,
+    exoHttp_req_content,
+    exoHttp_req_content_length,
+    exoHttp_req_body,
+    exoHttp_req_complete
+};
+struct exoHttp_req_s {
+    enum exoHttp_req_e step;
+    char * method_url_path;
+    int include_cik;
+    size_t content_length;
+    char *body;
+};
+typedef struct exoHttp_req_s exoHttp_req_t;
+
+
+/******************************************************************************/
 enum Exosite_state_e {
     Exosite_State_uninitialized = 0,
     Exosite_State_needs_start,
@@ -94,10 +119,10 @@ struct Exosite_state_s {
     char cik[CIK_LENGTH];
     char uuid[MAX_UUID_LENGTH];
 
-    void *http_req;
+    exoHttp_req_t http_req;
 
 
-    char workbuf[80];
+    char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
 
     // Public
     Exosite_ops_t ops;

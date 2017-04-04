@@ -39,6 +39,7 @@
 #include "exosite_async.h"
 
 
+/******************************************************************************/
 
 static const char STR_TIMESTAMP_URL[] = "GET /timestamp ";
 static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
@@ -57,28 +58,11 @@ static const char STR_SN[] = "&sn=";
 static const char STR_CRLF[] = "\r\n";
 
 
-enum exoHttp_req_e {
-    exoHttp_req_method_url = 0,
-    exoHttp_req_host,
-    exoHttp_req_cik,
-    exoHttp_req_content,
-    exoHttp_req_content_length,
-    exoHttp_req_body,
-    exoHttp_req_complete
-};
-struct http_req_s {
-    enum exoHttp_req_e step;
-    char * method_url_path;
-    int include_cik;
-    size_t content_length;
-    char *body;
-};
-
 /******************************************************************************/
 void exosite_send_http_req(Exosite_state_t *state)
 {
     size_t slen = 0;
-    struct http_req_s *req = (struct http_req_s*)state->http_req;
+    exoHttp_req_t *req = &state->http_req;
     switch(req->step) {
         case exoHttp_req_method_url:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
@@ -157,12 +141,11 @@ void exosite_activate(Exosite_state_t *state)
 }
 void exosite_activate_send(Exosite_state_t *state)
 {
-    struct http_req_s *req;
-    req->step = exoHttp_req_method_url;
-    req->method_url_path = (char*)STR_ACTIVATE_URL;
-    req->include_cik = 0;
-    req->content_length = 35; // XXX
-    req->body = (char*)STR_VENDOR; // omg. this sux.
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_ACTIVATE_URL;
+    state->http_req.include_cik = 0;
+    state->http_req.content_length = 35; // XXX
+    state->http_req.body = (char*)STR_VENDOR; // omg. this sux.
 
     exosite_send_http_req(state);
 }
