@@ -78,7 +78,7 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
             exoPal_strlcpy(state->workbuf, STR_HOST, sizeof(state->workbuf));
             exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
-            exoPal_strlcpy(state->workbuf, STR_HOST_ROOT, sizeof(state->workbuf));
+            exoPal_strlcat(state->workbuf, STR_HOST_ROOT, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
             if(req->include_cik) {
@@ -117,7 +117,19 @@ void exosite_send_http_req(Exosite_state_t *state)
 
         case exoHttp_req_body:
             req->step = exoHttp_req_complete;
-            exoPal_socketWrite(state->exoPal, req->body, exoPal_strlen(req->body));
+            if(req->is_activate) {
+                exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+                exoPal_strlcpy(state->workbuf, STR_VENDOR, sizeof(state->workbuf));
+                exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
+                exoPal_strlcpy(state->workbuf, STR_MODEL, sizeof(state->workbuf));
+                exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
+                exoPal_strlcpy(state->workbuf, STR_SN, sizeof(state->workbuf));
+                slen = exoPal_strlcat(state->workbuf, state->uuid, sizeof(state->workbuf));
+
+                exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+            } else {
+                exoPal_socketWrite(state->exoPal, req->body, exoPal_strlen(req->body));
+            }
             break;
 
         case exoHttp_req_complete:
@@ -143,9 +155,12 @@ void exosite_activate_send(Exosite_state_t *state)
 {
     state->http_req.step = exoHttp_req_method_url;
     state->http_req.method_url_path = (char*)STR_ACTIVATE_URL;
+    state->http_req.content_length = (sizeof(STR_VENDOR) - 1) +
+        (sizeof(STR_MODEL) - 1) + (sizeof(STR_SN) - 1) +
+        (exoPal_strlen(state->projectid) * 2) + exoPal_strlen(state->uuid);
     state->http_req.include_cik = 0;
-    state->http_req.content_length = 35; // XXX
-    state->http_req.body = (char*)STR_VENDOR; // omg. this sux.
+    state->http_req.is_activate = 1;
+    state->http_req.body = NULL;
 
     exosite_send_http_req(state);
 }
@@ -197,6 +212,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
             exosite_send_http_req(state);
 
             if(state->stage == Exosite_Stage_waiting) {
+                state->stage = Exosite_Stage_recving;
                 exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
             }
 

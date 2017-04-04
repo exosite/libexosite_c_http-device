@@ -40,7 +40,6 @@
 #define CIK_LENGTH                              40
 #define MAX_UUID_LENGTH                         40
 #define MAX_VENDOR_LENGTH                       20
-#define MAX_MODEL_LENGTH                        20
 
 /*!< This defines the maximum size that a string can be for sending data
    to Exosite.  It is used to prevent exosite_strlen from overrunning.
@@ -64,8 +63,9 @@ enum exoHttp_req_e {
 struct exoHttp_req_s {
     enum exoHttp_req_e step;
     char * method_url_path;
-    int include_cik;
     size_t content_length;
+    int include_cik:1; //!< Don't include CIK header.
+    int is_activate:1; //!< Don't use body, compute activation body instead.
     char *body;
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
