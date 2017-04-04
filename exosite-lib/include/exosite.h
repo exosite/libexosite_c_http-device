@@ -73,10 +73,7 @@ typedef enum EXOSITE_DEVICE_STATE_tag
 
 
 // PUBLIC FUNCTIONS
-#if 0
-#if 0
 EXO_STATE exosite_activate();
-#endif
 EXO_STATE exosite_init(const char *vendor, const char *model);
 
 int32_t exosite_write(const char * writeData, uint16_t length);
@@ -91,100 +88,14 @@ int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, 
 // internal.
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
-#endif
 
 #if 0
 void exosite_setCIK(char * pCIK);
 uint8_t exosite_resetCik();
 void exosite_getCIK(char * pCIK);
 #endif
+
+
+
 #endif
-
-
-#ifndef __G__G__
-#define __G__G__
-
-enum Exosite_state_e {
-    Exosite_State_uninitialized = 0,
-    Exosite_State_needs_start,
-    Exosite_State_idle,
-
-    Exosite_State_dns_lookup,
-
-    Exosite_State_activate_sending,
-    Exosite_State_activate_waiting,
-    Exosite_State_activate_recving,
-
-    Exosite_State_write_sending,
-    Exosite_State_write_waiting,
-    Exosite_State_write_recving,
-
-    Exosite_State_read_sending,
-    Exosite_State_read_waiting,
-    Exosite_State_read_recving,
-
-    Exosite_State_hybrid_sending,
-    Exosite_State_hybrid_waiting,
-    Exosite_State_hybrid_recving,
-
-    Exosite_State_longpoll_sending,
-    Exosite_State_longpoll_waiting,
-    Exosite_State_longpoll_recving,
-
-    Exosite_State_timestamp_sending,
-    Exosite_State_timestamp_waiting,
-    Exosite_State_timestamp_recving,
-
-};
-typedef struct Exosite_ops_s Exosite_ops_t;
-typedef struct Exosite_state_s Exosite_state_t;
-typedef int (*exo_status_cb) (Exosite_state_t *state, int status);
-typedef int (*exo_data_cb) (Exosite_state_t *state, const char *data, size_t len);
-
-struct Exosite_ops_s {
-    exo_status_cb on_start_complete;
-    exo_status_cb on_write_complete;
-    exo_status_cb on_read_begin;
-    exo_data_cb   on_read_raw;
-    exo_data_cb   on_read_alias;
-    exo_data_cb   on_read_value;
-    exo_status_cb on_read_complete;
-    exo_status_cb on_timestamp_complete;
-};
-
-struct Exosite_state_s {
-    // Private
-    enum Exosite_state_e state;
-
-    char projectid[MAX_VENDOR_LENGTH];
-    char cik[CIK_LENGTH];
-    char uuid[MAX_UUID_LENGTH];
-
-    // Public
-    Exosite_ops_t ops;
-    exoPal_state_t *exoPal;
-
-    void *context; //!< Use specific context data.
-};
-
-
-void exosite_init(Exosite_state_t *state);
-/*
- * - call init
- * - set pal pointer
- * - set ops.callbacks
- * - optionally set context.
- * - call start
- */
-
-int exosite_start(Exosite_state_t *state);
-
-int exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
-int exosite_read(Exosite_state_t *state, const char *aliases);
-int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases);
-int exosite_longpoll(Exosite_state_t *state, const char *aliases, const char *timestamp, uint32_t timeout);
-int exosite_timestamp(Exosite_state_t *state);
-
-#endif /*__G__G__*/
-
 /* vim: set ai cin et sw=4 ts=4 : */
