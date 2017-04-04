@@ -40,9 +40,9 @@
 // Utility PAL
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
 int32_t exoPal_atoi(char* val);
-uint16_t exoPal_strlen(const char *s);
+size_t exoPal_strlen(const char *s);
 char* exoPal_strstr(const char *str, const char *target);
-void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
+void * exoPal_memmove(void* dst, const void * src, size_t length);
 void * exoPal_memset(void* dst, int c, uint16_t length);
 size_t exoPal_strlcpy(char* dst, const char* src, size_t len);
 size_t exoPal_strlcat(char* dst, const char* src, size_t len);

@@ -90,6 +90,7 @@ enum Exosite_Stage_e {
     Exosite_Stage_connecting,
     Exosite_Stage_sending,
     Exosite_Stage_waiting,
+    Exosite_Stage_recving_status,
     Exosite_Stage_recving_headers,
     Exosite_Stage_recving_body,
     Exosite_Stage_closing,
@@ -124,6 +125,8 @@ struct Exosite_state_s {
 
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
     int wb_offset; //!> If we need to recv again to get enough data.
+
+    int statusCode; //!> HTTP status code
 
     // Public
     Exosite_ops_t ops;
