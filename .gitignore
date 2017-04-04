@@ -5,6 +5,7 @@ Icon
 *.sw[a-z]
 tags
 .env
+.jiramulerc
 
 vs2012/Debug
 vs2012/exosite_c_libraries/Debug/
