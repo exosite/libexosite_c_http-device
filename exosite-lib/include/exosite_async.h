@@ -73,11 +73,9 @@ typedef struct exoHttp_req_s exoHttp_req_t;
 
 /******************************************************************************/
 enum Exosite_state_e {
-    Exosite_State_uninitialized = 0,
-    Exosite_State_needs_start,
+    Exosite_State_initialized = 0,
+    Exosite_State_pal_starting,
     Exosite_State_idle,
-
-    Exosite_State_dns_lookup,
 
     Exosite_State_activate,
     Exosite_State_write,

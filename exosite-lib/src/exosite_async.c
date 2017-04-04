@@ -156,6 +156,13 @@ int exosite_lib_start_complete(exoPal_state_t *pal, int status)
     Exosite_state_t *state = (Exosite_state_t *)pal->context;
     EXO_ASSERT(pal->context);
 
+    if(status != 0) {
+        if(state->ops.on_start_complete) {
+            state->ops.on_start_complete(state, status);
+        }
+        return -1;
+    }
+
     // Everything should be ready for network IO now.
     // We always do an activate next.
     exosite_activate(state);
@@ -225,23 +232,15 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
 }
 
 /******************************************************************************/
-#if 0
+
 void exosite_init(Exosite_state_t *state)
 {
     exoPal_memset(state, 0, sizeof(Exosite_state_t));
 }
-#endif
 
 int exosite_start(Exosite_state_t *state)
 {
-    char hostbuf[MAX_VENDOR_LENGTH + 15 + 1];
-    state->state = Exosite_State_needs_start;
-
-    // Build full domain name string
-    exoPal_getProduct(state->projectid);
-    state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
-    exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
-    exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(STR_HOST_ROOT));
+    char hostbuf[MAX_VENDOR_LENGTH + sizeof(STR_HOST_ROOT) + 1];
 
     // Setup pal callbacks.
     if(state->exoPal == NULL) {
@@ -256,8 +255,13 @@ int exosite_start(Exosite_state_t *state)
     state->exoPal->ops.on_socket_closed = exosite_lib_socket_closed;
     state->exoPal->context = state;
 
+    // Build full domain name string
+    exoPal_getProduct(state->projectid);
+    state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
+    exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
+    exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(STR_HOST_ROOT));
 
-    state->state = Exosite_State_dns_lookup;
+    state->state = Exosite_State_pal_starting;
     // Start up pal. (includes a DNS lookup.)
     exoPal_start(state->exoPal, hostbuf);
 
