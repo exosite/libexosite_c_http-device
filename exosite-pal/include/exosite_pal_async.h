@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-*  exosite_pal.h - Common header for Exosite hardware adapation layer
+*  exosite_pal_async.h - Common header for Exosite hardware adapation layer
 *  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,38 +32,64 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-
-#ifndef EXOSITE_PAL_H
-#define EXOSITE_PAL_H
+#ifndef __EXOSITE_PAL_ASYNC__
+#define __EXOSITE_PAL_ASYNC__
+#include <sys/types.h>
 #include <stdint.h>
 
-// defines
-/*!< This defines the size of the rx buffer in the PAL.  This buffer is used
-to place incoming data from the modem/socket in.*/
-#define RX_BUFFER_SIZE                         512
-
-extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
-
-// functions for export
-void exoPal_init();
-uint8_t exoPal_setCik(const char * read_buffer);
-uint8_t exoPal_getCik(char * read_buffer);
-uint8_t exoPal_getModel(char * read_buffer);
-uint8_t exoPal_getVendor(char * read_buffer);
-uint8_t exoPal_getUuid(char * read_buffer);
-
-uint8_t exoPal_tcpSocketClose();
-uint8_t exoPal_tcpSocketOpen();
-uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
-uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
-int32_t exoPal_sendingComplete();
-
+// Utility PAL
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
 int32_t exoPal_atoi(char* val);
 uint16_t exoPal_strlen(const char *s);
 char* exoPal_strstr(const char *str, const char *target);
 void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
+void * exoPal_memset(void* dst, int c, uint16_t length);
+size_t exoPal_strlcpy(char* dst, const char* src, size_t len);
+size_t exoPal_strlcat(char* dst, const char* src, size_t len);
+
+// Memory/NVRAM/Flash PAL
+uint8_t exoPal_setCik(const char * read_buffer);
+uint8_t exoPal_getCik(char * read_buffer);
+uint8_t exoPal_getProduct(char * read_buffer);
+uint8_t exoPal_getUuid(char * read_buffer);
 
 
-#endif
+// Async Sockets PAL.
+typedef struct exoPal_state_s exoPal_state_t;
+typedef struct exoPal_ops_s exoPal_ops_t;
+
+typedef int (*exoPal_status_cb) (exoPal_state_t *, int status);
+typedef int (*exoPal_data_cb) (exoPal_state_t *, const char *data, size_t len);
+struct exoPal_ops_s {
+    exoPal_status_cb on_start_complete;
+    exoPal_status_cb on_connected; // on_socket_opened.
+    exoPal_status_cb on_send_complete;
+    exoPal_data_cb   on_recv;
+    exoPal_status_cb on_socket_closed;
+};
+
+enum exoPal_state_e {
+    exoPal_state_uninitalized = 0,
+};
+struct exoPal_state_s {
+    enum exoPal_state_e state;
+    exoPal_ops_t ops;
+    void *context;
+
+    // Contents here are specific to each PAL.
+};
+
+
+void exoPal_init(exoPal_state_t *state);
+int exoPal_start(exoPal_state_t *state, const char *host);
+int exoPal_stop(exoPal_state_t *state);
+
+int exoPal_tcpSocketClose(exoPal_state_t *state);
+int exoPal_tcpSocketOpen(exoPal_state_t *state);
+int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len);
+int exoPal_socketRead(exoPal_state_t *state, char *buffer, uint16_t bufSize);
+int exoPal_sendingComplete(exoPal_state_t *state);
+
+#endif /*__EXOSITE_PAL_ASYNC__*/
+
 /* vim: set ai cin et sw=4 ts=4 : */

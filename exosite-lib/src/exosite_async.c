@@ -35,7 +35,7 @@
 
 #include <stdlib.h>
 
-#include "exosite_pal.h"
+#include "exosite_pal_async.h"
 #include "exosite_async.h"
 
 
