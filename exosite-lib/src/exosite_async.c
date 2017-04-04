@@ -378,7 +378,7 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
                     state->wb_offset += len;
                     exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
                             sizeof(state->workbuf) - state->wb_offset);
-                    
+
                 } else {
                     // ok, all of CIK is now in workbuf; save it.
                     exoPal_memmove(state->cik, state->workbuf, CIK_LENGTH);
@@ -391,18 +391,28 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
             break;
 
         case Exosite_State_write:
-            // Find status code. Toss rest.
             state->stage = Exosite_Stage_closing;
             exoPal_tcpSocketClose(state->exoPal);
             break;
 
         case Exosite_State_timestamp:
-            // Find status code. Then find body
-            if(state->statusCode == 200) {
-                state->stage = Exosite_Stage_recving_body;
-                // TODO: Get the body.
+            if(state->statusCode != 200) {
+                // just stop.
+                state->stage = Exosite_Stage_closing;
+                exoPal_tcpSocketClose(state->exoPal);
+
             } else {
-                // error.
+                // how do I know when to stop? kinda works. maybe
+                if((state->wb_offset + len) < 15) {
+                    // read more.
+                    state->wb_offset += len;
+                    exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
+                            sizeof(state->workbuf) - state->wb_offset);
+                } else {
+                    state->wb_offset += len;
+                    state->stage = Exosite_Stage_closing;
+                    exoPal_tcpSocketClose(state->exoPal);
+                }
             }
             break;
 
@@ -433,6 +443,15 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             if(state->ops.on_write_complete) {
                 state->ops.on_write_complete(state, state->statusCode);
             }
+            break;
+
+        case Exosite_State_timestamp:
+            state->stage = Exosite_Stage_idle;
+            state->state = Exosite_State_idle;
+            if(state->ops.on_timestamp_complete) {
+                state->ops.on_timestamp_complete(state, state->workbuf, state->wb_offset);
+            }
+            break;
 
         default:
             EXO_ASSERT(0);
@@ -451,6 +470,10 @@ void exosite_init(Exosite_state_t *state)
 int exosite_start(Exosite_state_t *state)
 {
     char hostbuf[MAX_VENDOR_LENGTH + sizeof(STR_HOST_ROOT) + 1];
+
+    if(state->state != Exosite_State_initialized) {
+        return -1;
+    }
 
     // Setup pal callbacks.
     if(state->exoPal == NULL) {
@@ -478,8 +501,12 @@ int exosite_start(Exosite_state_t *state)
     return 0;
 }
 
-void exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
+int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
 {
+    if(state->state != Exosite_State_idle) {
+        return -1;
+    }
+
     state->state = Exosite_State_write;
     state->stage = Exosite_Stage_connecting;
 
@@ -490,11 +517,15 @@ void exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
     state->http_req.is_activate = 0;
     state->http_req.body = aliasesAndValues;
 
-    exoPal_tcpSocketOpen(state->exoPal);
+    return exoPal_tcpSocketOpen(state->exoPal);
 }
 
-void exosite_timestamp(Exosite_state_t *state)
+int exosite_timestamp(Exosite_state_t *state)
 {
+    if(state->state != Exosite_State_idle) {
+        return -1;
+    }
+
     state->state = Exosite_State_timestamp;
     state->stage = Exosite_Stage_connecting;
 
@@ -505,7 +536,7 @@ void exosite_timestamp(Exosite_state_t *state)
     state->http_req.is_activate = 0;
     state->http_req.body = NULL;
 
-    exoPal_tcpSocketOpen(state->exoPal);
+    return exoPal_tcpSocketOpen(state->exoPal);
 }
 
 /* vim: set ai cin et sw=4 ts=4 : */

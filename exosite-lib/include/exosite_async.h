@@ -108,7 +108,7 @@ struct Exosite_ops_s {
     exo_data_cb   on_read_alias;
     exo_data_cb   on_read_value;
     exo_status_cb on_read_complete;
-    exo_status_cb on_timestamp_complete;
+    exo_data_cb   on_timestamp_complete;
 };
 
 struct Exosite_state_s {
@@ -147,11 +147,11 @@ void exosite_init(Exosite_state_t *state);
 
 int exosite_start(Exosite_state_t *state);
 
-void exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
+int exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
 int exosite_read(Exosite_state_t *state, const char *aliases);
 int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases);
 int exosite_longpoll(Exosite_state_t *state, const char *aliases, const char *timestamp, uint32_t timeout);
-void exosite_timestamp(Exosite_state_t *state);
+int exosite_timestamp(Exosite_state_t *state);
 
 
 #ifdef EXO_ASSERT_CHECKS
