@@ -66,7 +66,7 @@ struct exoHttp_req_s {
     size_t content_length;
     int include_cik:1; //!< Don't include CIK header.
     int is_activate:1; //!< Don't use body, compute activation body instead.
-    char *body;
+    const char *body;
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 
@@ -90,7 +90,9 @@ enum Exosite_Stage_e {
     Exosite_Stage_connecting,
     Exosite_Stage_sending,
     Exosite_Stage_waiting,
-    Exosite_Stage_recving,
+    Exosite_Stage_recving_headers,
+    Exosite_Stage_recving_body,
+    Exosite_Stage_closing,
 };
 typedef struct Exosite_ops_s Exosite_ops_t;
 typedef struct Exosite_state_s Exosite_state_t;
@@ -121,6 +123,7 @@ struct Exosite_state_s {
 
 
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
+    int wb_offset; //!> If we need to recv again to get enough data.
 
     // Public
     Exosite_ops_t ops;
@@ -141,11 +144,11 @@ void exosite_init(Exosite_state_t *state);
 
 int exosite_start(Exosite_state_t *state);
 
-int exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
+void exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
 int exosite_read(Exosite_state_t *state, const char *aliases);
 int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases);
 int exosite_longpoll(Exosite_state_t *state, const char *aliases, const char *timestamp, uint32_t timeout);
-int exosite_timestamp(Exosite_state_t *state);
+void exosite_timestamp(Exosite_state_t *state);
 
 
 #ifdef EXO_ASSERT_CHECKS

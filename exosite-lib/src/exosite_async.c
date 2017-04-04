@@ -141,15 +141,9 @@ void exosite_send_http_req(Exosite_state_t *state)
 
 void exosite_activate(Exosite_state_t *state)
 {
-    // - Connect socket
     state->state = Exosite_State_activate;
     state->stage = Exosite_Stage_connecting;
     exoPal_tcpSocketOpen(state->exoPal);
-
-    // - Write data
-    // - wait for reply
-    // - parse it.
-    // - call cb with results.
 }
 void exosite_activate_send(Exosite_state_t *state)
 {
@@ -163,6 +157,39 @@ void exosite_activate_send(Exosite_state_t *state)
     state->http_req.body = NULL;
 
     exosite_send_http_req(state);
+}
+
+/******************************************************************************/
+
+/*!
+ * \brief Gets the HTTP status code out of the buffer
+ *
+ * \param[in] response an HTTP response string
+ *
+ * This assumes that response starts from the beginning of the response data and
+ * that the status code is within the first 15 bytes.
+ *
+ * \return [uint16_t] The status code.
+ *
+ */
+uint16_t exosite_getStatusCode(char * response)
+{
+    uint8_t spaceFound = 0;
+    int16_t i;
+    for (i = 1; (i < 15) && (spaceFound == 0); i++)
+    {
+        if (response[i] == ' ')
+        {
+            spaceFound = i + 1;
+        }
+    }
+    if (spaceFound > 0)
+    {
+        // If we found a ' ', try to match the code
+        return exoPal_atoi(&response[spaceFound]);
+    }
+
+    return 0;
 }
 
 /******************************************************************************/
@@ -195,6 +222,16 @@ int exosite_lib_connected(exoPal_state_t *pal, int status)
             exosite_activate_send(state);
             break;
 
+        case Exosite_State_write:
+            state->stage = Exosite_Stage_sending;
+            exosite_send_http_req(state);
+            break;
+
+        case Exosite_State_timestamp:
+            state->stage = Exosite_Stage_sending;
+            exosite_send_http_req(state);
+            break;
+
         default:
             EXO_ASSERT(0);
             break;
@@ -212,9 +249,31 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
             exosite_send_http_req(state);
 
             if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving;
+                state->stage = Exosite_Stage_recving_headers;
+                state->wb_offset = 0;
                 exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
             }
+            break;
+
+        case Exosite_State_write:
+            exosite_send_http_req(state);
+
+            if(state->stage == Exosite_Stage_waiting) {
+                state->stage = Exosite_Stage_recving_headers;
+                state->wb_offset = 0;
+                exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
+            }
+            break;
+
+        case Exosite_State_timestamp:
+            exosite_send_http_req(state);
+
+            if(state->stage == Exosite_Stage_waiting) {
+                state->stage = Exosite_Stage_recving_headers;
+                state->wb_offset = 0;
+                exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
+            }
+            break;
 
         default:
             EXO_ASSERT(0);
@@ -231,9 +290,74 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
     switch(state->state) {
         case Exosite_State_activate:
             // find status code. Maybe find body.
+            // "HTTP/* ### *\r\n
+            if (state->stage == Exosite_Stage_recving_headers) {
+                if( (state->wb_offset + len) < 15 ) {
+                    state->wb_offset += len;
+                    exoPal_socketRead(state->exoPal,
+                            &(state->workbuf[state->wb_offset]),
+                            sizeof(state->workbuf) - state->wb_offset);
+                } else {
+                    // Ok, we have the HTTP status code
+                    int statusCode = exosite_getStatusCode(state->workbuf);
+                    if(statusCode == 409) {
+                        // Already activated.
+                        exoPal_getCik(state->cik);
+                        // TODO: isvalid?
+
+                        // activate complete!
+                        state->stage = Exosite_Stage_closing;
+                        exoPal_tcpSocketClose(state->exoPal);
+
+                    } else if(statusCode == 200) {
+                        // Just activated.  Now need to find body and get CIK.
+                        state->stage = Exosite_Stage_recving_body;
+
+                        // TODO: now what?
+                        state->stage = Exosite_Stage_closing;
+                        exoPal_tcpSocketClose(state->exoPal);
+                    }
+                }
+            }
+            break;
 
         case Exosite_State_write:
             // Find status code. Toss rest.
+            if (state->stage == Exosite_Stage_recving_headers) {
+                if( (state->wb_offset + len) < 15 ) {
+                    state->wb_offset += len;
+                    exoPal_socketRead(state->exoPal,
+                            &(state->workbuf[state->wb_offset]),
+                            sizeof(state->workbuf) - state->wb_offset);
+                } else {
+                    // Ok, we have the HTTP status code
+                    // We'll close things up here, and pull out the code later.
+                    state->stage = Exosite_Stage_closing;
+                    exoPal_tcpSocketClose(state->exoPal);
+                }
+            }
+            break;
+
+        case Exosite_State_timestamp:
+            // Find status code. Then find body
+            if (state->stage == Exosite_Stage_recving_headers) {
+                if( (state->wb_offset + len) < 15 ) {
+                    state->wb_offset += len;
+                    exoPal_socketRead(state->exoPal,
+                            &(state->workbuf[state->wb_offset]),
+                            sizeof(state->workbuf) - state->wb_offset);
+                } else {
+                    // Ok, we have the HTTP status code
+                    int statusCode = exosite_getStatusCode(state->workbuf);
+                    if(statusCode == 200) {
+                        state->stage = Exosite_Stage_recving_body;
+                        // TODO: Get the body.
+                    } else {
+                        // error.
+                    }
+                }
+            }
+            break;
 
         default:
             EXO_ASSERT(0);
@@ -244,6 +368,30 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
 
 int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
 {
+    Exosite_state_t *state = (Exosite_state_t *)pal->context;
+    EXO_ASSERT(pal->context);
+
+    switch(state->state) {
+        case Exosite_State_activate:
+            state->stage = Exosite_Stage_idle;
+            state->state = Exosite_State_idle;
+            if(state->ops.on_start_complete) {
+                state->ops.on_start_complete(state, 0);
+            }
+            break;
+
+        case Exosite_State_write:
+            state->stage = Exosite_Stage_idle;
+            state->state = Exosite_State_idle;
+            if(state->ops.on_write_complete) {
+                int statusCode = exosite_getStatusCode(state->workbuf);
+                state->ops.on_write_complete(state, statusCode);
+            }
+
+        default:
+            EXO_ASSERT(0);
+            break;
+    }
     return 0;
 }
 
@@ -283,4 +431,35 @@ int exosite_start(Exosite_state_t *state)
 
     return 0;
 }
+
+void exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
+{
+    state->state = Exosite_State_write;
+    state->stage = Exosite_Stage_connecting;
+
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_WRITE_URL;
+    state->http_req.content_length = exoPal_strlen(aliasesAndValues);
+    state->http_req.include_cik = 1;
+    state->http_req.is_activate = 0;
+    state->http_req.body = aliasesAndValues;
+
+    exoPal_tcpSocketOpen(state->exoPal);
+}
+
+void exosite_timestamp(Exosite_state_t *state)
+{
+    state->state = Exosite_State_timestamp;
+    state->stage = Exosite_Stage_connecting;
+
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_TIMESTAMP_URL;
+    state->http_req.content_length = 0;
+    state->http_req.include_cik = 0;
+    state->http_req.is_activate = 0;
+    state->http_req.body = NULL;
+
+    exoPal_tcpSocketOpen(state->exoPal);
+}
+
 /* vim: set ai cin et sw=4 ts=4 : */
