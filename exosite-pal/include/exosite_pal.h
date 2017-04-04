@@ -79,8 +79,8 @@ uint16_t exoPal_strlen(const char *s);
 char* exoPal_strstr(const char *str, const char *target);
 void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
 void * exoPal_memset(void* dst, int c, uint16_t length);
-char * exoPal_strcpy(char* dst, const char* src, size_t len);
-char * exoPal_strcat(char* dst, const char* src, size_t len);
+size_t exoPal_strlcpy(char* dst, const char* src, size_t len);
+size_t exoPal_strlcat(char* dst, const char* src, size_t len);
 
 // Memory/NVRAM/Flash PAL
 uint8_t exoPal_setCik(const char * read_buffer);
@@ -109,12 +109,13 @@ enum exoPal_state_e {
 struct exoPal_state_s {
     enum exoPal_state_e state;
     exoPal_ops_t ops;
+    void *context;
 
     // Contents here are specific to each PAL.
 };
 
 
-int exoPal_init(exoPal_state_t *state);
+void exoPal_init(exoPal_state_t *state);
 int exoPal_start(exoPal_state_t *state, const char *host);
 int exoPal_stop(exoPal_state_t *state);
 
