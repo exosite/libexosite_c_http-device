@@ -162,6 +162,36 @@ void exosite_activate_send(Exosite_state_t *state)
 /******************************************************************************/
 
 /*!
+ * \brief Checks if the given cik is valid
+ *
+ * Checks that the first 40 chars of `cik` are valid, lowercase hexadecimal bytes.
+ *
+ *
+ *
+ * \param[in] cik array of CIK_LENGTH bytes
+ *
+ * \return Returns 1 if successful, else 0
+ * \sa
+ * \note
+ * \warning
+ */
+uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
+{
+    uint8_t i;
+
+    for (i = 0; i < CIK_LENGTH; i++)
+    {
+        if (!((cik[i] >= 'a' && cik[i] <= 'f') || (cik[i] >= '0' && cik[i] <= '9')))
+        {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+/*!
  * \brief Gets the HTTP status code out of the buffer
  *
  * \param[in] response an HTTP response string
@@ -365,7 +395,10 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
             if(state->statusCode == 409) {
                 // Already activated.
                 exoPal_getCik(state->cik);
-                // TODO: isvalid?
+                if(!exosite_isCIKValid(state->cik)) {
+                    // Stored CIK is invalid and this SN is activated.
+                    state->statusCode = -409;
+                }
 
                 // activate complete!
                 state->stage = Exosite_Stage_closing;
@@ -381,8 +414,13 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
 
                 } else {
                     // ok, all of CIK is now in workbuf; save it.
-                    exoPal_memmove(state->cik, state->workbuf, CIK_LENGTH);
-                    exoPal_setCik(state->cik);
+                    if(exosite_isCIKValid(state->workbuf)) {
+                        exoPal_memmove(state->cik, state->workbuf, CIK_LENGTH);
+                        exoPal_setCik(state->cik);
+                    } else {
+                        // It gace us an invalid CIK!?!?!?!
+                        state->statusCode = -200;
+                    }
 
                     state->stage = Exosite_Stage_closing;
                     exoPal_tcpSocketClose(state->exoPal);
