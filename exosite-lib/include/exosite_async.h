@@ -75,6 +75,25 @@ struct exoHttp_req_s {
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 
+enum exoHttp_rpl_e {
+    exoHttp_rpl_looking_for_status = 0,
+    exoHttp_rpl_read_status,
+    exoHttp_rpl_status_looking_for_cr,
+    exoHttp_rpl_status_looking_for_lf,
+    exoHttp_rpl_header_start,
+    exoHttp_rpl_header_looking_for_sep,
+    exoHttp_rpl_header_looking_for_cr,
+    exoHttp_rpl_header_looking_for_lf,
+
+    exoHttp_rpl_looking_for_lf_start_body,
+    exoHttp_rpl_body,
+    exoHttp_rpl_error
+};
+struct exoHttp_rpl_s {
+    enum exoHttp_rpl_e step;
+    uint16_t statusCode; //!> HTTP status code
+};
+typedef struct exoHttp_rpl_s exoHttp_rpl_t;
 
 /******************************************************************************/
 enum Exosite_state_e {
@@ -125,7 +144,9 @@ struct Exosite_state_s {
     char cik[CIK_LENGTH];
     char uuid[MAX_UUID_LENGTH];
 
+    // union these two?
     exoHttp_req_t http_req;
+    exoHttp_rpl_t http_rpl;
 
 
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives

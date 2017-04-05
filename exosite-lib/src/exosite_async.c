@@ -171,6 +171,99 @@ void exosite_send_http_req(Exosite_state_t *state)
             break;
     }
 }
+/******************************************************************************/
+
+void exosite_http_rpl_parse_one(Exosite_state_t *state, char data)
+{
+    exoHttp_rpl_t *rpl = &state->http_rpl;
+    switch(rpl->step) {
+        case exoHttp_rpl_looking_for_status:
+            if(data == ' ') {
+                rpl->step = exoHttp_rpl_read_status;
+            }
+            break;
+        case exoHttp_rpl_read_status:
+            if(data >= '0' && data <= '9') {
+                rpl->statusCode *= 10;
+                rpl->statusCode += data - '0';
+            } else if(data == ' ') {
+                rpl->step = exoHttp_rpl_status_looking_for_cr;
+            } else {
+                rpl->step = exoHttp_rpl_error;
+            }
+            break;
+        case exoHttp_rpl_status_looking_for_cr:
+            if(data == '\r') {
+                rpl->step = exoHttp_rpl_status_looking_for_lf;
+            }
+            break;
+        case exoHttp_rpl_status_looking_for_lf:
+            if(data != '\n') {
+                rpl->step = exoHttp_rpl_error;
+            }
+            rpl->step = exoHttp_rpl_header_start;
+            break;
+        case exoHttp_rpl_header_start:
+            if(data == '\r') {
+                // This is either start of second CRLF to start body, or will be
+                // error.
+                rpl->step = exoHttp_rpl_looking_for_lf_start_body;
+            } else {
+                rpl->step = exoHttp_rpl_header_looking_for_sep;
+                // TODO: signal back ?
+            }
+            break;
+        case exoHttp_rpl_header_looking_for_sep:
+            if(data == ':') {
+                // switch to value
+                rpl->step = exoHttp_rpl_header_looking_for_cr;
+            } else {
+                // part of name.
+                // TODO: signal back ?
+            }
+            break;
+        case exoHttp_rpl_header_looking_for_cr:
+            if(data == '\r') {
+                rpl->step = exoHttp_rpl_header_looking_for_lf;
+            } else {
+                // part of value.
+                // TODO: signal back ?
+            }
+            break;
+        case exoHttp_rpl_header_looking_for_lf:
+            if(data == '\n') {
+                // end of header.
+                // Next header, or maybe body.
+                rpl->step = exoHttp_rpl_header_start;
+            } else {
+                rpl->step = exoHttp_rpl_error;
+            }
+            break;
+
+
+        case exoHttp_rpl_looking_for_lf_start_body:
+            if(data != '\n') {
+                rpl->step = exoHttp_rpl_error;
+            } else {
+                rpl->step = exoHttp_rpl_body;
+            }
+            break;
+        case exoHttp_rpl_body:
+            // TODO: signal back ?
+            break;
+
+        case exoHttp_rpl_error:
+            break;
+    }
+}
+void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
+{
+    for(; len > 0; ++data, --len) {
+        exosite_http_rpl_parse_one(state, *data);
+    }
+}
+
+/******************************************************************************/
 
 void exosite_activate(Exosite_state_t *state)
 {
