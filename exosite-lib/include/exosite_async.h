@@ -119,9 +119,7 @@ enum Exosite_Stage_e {
     Exosite_Stage_connecting,
     Exosite_Stage_sending,
     Exosite_Stage_waiting,
-    Exosite_Stage_recving_status,
-    Exosite_Stage_recving_headers,
-    Exosite_Stage_recving_body,
+    Exosite_Stage_recving,
     Exosite_Stage_closing,
 };
 typedef struct Exosite_ops_s Exosite_ops_t;

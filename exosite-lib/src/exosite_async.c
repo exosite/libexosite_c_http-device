@@ -453,7 +453,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
             exosite_send_http_req(state);
 
             if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving_status;
+                state->stage = Exosite_Stage_recving;
                 state->wb_offset = 0;
                 state->statusCode = 0;
                 exosite_http_rpl_init(&state->http_rpl);
@@ -465,7 +465,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
             exosite_send_http_req(state);
 
             if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving_status;
+                state->stage = Exosite_Stage_recving;
                 state->wb_offset = 0;
                 state->statusCode = 0;
                 exosite_http_rpl_init(&state->http_rpl);
@@ -477,7 +477,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
             exosite_send_http_req(state);
 
             if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving_status;
+                state->stage = Exosite_Stage_recving;
                 state->wb_offset = 0;
                 state->statusCode = 0;
                 exosite_http_rpl_init(&state->http_rpl);
