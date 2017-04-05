@@ -120,6 +120,7 @@ enum Exosite_Stage_e {
     Exosite_Stage_sending,
     Exosite_Stage_waiting,
     Exosite_Stage_recving,
+    Exosite_Stage_recving_body,
     Exosite_Stage_closing,
 };
 typedef struct Exosite_ops_s Exosite_ops_t;
@@ -132,8 +133,10 @@ struct Exosite_ops_s {
     exo_status_cb on_write_complete;
     exo_status_cb on_read_begin;
     exo_data_cb   on_read_raw;
+#if 0
     exo_data_cb   on_read_alias;
     exo_data_cb   on_read_value;
+#endif
     exo_status_cb on_read_complete;
     exo_data_cb   on_timestamp_complete;
 };

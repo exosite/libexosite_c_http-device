@@ -539,6 +539,23 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
 int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 {
     int retcode = 0;
+    if(state->stage == Exosite_Stage_recving) {
+        state->stage = Exosite_Stage_recving_body;
+
+        // Fire off read_begin callbacks.
+        switch(state->state) {
+            case Exosite_State_read:
+            case Exosite_State_hybrid:
+            case Exosite_State_longpoll:
+                if(state->ops.on_read_begin) {
+                    state->ops.on_read_begin(state, state->http_rpl.statusCode);
+                }
+                break;
+            default:
+                // nop
+                break;
+        }
+    }
     switch(state->state) {
         case Exosite_State_activate:
             if(state->http_rpl.statusCode == 409) {
@@ -578,6 +595,21 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 
         case Exosite_State_write:
             retcode = 1;
+            break;
+
+        case Exosite_State_read:
+        case Exosite_State_hybrid:
+            if(state->http_rpl.statusCode != 200) {
+                // just stop.
+                retcode = 1;
+
+            } else {
+                if(state->ops.on_read_raw) {
+                    state->ops.on_read_raw(state, data, len);
+                }
+                // TODO: decode form data.
+                // Do this in here? or provide a layer above?
+            }
             break;
 
         case Exosite_State_timestamp:
@@ -635,6 +667,15 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             state->state = Exosite_State_idle;
             if(state->ops.on_timestamp_complete) {
                 state->ops.on_timestamp_complete(state, state->workbuf, state->wb_offset);
+            }
+            break;
+
+        case Exosite_State_read:
+        case Exosite_State_hybrid:
+            state->stage = Exosite_Stage_idle;
+            state->state = Exosite_State_idle;
+            if(state->ops.on_read_complete) {
+                state->ops.on_read_complete(state, state->statusCode);
             }
             break;
 
@@ -706,6 +747,48 @@ int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
     state->http_req.is_activate = 0;
     state->http_req.body = aliasesAndValues;
     state->http_req.query = NULL;
+
+    return exoPal_tcpSocketOpen(state->exoPal);
+}
+
+int exosite_read(Exosite_state_t *state, const char *aliases)
+{
+    if(state->state != Exosite_State_idle) {
+        return -1;
+    }
+
+    state->state = Exosite_State_read;
+    state->stage = Exosite_Stage_connecting;
+
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_DATA_URL;
+    state->http_req.content_length = 0;
+    state->http_req.is_post = 0;
+    state->http_req.include_cik = 1;
+    state->http_req.is_activate = 0;
+    state->http_req.body = NULL;
+    state->http_req.query = aliases;
+
+    return exoPal_tcpSocketOpen(state->exoPal);
+}
+
+int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases)
+{
+    if(state->state != Exosite_State_idle) {
+        return -1;
+    }
+
+    state->state = Exosite_State_hybrid;
+    state->stage = Exosite_Stage_connecting;
+
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_DATA_URL;
+    state->http_req.content_length = exoPal_strlen(writeAliasesAndValues);
+    state->http_req.is_post = 1;
+    state->http_req.include_cik = 1;
+    state->http_req.is_activate = 0;
+    state->http_req.body = writeAliasesAndValues;
+    state->http_req.query = readAliases;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
