@@ -66,7 +66,8 @@ enum exoHttp_req_e {
 struct exoHttp_req_s {
     enum exoHttp_req_e step;
     size_t content_length;
-    int include_cik:1; //!< Don't include CIK header.
+    int is_post:1; //!< POST or GET?
+    int include_cik:1; //!< Iinclude CIK header.
     int is_activate:1; //!< Don't use body, compute activation body instead.
     const char * method_url_path;
     const char * query;
