@@ -329,10 +329,7 @@ void exosite_activate(Exosite_state_t *state)
 {
     state->state = Exosite_State_activate;
     state->stage = Exosite_Stage_connecting;
-    exoPal_tcpSocketOpen(state->exoPal);
-}
-void exosite_activate_send(Exosite_state_t *state)
-{
+
     state->http_req.step = exoHttp_req_method_url;
     state->http_req.method_url_path = (char*)STR_ACTIVATE_URL;
     state->http_req.content_length = (sizeof(STR_VENDOR) - 1) +
@@ -344,7 +341,7 @@ void exosite_activate_send(Exosite_state_t *state)
     state->http_req.body = NULL;
     state->http_req.query = NULL;
 
-    exosite_send_http_req(state);
+    exoPal_tcpSocketOpen(state->exoPal);
 }
 
 /******************************************************************************/
@@ -434,26 +431,8 @@ int exosite_lib_connected(exoPal_state_t *pal, int status)
     Exosite_state_t *state = (Exosite_state_t *)pal->context;
     EXO_ASSERT(pal->context);
 
-    switch(state->state) {
-        case Exosite_State_activate:
-            state->stage = Exosite_Stage_sending;
-            exosite_activate_send(state);
-            break;
-
-        case Exosite_State_write:
-            state->stage = Exosite_Stage_sending;
-            exosite_send_http_req(state);
-            break;
-
-        case Exosite_State_timestamp:
-            state->stage = Exosite_Stage_sending;
-            exosite_send_http_req(state);
-            break;
-
-        default:
-            EXO_ASSERT(0);
-            break;
-    }
+    state->stage = Exosite_Stage_sending;
+    exosite_send_http_req(state);
     return 0;
 }
 
@@ -462,46 +441,14 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
     Exosite_state_t *state = (Exosite_state_t *)pal->context;
     EXO_ASSERT(pal->context);
 
-    switch(state->state) {
-        case Exosite_State_activate:
-            exosite_send_http_req(state);
+    exosite_send_http_req(state);
 
-            if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving;
-                state->wb_offset = 0;
-                state->statusCode = 0;
-                exosite_http_rpl_init(&state->http_rpl);
-                exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
-            }
-            break;
-
-        case Exosite_State_write:
-            exosite_send_http_req(state);
-
-            if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving;
-                state->wb_offset = 0;
-                state->statusCode = 0;
-                exosite_http_rpl_init(&state->http_rpl);
-                exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
-            }
-            break;
-
-        case Exosite_State_timestamp:
-            exosite_send_http_req(state);
-
-            if(state->stage == Exosite_Stage_waiting) {
-                state->stage = Exosite_Stage_recving;
-                state->wb_offset = 0;
-                state->statusCode = 0;
-                exosite_http_rpl_init(&state->http_rpl);
-                exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
-            }
-            break;
-
-        default:
-            EXO_ASSERT(0);
-            break;
+    if(state->stage == Exosite_Stage_waiting) {
+        state->stage = Exosite_Stage_recving;
+        state->wb_offset = 0;
+        state->statusCode = 0;
+        exosite_http_rpl_init(&state->http_rpl);
+        exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
     }
     return 0;
 }
@@ -527,7 +474,7 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
     } else if(state->http_rpl.step == exoHttp_rpl_error) {
         state->stage = Exosite_Stage_closing;
         exoPal_tcpSocketClose(state->exoPal);
-        // TODO: callback.
+        // TODO: callback?
 
     } else {
         exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
