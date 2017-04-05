@@ -114,8 +114,13 @@ void exosite_send_http_req(Exosite_state_t *state)
             break;
 
         case exoHttp_req_cik:
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+            exoPal_strlcpy(state->workbuf, STR_CIK_HEADER, sizeof(state->workbuf));
+            exoPal_strlcat(state->workbuf, state->cik, sizeof(state->workbuf));
+            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
             req->step = exoHttp_req_content;
-            exoPal_socketWrite(state->exoPal, STR_CONTENT, sizeof(STR_CONTENT)-1);
+            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
 
         case exoHttp_req_content:
@@ -144,7 +149,11 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
-            req->step = exoHttp_req_body;
+            if(req->content_length == 0 || req->body == NULL) {
+                req->step = exoHttp_req_complete;
+            } else {
+                req->step = exoHttp_req_body;
+            }
             exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
 

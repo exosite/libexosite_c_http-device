@@ -143,9 +143,9 @@ struct Exosite_state_s {
     enum Exosite_state_e state;
     enum Exosite_Stage_e stage;
 
-    char projectid[MAX_VENDOR_LENGTH];
-    char cik[CIK_LENGTH];
-    char uuid[MAX_UUID_LENGTH];
+    char projectid[MAX_VENDOR_LENGTH+1];
+    char cik[CIK_LENGTH+1];
+    char uuid[MAX_UUID_LENGTH+1];
 
     // union these two?
     exoHttp_req_t http_req;
