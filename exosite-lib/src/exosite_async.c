@@ -538,6 +538,8 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 break;
         }
     }
+
+    // Process body data.
     switch(state->state) {
         case Exosite_State_activate:
             if(state->http_rpl.statusCode == 409) {
@@ -581,6 +583,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 
         case Exosite_State_read:
         case Exosite_State_hybrid:
+        case Exosite_State_longpoll:
             if(state->http_rpl.statusCode != 200) {
                 // just stop.
                 retcode = 1;
@@ -654,6 +657,7 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
 
         case Exosite_State_read:
         case Exosite_State_hybrid:
+        case Exosite_State_longpoll:
             state->stage = Exosite_Stage_idle;
             state->state = Exosite_State_idle;
             if(state->ops.on_read_complete) {
@@ -780,6 +784,26 @@ int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, co
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
+
+int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modified_since, uint32_t timeout)
+{
+    if(state->state != Exosite_State_idle) {
+        return -1;
+    }
+
+    state->state = Exosite_State_longpoll;
+    state->stage = Exosite_Stage_connecting;
+
+    state->http_req.step = exoHttp_req_method_url;
+    state->http_req.method_url_path = (char*)STR_DATA_URL;
+    state->http_req.content_length = 0;
+    state->http_req.is_post = 1;
+    state->http_req.include_cik = 1;
+    state->http_req.is_activate = 0;
+    state->http_req.body = NULL;
+    state->http_req.query = alias;
+    state->http_req.modified_since = modified_since;
+    state->http_req.request_timeout = MIN(300000, timeout);
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }

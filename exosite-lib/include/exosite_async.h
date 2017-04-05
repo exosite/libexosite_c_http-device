@@ -186,7 +186,7 @@ int exosite_start(Exosite_state_t *state);
 int exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
 int exosite_read(Exosite_state_t *state, const char *aliases);
 int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases);
-int exosite_longpoll(Exosite_state_t *state, const char *aliases, const char *timestamp, uint32_t timeout);
+int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modified_since, uint32_t timeout);
 int exosite_timestamp(Exosite_state_t *state);
 
 
