@@ -410,38 +410,6 @@ uint8_t exosite_isCIKValid(char cik[CIK_LENGTH])
     return 1;
 }
 
-
-/*!
- * \brief Gets the HTTP status code out of the buffer
- *
- * \param[in] response an HTTP response string
- *
- * This assumes that response starts from the beginning of the response data and
- * that the status code is within the first 15 bytes.
- *
- * \return [uint16_t] The status code.
- *
- */
-uint16_t exosite_getStatusCode(char * response)
-{
-    uint8_t spaceFound = 0;
-    int16_t i;
-    for (i = 1; (i < 15) && (spaceFound == 0); i++)
-    {
-        if (response[i] == ' ')
-        {
-            spaceFound = i + 1;
-        }
-    }
-    if (spaceFound > 0)
-    {
-        // If we found a ' ', try to match the code
-        return exoPal_atoi(&response[spaceFound]);
-    }
-
-    return 0;
-}
-
 /******************************************************************************/
 int exosite_lib_start_complete(exoPal_state_t *pal, int status)
 {
