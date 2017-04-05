@@ -67,19 +67,21 @@ enum exoHttp_req_e {
     exoHttp_req_complete
 };
 struct exoHttp_req_s {
-    enum exoHttp_req_e step;
-    size_t content_length;
+    enum exoHttp_req_e step; //!< Where it is on sending data.
+    size_t content_length; //!< how much data is in body.
     int is_post:1; //!< POST or GET?
     int include_cik:1; //!< Iinclude CIK header.
     int is_activate:1; //!< Don't use body, compute activation body instead.
     const char * method_url_path;
-    const char * query;
-    const char * body;
+    const char * query; //!< query params, usually the aliases to read
+    const char * body; //!< POST body, usually aliases and data to write
     const char * modified_since; //!< For LongPoll, start time for waiting
     uint32_t request_timeout; //!< For LongPoll, how many milliseconds to wait. (max 300,000)
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 
+/* State machine for receiving HTTP requests from Exosite HTTP-Device-API.
+ */
 enum exoHttp_rpl_e {
     exoHttp_rpl_looking_for_status = 0,
     exoHttp_rpl_read_status,
@@ -91,7 +93,6 @@ enum exoHttp_rpl_e {
     exoHttp_rpl_header_mark_value,
     exoHttp_rpl_header_looking_for_cr,
     exoHttp_rpl_header_looking_for_lf,
-
     exoHttp_rpl_looking_for_lf_start_body,
     exoHttp_rpl_body,
     exoHttp_rpl_complete,
@@ -100,7 +101,9 @@ enum exoHttp_rpl_e {
 struct exoHttp_rpl_s {
     enum exoHttp_rpl_e step;
     uint16_t statusCode; //!> HTTP status code
+#if 0
     size_t content_length; //!> Value of Content-Length header, if it exists.
+#endif
 
 };
 typedef struct exoHttp_rpl_s exoHttp_rpl_t;
@@ -117,7 +120,6 @@ enum Exosite_state_e {
     Exosite_State_hybrid,
     Exosite_State_longpoll,
     Exosite_State_timestamp,
-
 };
 enum Exosite_Stage_e {
     Exosite_Stage_idle = 0,
