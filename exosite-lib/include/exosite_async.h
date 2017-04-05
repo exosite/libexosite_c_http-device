@@ -53,20 +53,24 @@
 
 enum exoHttp_req_e {
     exoHttp_req_method_url = 0,
+    exoHttp_req_query,
+    exoHttp_req_http_version,
     exoHttp_req_host,
     exoHttp_req_cik,
     exoHttp_req_content,
+    exoHttp_req_accept,
     exoHttp_req_content_length,
     exoHttp_req_body,
     exoHttp_req_complete
 };
 struct exoHttp_req_s {
     enum exoHttp_req_e step;
-    char * method_url_path;
     size_t content_length;
     int include_cik:1; //!< Don't include CIK header.
     int is_activate:1; //!< Don't use body, compute activation body instead.
-    const char *body;
+    const char * method_url_path;
+    const char * query;
+    const char * body;
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 

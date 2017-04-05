@@ -41,15 +41,15 @@
 
 /******************************************************************************/
 
-static const char STR_TIMESTAMP_URL[] = "GET /timestamp ";
-static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
-static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
+static const char STR_TIMESTAMP_URL[] = "GET /timestamp";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
-static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
-static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
-static const char STR_HTTP[] = "HTTP/1.1";
+static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias";
+static const char STR_ACTIVATE_URL[] = "POST /provision/activate";
+static const char STR_HTTP[] = " HTTP/1.1";
 static const char STR_HOST[] = "Host: ";
 static const char STR_HOST_ROOT[] = ".m2.exosite.com";
+static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
+static const char STR_CONTENT_LENGTH[] = "Content-Length:";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_VENDOR[] = "vendor=";
@@ -66,7 +66,23 @@ void exosite_send_http_req(Exosite_state_t *state)
     switch(req->step) {
         case exoHttp_req_method_url:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
-            exoPal_strlcpy(state->workbuf, req->method_url_path, sizeof(state->workbuf));
+            slen = exoPal_strlcpy(state->workbuf, req->method_url_path, sizeof(state->workbuf));
+
+            if(req->query != NULL) {
+                req->step = exoHttp_req_query;
+            } else {
+                req->step = exoHttp_req_http_version;
+            }
+            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+            break;
+
+        case exoHttp_req_query:
+            req->step = exoHttp_req_http_version;
+            exoPal_socketWrite(state->exoPal, req->query, exoPal_strlen(req->query));
+            break;
+
+        case exoHttp_req_http_version:
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
             exoPal_strlcat(state->workbuf, STR_HTTP, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
@@ -97,6 +113,15 @@ void exosite_send_http_req(Exosite_state_t *state)
         case exoHttp_req_content:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
             exoPal_strlcpy(state->workbuf, STR_CONTENT, sizeof(state->workbuf));
+            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
+            req->step = exoHttp_req_accept;
+            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+            break;
+
+        case exoHttp_req_accept:
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+            exoPal_strlcpy(state->workbuf, STR_ACCEPT, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
             req->step = exoHttp_req_content_length;
