@@ -47,6 +47,10 @@ void * exoPal_memset(void* dst, int c, uint16_t length);
 size_t exoPal_strlcpy(char* dst, const char* src, size_t len);
 size_t exoPal_strlcat(char* dst, const char* src, size_t len);
 
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#endif /*MIN*/
+
 // Memory/NVRAM/Flash PAL
 uint8_t exoPal_setCik(const char * read_buffer);
 uint8_t exoPal_getCik(char * read_buffer);

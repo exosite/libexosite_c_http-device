@@ -151,11 +151,10 @@ struct Exosite_state_s {
     exoHttp_req_t http_req;
     exoHttp_rpl_t http_rpl;
 
-
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
     int wb_offset; //!> If we need to recv again to get enough data.
 
-    int statusCode; //!> HTTP status code
+    int statusCode; //!>  status code
 
     // Public
     Exosite_ops_t ops;

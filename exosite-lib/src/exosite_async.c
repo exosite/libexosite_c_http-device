@@ -185,9 +185,9 @@ void exosite_http_rpl_header_name(Exosite_state_t *state, const char *data, size
 void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, size_t len)
 {
 }
-void exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
-{
-}
+
+// Just the prototype here. Implementation is down below.
+int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len);
 
 void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
 {
@@ -197,7 +197,9 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
 
     // Special case speed up. If in the exoHttp_rpl_body, nothing to scan.
     if(rpl->step == exoHttp_rpl_body) {
-        exosite_http_rpl_body(state, data, len);
+        if(exosite_http_rpl_body(state, data, len) != 0) {
+            rpl->step = exoHttp_rpl_complete;
+        }
         return;
     }
 
@@ -301,7 +303,9 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
             break;
 
         case exoHttp_rpl_body:
-            exosite_http_rpl_body(state, start_mark, data-start_mark);
+            if(exosite_http_rpl_body(state, start_mark, data-start_mark) != 0) {
+                rpl->step = exoHttp_rpl_complete;
+            }
             break;
 
         default:
@@ -506,21 +510,29 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
     }
 
     exosite_http_rpl_parse(state, data, len);
-    if(state->http_rpl.step != exoHttp_rpl_complete &&
-            state->http_rpl.step != exoHttp_rpl_complete) {
-        exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
-    } else {
+
+    if(state->http_rpl.step == exoHttp_rpl_complete) {
         state->stage = Exosite_Stage_closing;
         exoPal_tcpSocketClose(state->exoPal);
+
+    } else if(state->http_rpl.step == exoHttp_rpl_error) {
+        state->stage = Exosite_Stage_closing;
+        exoPal_tcpSocketClose(state->exoPal);
+        // TODO: callback.
+
+    } else {
+        exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
     }
+    return 0;
+}
 
 
-#if 0
+int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
+{
+    int retcode = 0;
     switch(state->state) {
         case Exosite_State_activate:
-            // find status code. Maybe find body.
-            // "HTTP/* ### *\r\n
-            if(state->statusCode == 409) {
+            if(state->http_rpl.statusCode == 409) {
                 // Already activated.
                 exoPal_getCik(state->cik);
                 if(!exosite_isCIKValid(state->cik)) {
@@ -529,45 +541,44 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
                 }
 
                 // activate complete!
-                state->stage = Exosite_Stage_closing;
-                exoPal_tcpSocketClose(state->exoPal);
+                retcode = 1;
 
-            } else if(state->statusCode == 200) {
-                // Just activated.  Now need to find body and get CIK.
-                if((state->wb_offset + len) < CIK_LENGTH) {
-                    // Read more.
-                    state->wb_offset += len;
-                    exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
-                            sizeof(state->workbuf) - state->wb_offset);
+            } else if(state->http_rpl.statusCode == 200) {
+                // Just activated.
 
-                } else {
-                    // ok, all of CIK is now in workbuf; save it.
-                    if(exosite_isCIKValid(state->workbuf)) {
-                        exoPal_memmove(state->cik, state->workbuf, CIK_LENGTH);
+                // copy into cik, by parts if need be.
+                int remain = MIN(len, CIK_LENGTH - state->wb_offset);
+                EXO_ASSERT(remain > 0);
+                exoPal_memmove(&state->cik[state->wb_offset], data, remain);
+                state->wb_offset += remain;
+                EXO_ASSERT(state->wb_offset <= CIK_LENGTH);
+
+                if(state->wb_offset == CIK_LENGTH) {
+                    // ok, all of CIK is now in cik; save it.
+                    if(exosite_isCIKValid(state->cik)) {
                         exoPal_setCik(state->cik);
                     } else {
-                        // It gace us an invalid CIK!?!?!?!
+                        // It gave us an invalid CIK!?!?!?!
                         state->statusCode = -200;
                     }
 
-                    state->stage = Exosite_Stage_closing;
-                    exoPal_tcpSocketClose(state->exoPal);
+                    retcode = 1;
                 }
             }
             break;
 
         case Exosite_State_write:
-            state->stage = Exosite_Stage_closing;
-            exoPal_tcpSocketClose(state->exoPal);
+            retcode = 1;
             break;
 
         case Exosite_State_timestamp:
-            if(state->statusCode != 200) {
+            if(state->http_rpl.statusCode != 200) {
                 // just stop.
-                state->stage = Exosite_Stage_closing;
-                exoPal_tcpSocketClose(state->exoPal);
+                retcode = 1;
 
             } else {
+                // FIXME: need to build the response up somewhere.
+
                 // how do I know when to stop? kinda works. maybe
                 if((state->wb_offset + len) < 15) {
                     // read more.
@@ -576,8 +587,7 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
                             sizeof(state->workbuf) - state->wb_offset);
                 } else {
                     state->wb_offset += len;
-                    state->stage = Exosite_Stage_closing;
-                    exoPal_tcpSocketClose(state->exoPal);
+                    retcode = 1;
                 }
             }
             break;
@@ -586,8 +596,7 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
             EXO_ASSERT(0);
             break;
     }
-#endif
-    return 0;
+    return retcode;
 }
 
 int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
