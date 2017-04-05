@@ -59,7 +59,10 @@ enum exoHttp_req_e {
     exoHttp_req_cik,
     exoHttp_req_content,
     exoHttp_req_accept,
+    exoHttp_req_timeout,
+    exoHttp_req_modified_since,
     exoHttp_req_content_length,
+    exoHttp_req_start_body,
     exoHttp_req_body,
     exoHttp_req_complete
 };
@@ -72,6 +75,8 @@ struct exoHttp_req_s {
     const char * method_url_path;
     const char * query;
     const char * body;
+    const char * modified_since; //!< For LongPoll, start time for waiting
+    uint32_t request_timeout; //!< For LongPoll, how many milliseconds to wait. (max 300,000)
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 

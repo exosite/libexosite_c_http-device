@@ -51,7 +51,9 @@ static const char STR_HTTP[] = " HTTP/1.1";
 static const char STR_HOST[] = "Host: ";
 static const char STR_HOST_ROOT[] = ".m2.exosite.com";
 static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
-static const char STR_CONTENT_LENGTH[] = "Content-Length:";
+static const char STR_REQUEST_TIMEOUT[] = "Request-Timeout: ";
+static const char STR_MODIFIED_SINCE[] = "If-Modified-Since: ";
+static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_VENDOR[] = "vendor=";
@@ -105,23 +107,22 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_strlcat(state->workbuf, STR_HOST_ROOT, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
-            if(req->include_cik) {
-                req->step = exoHttp_req_cik;
-            } else {
-                req->step = exoHttp_req_content;
-            }
+            req->step = exoHttp_req_cik;
             exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
 
         case exoHttp_req_cik:
-            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
-            exoPal_strlcpy(state->workbuf, STR_CIK_HEADER, sizeof(state->workbuf));
-            exoPal_strlcat(state->workbuf, state->cik, sizeof(state->workbuf));
-            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
-
             req->step = exoHttp_req_content;
-            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
-            break;
+            if(req->include_cik) {
+                exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+                exoPal_strlcpy(state->workbuf, STR_CIK_HEADER, sizeof(state->workbuf));
+                exoPal_strlcat(state->workbuf, state->cik, sizeof(state->workbuf));
+                slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
+                exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+                break;
+            }
+            // Fall-thru if no CIK
 
         case exoHttp_req_content:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
@@ -137,23 +138,53 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_strlcpy(state->workbuf, STR_ACCEPT, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
-            req->step = exoHttp_req_content_length;
+            req->step = exoHttp_req_timeout;
             exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
 
-        case exoHttp_req_content_length:
-            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
-            slen = exoPal_strlcpy(state->workbuf, STR_CONTENT_LENGTH, sizeof(state->workbuf));
-            exoPal_itoa(req->content_length, &state->workbuf[slen], sizeof(state->workbuf)-slen);
-            // Two CRLF because body is next
-            exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
-            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+        case exoHttp_req_timeout:
+            req->step = exoHttp_req_modified_since;
+            if(req->request_timeout > 0) {
+                exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+                slen = exoPal_strlcpy(state->workbuf, STR_REQUEST_TIMEOUT, sizeof(state->workbuf));
+                exoPal_itoa(req->request_timeout, &state->workbuf[slen], sizeof(state->workbuf)-slen);
+                slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
-            if(req->content_length == 0 || req->body == NULL) {
-                req->step = exoHttp_req_complete;
-            } else {
-                req->step = exoHttp_req_body;
+                exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+                break;
             }
+            // Fall-thru if no timeout
+
+        case exoHttp_req_modified_since:
+            req->step = exoHttp_req_content_length;
+            if(req->modified_since != NULL) {
+                exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+                exoPal_strlcpy(state->workbuf, STR_MODIFIED_SINCE, sizeof(state->workbuf));
+                exoPal_strlcat(state->workbuf, req->modified_since, sizeof(state->workbuf));
+                slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
+                exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+                break;
+            }
+            // Fall-thru if no modified_since
+
+        case exoHttp_req_content_length:
+            req->step = exoHttp_req_start_body;
+            if(req->content_length > 0) {
+                exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+                slen = exoPal_strlcpy(state->workbuf, STR_CONTENT_LENGTH, sizeof(state->workbuf));
+                exoPal_itoa(req->content_length, &state->workbuf[slen], sizeof(state->workbuf)-slen);
+                slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
+                exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+                break;
+            }
+            // Fall-thru if no content_length
+
+        case exoHttp_req_start_body:
+            req->step = exoHttp_req_body;
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+            slen = exoPal_strlcpy(state->workbuf, STR_CRLF, sizeof(state->workbuf));
             exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
 
@@ -170,10 +201,12 @@ void exosite_send_http_req(Exosite_state_t *state)
                 slen = exoPal_strlcat(state->workbuf, state->uuid, sizeof(state->workbuf));
 
                 exoPal_socketWrite(state->exoPal, state->workbuf, slen);
-            } else {
+                break;
+            } else if(req->body != NULL) {
                 exoPal_socketWrite(state->exoPal, req->body, exoPal_strlen(req->body));
+                break;
             }
-            break;
+            // Fall-thru if no body
 
         case exoHttp_req_complete:
             exoPal_sendingComplete(state->exoPal);
@@ -340,6 +373,8 @@ void exosite_activate(Exosite_state_t *state)
     state->http_req.is_activate = 1;
     state->http_req.body = NULL;
     state->http_req.query = NULL;
+    state->http_req.modified_since = NULL;
+    state->http_req.request_timeout = 0;
 
     exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -694,6 +729,8 @@ int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
     state->http_req.is_activate = 0;
     state->http_req.body = aliasesAndValues;
     state->http_req.query = NULL;
+    state->http_req.modified_since = NULL;
+    state->http_req.request_timeout = 0;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -715,6 +752,8 @@ int exosite_read(Exosite_state_t *state, const char *aliases)
     state->http_req.is_activate = 0;
     state->http_req.body = NULL;
     state->http_req.query = aliases;
+    state->http_req.modified_since = NULL;
+    state->http_req.request_timeout = 0;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -736,6 +775,11 @@ int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, co
     state->http_req.is_activate = 0;
     state->http_req.body = writeAliasesAndValues;
     state->http_req.query = readAliases;
+    state->http_req.modified_since = NULL;
+    state->http_req.request_timeout = 0;
+
+    return exoPal_tcpSocketOpen(state->exoPal);
+}
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -757,6 +801,8 @@ int exosite_timestamp(Exosite_state_t *state)
     state->http_req.is_activate = 0;
     state->http_req.body = NULL;
     state->http_req.query = NULL;
+    state->http_req.modified_since = NULL;
+    state->http_req.request_timeout = 0;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
