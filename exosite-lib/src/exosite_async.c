@@ -173,93 +173,139 @@ void exosite_send_http_req(Exosite_state_t *state)
 }
 /******************************************************************************/
 
-void exosite_http_rpl_parse_one(Exosite_state_t *state, char data)
+void exosite_http_rpl_init(exoHttp_rpl_t *http_rpl)
 {
-    exoHttp_rpl_t *rpl = &state->http_rpl;
-    switch(rpl->step) {
-        case exoHttp_rpl_looking_for_status:
-            if(data == ' ') {
-                rpl->step = exoHttp_rpl_read_status;
-            }
-            break;
-        case exoHttp_rpl_read_status:
-            if(data >= '0' && data <= '9') {
-                rpl->statusCode *= 10;
-                rpl->statusCode += data - '0';
-            } else if(data == ' ') {
-                rpl->step = exoHttp_rpl_status_looking_for_cr;
-            } else {
-                rpl->step = exoHttp_rpl_error;
-            }
-            break;
-        case exoHttp_rpl_status_looking_for_cr:
-            if(data == '\r') {
-                rpl->step = exoHttp_rpl_status_looking_for_lf;
-            }
-            break;
-        case exoHttp_rpl_status_looking_for_lf:
-            if(data != '\n') {
-                rpl->step = exoHttp_rpl_error;
-            }
-            rpl->step = exoHttp_rpl_header_start;
-            break;
-        case exoHttp_rpl_header_start:
-            if(data == '\r') {
-                // This is either start of second CRLF to start body, or will be
-                // error.
-                rpl->step = exoHttp_rpl_looking_for_lf_start_body;
-            } else {
-                rpl->step = exoHttp_rpl_header_looking_for_sep;
-                // TODO: signal back ?
-            }
-            break;
-        case exoHttp_rpl_header_looking_for_sep:
-            if(data == ':') {
-                // switch to value
-                rpl->step = exoHttp_rpl_header_looking_for_cr;
-            } else {
-                // part of name.
-                // TODO: signal back ?
-            }
-            break;
-        case exoHttp_rpl_header_looking_for_cr:
-            if(data == '\r') {
-                rpl->step = exoHttp_rpl_header_looking_for_lf;
-            } else {
-                // part of value.
-                // TODO: signal back ?
-            }
-            break;
-        case exoHttp_rpl_header_looking_for_lf:
-            if(data == '\n') {
-                // end of header.
-                // Next header, or maybe body.
-                rpl->step = exoHttp_rpl_header_start;
-            } else {
-                rpl->step = exoHttp_rpl_error;
-            }
-            break;
-
-
-        case exoHttp_rpl_looking_for_lf_start_body:
-            if(data != '\n') {
-                rpl->step = exoHttp_rpl_error;
-            } else {
-                rpl->step = exoHttp_rpl_body;
-            }
-            break;
-        case exoHttp_rpl_body:
-            // TODO: signal back ?
-            break;
-
-        case exoHttp_rpl_error:
-            break;
-    }
+    exoPal_memset(http_rpl, 0, sizeof(exoHttp_rpl_t));
 }
+
+void exosite_http_rpl_header_name(Exosite_state_t *state, const char *data, size_t len)
+{
+}
+void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, size_t len)
+{
+}
+void exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
+{
+}
+
 void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
 {
+    exoHttp_rpl_t *rpl = &state->http_rpl;
+    char dc;
+    const char *start_mark = data;
+
+    // Special case speed up. If in the exoHttp_rpl_body, nothing to scan.
+    if(rpl->step == exoHttp_rpl_body) {
+        exosite_http_rpl_body(state, data, len);
+        return;
+    }
+
     for(; len > 0; ++data, --len) {
-        exosite_http_rpl_parse_one(state, *data);
+        dc = *data;
+        switch(rpl->step) {
+            case exoHttp_rpl_looking_for_status:
+                if(dc == ' ') {
+                    rpl->step = exoHttp_rpl_read_status;
+                }
+                break;
+            case exoHttp_rpl_read_status:
+                if(dc >= '0' && dc <= '9') {
+                    rpl->statusCode *= 10;
+                    rpl->statusCode += dc - '0';
+                } else if(dc == ' ') {
+                    rpl->step = exoHttp_rpl_status_looking_for_cr;
+                } else {
+                    rpl->step = exoHttp_rpl_error;
+                }
+                break;
+            case exoHttp_rpl_status_looking_for_cr:
+                if(dc == '\r') {
+                    rpl->step = exoHttp_rpl_status_looking_for_lf;
+                }
+                break;
+            case exoHttp_rpl_status_looking_for_lf:
+                if(dc != '\n') {
+                    rpl->step = exoHttp_rpl_error;
+                }
+                rpl->step = exoHttp_rpl_header_start;
+                break;
+            case exoHttp_rpl_header_start:
+                if(dc == '\r') {
+                    // This is either start of second CRLF to start body, or will be
+                    // error.
+                    rpl->step = exoHttp_rpl_looking_for_lf_start_body;
+                } else {
+                    rpl->step = exoHttp_rpl_header_mark_name;
+                }
+                break;
+            case exoHttp_rpl_header_mark_name:
+                    start_mark = data;
+                    rpl->step = exoHttp_rpl_header_looking_for_sep;
+                    // this *must* fall-thru
+            case exoHttp_rpl_header_looking_for_sep:
+                if(dc == ':') {
+                    // switch to value
+                    rpl->step = exoHttp_rpl_header_mark_value;
+                    exosite_http_rpl_header_name(state, start_mark, data-start_mark);
+                }
+                break;
+            case exoHttp_rpl_header_mark_value:
+                    start_mark = data;
+                    rpl->step = exoHttp_rpl_header_looking_for_cr;
+                    // this *must* fall-thru
+            case exoHttp_rpl_header_looking_for_cr:
+                if(dc == '\r') {
+                    rpl->step = exoHttp_rpl_header_looking_for_lf;
+                    exosite_http_rpl_header_value(state, start_mark, data-start_mark);
+                }
+                break;
+            case exoHttp_rpl_header_looking_for_lf:
+                if(dc == '\n') {
+                    // end of header.
+                    // Next header, or maybe body.
+                    rpl->step = exoHttp_rpl_header_start;
+                } else {
+                    rpl->step = exoHttp_rpl_error;
+                }
+                break;
+
+
+            case exoHttp_rpl_looking_for_lf_start_body:
+                if(dc != '\n') {
+                    rpl->step = exoHttp_rpl_error;
+                    break;
+                } else {
+                    rpl->step = exoHttp_rpl_body;
+                    start_mark = data;
+                    // this *must* fall-thru
+                }
+            case exoHttp_rpl_body:
+                // just get to the end now.
+                // TODO maybe consult content_length?
+                break;
+
+            case exoHttp_rpl_complete:
+            case exoHttp_rpl_error:
+                break;
+        }
+    }
+    // Handle partial callbacks.
+    switch(rpl->step) {
+        case exoHttp_rpl_header_looking_for_sep:
+            exosite_http_rpl_header_name(state, start_mark, data-start_mark);
+            break;
+
+        case exoHttp_rpl_header_looking_for_cr:
+            exosite_http_rpl_header_value(state, start_mark, data-start_mark);
+            break;
+
+        case exoHttp_rpl_body:
+            exosite_http_rpl_body(state, start_mark, data-start_mark);
+            break;
+
+        default:
+            // nop.
+            break;
     }
 }
 
@@ -410,6 +456,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
                 state->stage = Exosite_Stage_recving_status;
                 state->wb_offset = 0;
                 state->statusCode = 0;
+                exosite_http_rpl_init(&state->http_rpl);
                 exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
             }
             break;
@@ -421,6 +468,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
                 state->stage = Exosite_Stage_recving_status;
                 state->wb_offset = 0;
                 state->statusCode = 0;
+                exosite_http_rpl_init(&state->http_rpl);
                 exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
             }
             break;
@@ -432,6 +480,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
                 state->stage = Exosite_Stage_recving_status;
                 state->wb_offset = 0;
                 state->statusCode = 0;
+                exosite_http_rpl_init(&state->http_rpl);
                 exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
             }
             break;
@@ -455,68 +504,17 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
         return 0;
     }
 
-    if (state->stage == Exosite_Stage_recving_status) {
-        // Get the status code.  Its always within the first 15 bytes.
-        if( (state->wb_offset + len) < 15 ) {
-            state->wb_offset += len;
-            exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
-                    sizeof(state->workbuf) - state->wb_offset);
-            return 0;
-
-        } else {
-            state->statusCode = exosite_getStatusCode(state->workbuf);
-            state->stage = Exosite_Stage_recving_headers;
-            // Fall-thru to recving_headers
-        }
+    exosite_http_rpl_parse(state, data, len);
+    if(state->http_rpl.step != exoHttp_rpl_complete &&
+            state->http_rpl.step != exoHttp_rpl_complete) {
+        exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
+    } else {
+        state->stage = Exosite_Stage_closing;
+        exoPal_tcpSocketClose(state->exoPal);
     }
-    // ? Need to capture Content-Length so we know how much body to read.
-    if (state->stage == Exosite_Stage_recving_headers) {
-        // Toss it all until CRLFCRLF
-        if( (state->wb_offset + len) < 4 ) {
-            // cannot possibly hold CRLFCRLF, so get more
-            state->wb_offset += len;
-            exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
-                    sizeof(state->workbuf) - state->wb_offset);
-            return 0;
-        } else {
 
-            char *p;
-            p = exoPal_strstr(state->workbuf, STR_CRLF);
-            if ( p != NULL && p[2] == '\r' && p[3] == '\n' ) {
-                // memmove just after CRLFCRLF to front
-                // Switch to reading body.
-                p += 4; // Now at start of body.
-                size_t to_toss = p - state->workbuf;
-                size_t to_save = (state->wb_offset + len) - to_toss;
-                exoPal_memmove(state->workbuf, p, to_save);
-                state->wb_offset = to_save;
-                // Fail-thru to recving_body
-                state->stage = Exosite_Stage_recving_body;
 
-            } else {
-                // Not found, save anything if needed, and throw the rest away
-                p = exoPal_strstr(state->workbuf, "\r");
-                if (p == NULL) {
-                    // Nothing to save.
-                    state->wb_offset = 0;
-
-                } else {
-                    if( p != state->workbuf) {
-                        // Need to slide on down.
-                        size_t to_toss = p - state->workbuf;
-                        size_t to_save = (state->wb_offset + len) - to_toss;
-                        exoPal_memmove(state->workbuf, p, to_save);
-                        state->wb_offset = to_save;
-                    }
-                }
-                exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
-                        sizeof(state->workbuf) - state->wb_offset);
-                return 0;
-            }
-        }
-    }
-    EXO_ASSERT(state->stage == Exosite_Stage_recving_body);
-
+#if 0
     switch(state->state) {
         case Exosite_State_activate:
             // find status code. Maybe find body.
@@ -587,6 +585,7 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
             EXO_ASSERT(0);
             break;
     }
+#endif
     return 0;
 }
 

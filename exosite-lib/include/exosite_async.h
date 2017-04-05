@@ -81,17 +81,22 @@ enum exoHttp_rpl_e {
     exoHttp_rpl_status_looking_for_cr,
     exoHttp_rpl_status_looking_for_lf,
     exoHttp_rpl_header_start,
+    exoHttp_rpl_header_mark_name,
     exoHttp_rpl_header_looking_for_sep,
+    exoHttp_rpl_header_mark_value,
     exoHttp_rpl_header_looking_for_cr,
     exoHttp_rpl_header_looking_for_lf,
 
     exoHttp_rpl_looking_for_lf_start_body,
     exoHttp_rpl_body,
+    exoHttp_rpl_complete,
     exoHttp_rpl_error
 };
 struct exoHttp_rpl_s {
     enum exoHttp_rpl_e step;
     uint16_t statusCode; //!> HTTP status code
+    size_t content_length; //!> Value of Content-Length header, if it exists.
+
 };
 typedef struct exoHttp_rpl_s exoHttp_rpl_t;
 
