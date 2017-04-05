@@ -79,7 +79,7 @@ enum exoPal_state_e {
 struct exoPal_state_s {
     enum exoPal_state_e state;
     exoPal_ops_t ops;
-    void *context;
+    void *context; //!< This is used to store Exosite_state_t
 
     // Contents here are specific to each PAL.
 };
