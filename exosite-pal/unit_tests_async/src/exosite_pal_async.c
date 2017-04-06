@@ -38,6 +38,59 @@
 #include <string.h>
 #include <stdio.h>
 
+/*****************************************************************************
+ * \defgroup Unit Test Specific details
+ * @{
+ */
+
+#define RX_TX_BUFFER_SIZE 512
+
+// unit test specific stuffs
+struct UnitTest_storage
+{
+    char cik[40];
+    char uuid[41];
+    char vendor[21];
+    char model[21];
+    char writeToBuffer[RX_TX_BUFFER_SIZE];
+    uint16_t writeToBufferLen;
+    char readFromBuffer[RX_TX_BUFFER_SIZE];
+    uint16_t readFromBufferLen;
+    uint8_t retVal_setCik;
+    uint8_t retVal_getCik;
+    uint8_t retVal_getModel;
+    uint8_t retVal_getVendor;
+    uint8_t retVal_getUuid;
+
+    uint8_t retVal_start;
+    uint8_t retVal_stop;
+
+    uint8_t retVal_tcpSocketClose;
+    uint8_t retVal_tcpSocketOpen;
+    uint8_t retVal_socketRead;
+    uint8_t retVal_socketWrite;
+    uint8_t retVal_sendingComplete;
+};
+
+/*!
+ * Stores a bunch of stuff to emulate nvm and manipulate return results
+ */
+struct UnitTest_storage mem_nvm;
+
+/*!
+ * \brief Retrieves a pointer to the UnitTest_storage struct
+ *
+ * This allows external applications speciically unit tests, to manipulate
+ * the way the the hal behaves.
+ *
+ * \return A pointer to the UnitTest_storage
+ */
+void * getUnitTestStorageStruct()
+{
+    return &mem_nvm;
+}
+
+/**@}*/
 
 /*****************************************************************************
  * \defgroup Utility PAL functions
@@ -140,5 +193,75 @@ size_t exoPal_strlcat(char* dst, const char* src, size_t len)
 
 /**@}*/
 
+/*****************************************************************************
+ * \defgroup Memory/NVRAM/Flash PAL
+ * @{
+ */
+
+/*!
+ * \brief Sets the cik
+ *
+ * Writes the 40 chars starting at cik* to nvm.
+ *
+ * \param[in] cik cik to write to nvm
+ * \return errorcode if successful else 0
+ */
+uint8_t exoPal_setCik(const char * cik)
+{
+    memcpy( mem_nvm.cik,cik, sizeof(mem_nvm.cik));
+    return mem_nvm.retVal_setCik;
+}
+
+/*!
+ * \brief Retrieves the stored CIK
+ * \param[out] read_buffer pointer of buffer to place results in
+ * \return 0 if successful, else errorCode
+ */
+uint8_t exoPal_getCik(char * read_buffer)
+{
+    memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
+    return mem_nvm.retVal_getCik;
+}
+
+/*!
+ * \brief Retrieves the stored Model string
+ * \param[in] read_buffer pointer of buffer to place results in
+ * \return 0 if successful, else returns error code
+ */
+uint8_t exoPal_getModel(char * read_buffer)
+{
+    memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
+    return mem_nvm.retVal_getModel;
+}
+
+/*!
+ * \brief Retrieves the vendor string
+ * \param[in] read_buffer pointer of buffer to place results in
+ * \return returns 0 if successful, else returns error code.
+ */
+uint8_t exoPal_getVendor(char * read_buffer)
+{
+    memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
+    return mem_nvm.retVal_getVendor;
+}
+
+/*!
+ * \brief Retrieves UUID from device
+ *
+ *	This function retrieves a unique ID from your device.  This is typically
+ *	the MEID of a cell modem, MAC address of a network card, or serial number
+ *	of the device.
+ *
+ * \param[in] UUID_buf Buffer to put the devices UUID into.
+ * \param[out]
+ * \return 1 if failed to retrieve UUID, else 0
+ */
+uint8_t exoPal_getUuid(char * read_buffer)
+{
+    memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
+    return mem_nvm.retVal_getUuid;
+}
+
+/**@}*/
 
 /* vim: set ai cin et sw=4 ts=4 : */
