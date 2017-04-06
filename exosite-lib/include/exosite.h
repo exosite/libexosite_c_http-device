@@ -81,15 +81,12 @@ int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, u
 int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
 int8_t exosite_getTimestamp(int32_t * timestamp);
-#if 0
-int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength);
-#endif
 
 // internal.
 int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
 
-#if 0
+#if 1 /* FIXME: should not need these; current tests use them. review. */
 void exosite_setCIK(char * pCIK);
 uint8_t exosite_resetCik();
 void exosite_getCIK(char * pCIK);

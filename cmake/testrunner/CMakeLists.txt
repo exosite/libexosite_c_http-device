@@ -3,7 +3,6 @@ include_directories(
   ../../gtest-1.6.0/include
   ../../gtest-1.6.0/src
   ../../exosite-lib/include/
-  ../../exosite-pal/include/
   ../../exosite-pal/unit_tests_sync/include/
   ../../exosite-pal/unit_tests_async/include/
   ../../exosite-tests/include/
@@ -18,6 +17,7 @@ set(test_sync_srcs
     ../../exosite-tests/include/msg.h
     ../../exosite-tests/include/http_parser.h
     ../../exosite-pal/unit_tests_sync/include/exosite_pal.h
+    ../../exosite-pal/unit_tests_sync/include/exosite_pal_private.h
     ../../exosite-lib/include/exosite.h
 )
 
