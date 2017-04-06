@@ -56,6 +56,9 @@ struct UnitTest_storage
     uint16_t writeToBufferLen;
     char readFromBuffer[RX_TX_BUFFER_SIZE];
     uint16_t readFromBufferLen;
+
+    uint8_t isSocketOpen;
+
     uint8_t retVal_setCik;
     uint8_t retVal_getCik;
     uint8_t retVal_getModel;
@@ -263,5 +266,153 @@ uint8_t exoPal_getUuid(char * read_buffer)
 }
 
 /**@}*/
+/*****************************************************************************
+ * \defgroup Async Sockets PAL
+ * @{
+ */
 
+/** \brief Setup the PAL state memory
+ * \param[out] state The PAL state to initialize
+ *
+ * Typically, this is just writes zeros to the structure.
+ */
+void exoPal_init(exoPal_state_t *state)
+{
+    exoPal_memset(state, 0, sizeof(exoPal_state_t));
+}
+
+/** \brief Setup PAL for IO
+ * \param[in,out] state The PAL state.
+ *
+ * Any HW or SW initialization should be performed in here
+ *
+ * This function is meant to perform any one time initialization and/or setup.
+ * This will be called everytime exosite_start is called.  It is expected that this
+ * will do a DNS lookup of #host.
+ *
+ * When this is complete, it must call state->ops.on_start_complete(). Either as
+ * the last thing this function does, or sometime later from async activity.
+ *
+ * \retval 0 Everything is ok
+ * \retval !0 Errors.
+ */
+int exoPal_start(exoPal_state_t *state, const char *host)
+{
+    mem_nvm.writeToBufferLen = exoPal_strlcpy(mem_nvm.writeToBuffer, host, RX_TX_BUFFER_SIZE);
+    // TODO: from mem_nvm, call on_start_complete() now, or after timer?
+    if(state->ops.on_start_complete)
+    {
+        state->ops.on_start_complete(state, mem_nvm.retVal_start);
+    }
+    return mem_nvm.retVal_start;
+}
+
+/** \brief Close up any final bits.
+ * \param[in,out] state The PAL state.
+ * \return errorcode if failed, else a 0
+ */
+int exoPal_stop(exoPal_state_t *state)
+{
+    return mem_nvm.retVal_stop;
+}
+
+/** \brief Opens a tcp socket
+ * \param[in,out] state The PAL state.
+ *
+ * When this is complete, it must call state->ops.on_connected(). Either as
+ * the last thing this function does, or sometime later from async activity.
+ *
+ * \return errorcode if failed, else a 0
+ */
+int exoPal_tcpSocketOpen(exoPal_state_t *state)
+{
+    if (mem_nvm.retVal_tcpSocketOpen == 0)
+    {
+        mem_nvm.isSocketOpen = 1;
+        mem_nvm.writeToBufferLen = 0;
+    }
+    if(state->ops.on_connected)
+    {
+        state->ops.on_connected(state, mem_nvm.retVal_tcpSocketOpen);
+    }
+    return mem_nvm.retVal_tcpSocketOpen;
+}
+
+/** \brief Closes a tcp socket
+ * \param[in,out] state The PAL state.
+ *
+ * When this is complete, it must call state->ops.on_socket_closed(). Either as
+ * the last thing this function does, or sometime later from async activity.
+ *
+ * \return errorcode if failed, else a 0
+ */
+int exoPal_tcpSocketClose(exoPal_state_t *state)
+{
+    mem_nvm.isSocketOpen = 0;
+    if(state->ops.on_socket_closed)
+    {
+        state->ops.on_socket_closed(state, mem_nvm.retVal_tcpSocketClose);
+    }
+    return mem_nvm.retVal_tcpSocketClose;
+}
+
+/** \brief Sends data to the open tcp socket
+ * \param[in,out] state The PAL state.
+ * \param[in] buffer Data to write to socket
+ * \param[in] len Length of data to write to socket
+ *
+ * When this is complete, it must call state->ops.on_send_complete(). Either as
+ * the last thing this function does, or sometime later from async activity.
+ *
+ * \return errorcode if failed, else a 0
+ */
+int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len)
+{
+    if (mem_nvm.isSocketOpen == 1)
+    {
+        exoPal_memmove(mem_nvm.writeToBuffer + mem_nvm.writeToBufferLen,buffer,len);
+        mem_nvm.writeToBufferLen += len;
+    }
+    if(state->ops.on_send_complete)
+    {
+        state->ops.on_send_complete(state, mem_nvm.retVal_socketWrite);
+    }
+    return mem_nvm.retVal_socketWrite;
+}
+
+
+/** \brief Ask for some data
+ * \param[in,out] state The PAL state.
+ * \param[in] buffer Buffer received data will be written to
+ * \param[in] bufferSize Size of buffer
+ *
+ * \note #buffer must remain and be untouched until the on_recv() callback is
+ * called.
+ *
+ * When this is complete, it must call state->ops.on_recv(). Either as
+ * the last thing this function does, or sometime later from async activity.
+ *
+ * \return errorcode if failed, else a 0
+ */
+int exoPal_socketRead(exoPal_state_t *state, char * buffer, uint16_t bufSize)
+{
+    exoPal_memmove(buffer,mem_nvm.readFromBuffer,bufSize);
+    if(state->ops.on_recv)
+    {
+        state->ops.on_recv(state, buffer, mem_nvm.readFromBufferLen);
+    }
+    return mem_nvm.retVal_socketRead;
+}
+
+/** \brief  Used to do any operations before
+ * \param[in,out] state The PAL state.
+ *
+ * \return Returns 0 if successful, else error code
+ */
+int exoPal_sendingComplete(exoPal_state_t *state)
+{
+    return mem_nvm.retVal_sendingComplete;
+}
+
+/**@}*/
 /* vim: set ai cin et sw=4 ts=4 : */

@@ -89,8 +89,8 @@ void exoPal_init(exoPal_state_t *state);
 int exoPal_start(exoPal_state_t *state, const char *host);
 int exoPal_stop(exoPal_state_t *state);
 
-int exoPal_tcpSocketClose(exoPal_state_t *state);
 int exoPal_tcpSocketOpen(exoPal_state_t *state);
+int exoPal_tcpSocketClose(exoPal_state_t *state);
 int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len);
 int exoPal_socketRead(exoPal_state_t *state, char *buffer, uint16_t bufSize);
 int exoPal_sendingComplete(exoPal_state_t *state);
