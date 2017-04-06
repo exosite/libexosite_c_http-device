@@ -1,3 +1,4 @@
 -Iexosite-lib/include
 -Iexosite-pal/include
--Iexosite-pal/unit_tests/include
+-Iexosite-pal/unit_tests_sync/include
+-Iexosite-pal/unit_tests_async/include
