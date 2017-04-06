@@ -4,11 +4,7 @@
 
 \section intro Introduction
  The PAL is responsible for abstracting away platform sepcific hardware and
- software.  There are existing ports for the PAL for the following platforms:
- 
- - Windows
- - Novatel/renesas-rl78g14
- 
+ software.
  
  Although the exosite libraries can be used on any platform, they are tailored
  to embedded applications, because of this, it is limited to only opening
