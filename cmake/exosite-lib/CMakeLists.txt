@@ -1,7 +1,7 @@
 include_directories(
   ../../exosite-lib/include/
-  ../../exosite-pal/include/
-  ../../exosite-pal/unit_tests/include/
+  ../../exosite-pal/unit_tests_sync/include/
+  ../../exosite-pal/unit_tests_async/include/
   )
 
 set(lib_sync_srcs
