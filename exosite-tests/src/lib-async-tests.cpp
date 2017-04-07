@@ -163,20 +163,35 @@ TEST_F(ExositeAsyncLib, canNotStart)
 }
 
 /******************************************************************************/
-#if 0
-TEST_F(ExositeAsyncLibWUT, canStart)
+int exotest_canStart_status(Exosite_state_t *state, int status)
+{
+    ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
+    me->callbacksHit |= 1<<0;
+    me->hit_cb_start_complete ++;
+    EXPECT_EQ(200, status);
+    return -1;
+}
+TEST_F(ExositeAsyncLib, canStart)
 {
     int ret;
+    exoLib.ops.on_start_complete = exotest_canStart_status;
 
-    exosite_init(&exoLib);
-    exoLib.exoPal = exoPal;
-    exoLib.context = this;
-    exoLib.ops.on_start_complete = 0;
-    exoLib.ops.on_write_complete = exotest_failme_status;
-    exoLib.ops.on_read_begin = exotest_failme_status;
-    exoLib.ops.on_read_raw = exotest_failme_data;
-    exoLib.ops.on_read_complete = exotest_failme_status;
-    exoLib.ops.on_timestamp_complete = exotest_failme_status;
+    // Setup test data
+    strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    nvm->retVal_start = 0;
+    nvm->retVal_tcpSocketOpen = 0;
+    nvm->retVal_socketWrite = 0;
+    nvm->retVal_socketRead = 0;
+    nvm->retVal_tcpSocketClose = 0;
+    strlcpy(nvm->readFromBuffer, "HTTP/1.1 200 OK\r\n"
+            "Server: faker\r\n"
+            "Connection: Keep-Alive\r\n"
+            "Content-Length: 40\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "\r\n"
+            "abcdef1234abcdef1234abcdef1234abcdef1234"
+            , sizeof(nvm->readFromBuffer));
 
     exosite_start(&exoLib);
     // This will call:
@@ -184,7 +199,6 @@ TEST_F(ExositeAsyncLibWUT, canStart)
     // - exoPal_getVendor()
     // - exoPal_getUuid()
     // - exoPal_start()
-    //   - IF status != 0; does NOT call activate, and done.
     // - exosite_activate()
     // - exoPal_tcpSocketOpen()
     // - mutilple: exoPal_socketWrite()
@@ -193,8 +207,23 @@ TEST_F(ExositeAsyncLibWUT, canStart)
     // - exoPal_setCik()
     // - exoPal_tcpSocketClose()
     // - ops.on_start_complete()
+
+    EXPECT_EQ(0, ret);
+    EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
+    EXPECT_STREQ("1234567", exoLib.uuid);
+    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->writeToBuffer);
+    EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
+    EXPECT_STREQ("POST /provision/activate HTTP/1.1\r\n"
+            "Host: aVendor.m2.exosite.com\r\n"
+            "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Content-Length: 39\r\n"
+            "\r\n"
+            "vendor=aVendor&model=aVendor&sn=1234567",
+            nvm->writeToBuffer);
+    EXPECT_EQ(1<<0, callbacksHit);
+    EXPECT_EQ(1, hit_cb_start_complete);
 }
-#endif
 
 #if 0
 TEST_F(ExoLibCleanState, provisionActivateRequest)
