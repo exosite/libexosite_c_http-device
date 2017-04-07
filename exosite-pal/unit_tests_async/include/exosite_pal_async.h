@@ -50,6 +50,7 @@ struct UnitTest_storage
     char uuid[41];
     char vendor[21];
     char model[21];
+    char hostname[81];
     char writeToBuffer[RX_TX_BUFFER_SIZE];
     uint16_t writeToBufferLen;
     char readFromBuffer[RX_TX_BUFFER_SIZE];

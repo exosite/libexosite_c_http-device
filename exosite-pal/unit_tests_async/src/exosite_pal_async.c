@@ -271,7 +271,7 @@ void exoPal_init(exoPal_state_t *state)
  */
 int exoPal_start(exoPal_state_t *state, const char *host)
 {
-    mem_nvm.writeToBufferLen = exoPal_strlcpy(mem_nvm.writeToBuffer, host, RX_TX_BUFFER_SIZE);
+    exoPal_strlcpy(mem_nvm.hostname, host, sizeof(mem_nvm.hostname));
     if(state->ops.on_start_complete)
     {
         state->ops.on_start_complete(state, mem_nvm.retVal_start);

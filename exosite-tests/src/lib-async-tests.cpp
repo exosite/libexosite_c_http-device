@@ -157,7 +157,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
     EXPECT_EQ(100, ret);
     EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
     EXPECT_STREQ("1234567", exoLib.uuid);
-    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->writeToBuffer);
+    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
     EXPECT_EQ(1<<0, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
 }
@@ -211,7 +211,7 @@ TEST_F(ExositeAsyncLib, canStart)
     EXPECT_EQ(0, ret);
     EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
     EXPECT_STREQ("1234567", exoLib.uuid);
-    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->writeToBuffer);
+    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
     EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
     EXPECT_STREQ("POST /provision/activate HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
