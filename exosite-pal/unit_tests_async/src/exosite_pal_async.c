@@ -342,6 +342,10 @@ int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len)
 {
     if (mem_nvm.isSocketOpen == 1)
     {
+        if(mem_nvm.writeToBufferLen + len > sizeof(mem_nvm.writeToBuffer))
+        {
+            return ~0;
+        }
         exoPal_memmove(mem_nvm.writeToBuffer + mem_nvm.writeToBufferLen,buffer,len);
         mem_nvm.writeToBufferLen += len;
     }
