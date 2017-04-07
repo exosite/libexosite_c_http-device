@@ -12,8 +12,7 @@ set(test_sync_srcs
 	../../exosite-tests/src/main.cpp
 	../../exosite-tests/src/msg.cpp
 	../../exosite-tests/src/http_parser.c
-	../../exosite-tests/src/pal-tests.cpp
-	../../exosite-tests/src/lib-tests.cpp
+	../../exosite-tests/src/lib-sync-tests.cpp
 	../../exosite-tests/include/msg.h
 	../../exosite-tests/include/http_parser.h
 	../../exosite-pal/unit_tests_sync/include/exosite_pal.h
