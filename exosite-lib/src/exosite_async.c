@@ -549,7 +549,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
             break;
 
         case Exosite_State_write:
-            state->statusCode = state->http_rpl.statusCode;
+            // If they send back a body, we ignore it.
             retcode = 1;
             break;
 
@@ -615,7 +615,7 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             state->stage = Exosite_Stage_idle;
             state->state = Exosite_State_idle;
             if(state->ops.on_write_complete) {
-                state->ops.on_write_complete(state, state->statusCode);
+                state->ops.on_write_complete(state, state->http_rpl.statusCode);
             }
             break;
 
