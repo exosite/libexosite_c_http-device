@@ -372,10 +372,17 @@ int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len)
  */
 int exoPal_socketRead(exoPal_state_t *state, char * buffer, uint16_t bufSize)
 {
-    exoPal_memmove(buffer,mem_nvm.readFromBuffer,bufSize);
+    int remain = mem_nvm.readFromBufferLen - mem_nvm.readFromBufferPartial;
+    if(remain < bufSize)
+    {
+        bufSize = remain;
+    }
+    exoPal_memmove(buffer, &mem_nvm.readFromBuffer[mem_nvm.readFromBufferPartial], bufSize);
+    mem_nvm.readFromBufferPartial += bufSize;
+
     if(state->ops.on_recv)
     {
-        state->ops.on_recv(state, buffer, mem_nvm.readFromBufferLen);
+        state->ops.on_recv(state, buffer, bufSize);
     }
     return mem_nvm.retVal_socketRead;
 }

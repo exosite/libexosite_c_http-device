@@ -55,6 +55,7 @@ struct UnitTest_storage
     uint16_t writeToBufferLen;
     char readFromBuffer[RX_TX_BUFFER_SIZE];
     uint16_t readFromBufferLen;
+    uint16_t readFromBufferPartial;
 
     uint8_t isSocketOpen;
 
