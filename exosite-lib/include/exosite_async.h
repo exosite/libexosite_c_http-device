@@ -90,7 +90,6 @@ enum exoHttp_rpl_e {
     exoHttp_rpl_status_looking_for_cr,
     exoHttp_rpl_status_looking_for_lf,
     exoHttp_rpl_header_start,
-    exoHttp_rpl_header_mark_name,
     exoHttp_rpl_header_looking_for_sep,
     exoHttp_rpl_header_mark_value,
     exoHttp_rpl_header_looking_for_cr,

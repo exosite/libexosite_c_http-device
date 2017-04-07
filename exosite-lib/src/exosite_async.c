@@ -271,8 +271,9 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
             case exoHttp_rpl_status_looking_for_lf:
                 if(dc != '\n') {
                     rpl->step = exoHttp_rpl_error;
+                } else {
+                    rpl->step = exoHttp_rpl_header_start;
                 }
-                rpl->step = exoHttp_rpl_header_start;
                 break;
             case exoHttp_rpl_header_start:
                 if(dc == '\r') {
@@ -280,13 +281,10 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
                     // error.
                     rpl->step = exoHttp_rpl_looking_for_lf_start_body;
                 } else {
-                    rpl->step = exoHttp_rpl_header_mark_name;
-                }
-                break;
-            case exoHttp_rpl_header_mark_name:
                     start_mark = data;
                     rpl->step = exoHttp_rpl_header_looking_for_sep;
-                    // this *must* fall-thru
+                }
+                break;
             case exoHttp_rpl_header_looking_for_sep:
                 if(dc == ':') {
                     // switch to value
