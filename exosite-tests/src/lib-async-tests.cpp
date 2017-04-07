@@ -184,7 +184,7 @@ TEST_F(ExositeAsyncLib, canStart)
     nvm->retVal_socketWrite = 0;
     nvm->retVal_socketRead = 0;
     nvm->retVal_tcpSocketClose = 0;
-    strlcpy(nvm->readFromBuffer, "HTTP/1.1 200 OK\r\n"
+    nvm->readFromBufferLen = strlcpy(nvm->readFromBuffer, "HTTP/1.1 200 OK\r\n"
             "Server: faker\r\n"
             "Connection: Keep-Alive\r\n"
             "Content-Length: 40\r\n"
@@ -193,7 +193,7 @@ TEST_F(ExositeAsyncLib, canStart)
             "abcdef1234abcdef1234abcdef1234abcdef1234"
             , sizeof(nvm->readFromBuffer));
 
-    exosite_start(&exoLib);
+    ret = exosite_start(&exoLib);
     // This will call:
     // - exoPal_init()
     // - exoPal_getVendor()
