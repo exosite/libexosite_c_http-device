@@ -95,6 +95,7 @@ enum exoHttp_rpl_e {
     exoHttp_rpl_header_looking_for_cr,
     exoHttp_rpl_header_looking_for_lf,
     exoHttp_rpl_looking_for_lf_start_body,
+    exoHttp_rpl_mark_body,
     exoHttp_rpl_body,
     exoHttp_rpl_complete,
     exoHttp_rpl_error

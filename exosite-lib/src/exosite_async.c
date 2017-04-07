@@ -316,12 +316,14 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
             case exoHttp_rpl_looking_for_lf_start_body:
                 if(dc != '\n') {
                     rpl->step = exoHttp_rpl_error;
-                    break;
                 } else {
-                    rpl->step = exoHttp_rpl_body;
-                    start_mark = data;
-                    // this *must* fall-thru
+                    rpl->step = exoHttp_rpl_mark_body;
                 }
+                break;
+            case exoHttp_rpl_mark_body:
+                rpl->step = exoHttp_rpl_body;
+                start_mark = data;
+                // this *must* fall-thru
             case exoHttp_rpl_body:
                 // just get to the end now.
                 // TODO maybe consult content_length?
