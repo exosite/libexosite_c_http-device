@@ -549,6 +549,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
             break;
 
         case Exosite_State_write:
+            state->statusCode = state->http_rpl.statusCode;
             retcode = 1;
             break;
 

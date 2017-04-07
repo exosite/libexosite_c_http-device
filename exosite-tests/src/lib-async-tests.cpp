@@ -233,77 +233,114 @@ TEST_F(ExositeAsyncLib, canStart)
     EXPECT_EQ(1, hit_cb_start_complete);
 }
 
-#if 0
-TEST_F(ExoLibCleanState, provisionActivateRequest)
+int exotest_writeRequest_status(Exosite_state_t *state, int status)
 {
-    EXO_STATE resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+    ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
+    me->callbacksHit |= CB_BIT_write_complete;
+    me->hit_cb_write_complete ++;
+    EXPECT_EQ(204, status);
+    return -1;
+}
+TEST_F(ExositeAsyncLib, writeRequest)
+{
+    int ret;
+    // Setup test data
+    strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    nvm->retVal_start = 0;
+    nvm->retVal_tcpSocketOpen = 0;
+    nvm->retVal_socketWrite = 0;
+    nvm->retVal_socketRead = 0;
+    nvm->retVal_tcpSocketClose = 0;
+    nvm->readFromBufferLen = strlcpy(nvm->readFromBuffer, "HTTP/1.1 204 No Content\r\n"
+            "Server: faker\r\n"
+            "Connection: Close\r\n"
+            "Content-Length: 0\r\n"
+            "\r\n"
+            , sizeof(nvm->readFromBuffer));
+
+    // 'Mock' that exosite_start() was called.
+    strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
+    strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
+    exoLib.state = Exosite_State_idle;
+    exoLib.stage = Exosite_Stage_idle;
+    exoLib.ops.on_write_complete = exotest_writeRequest_status;
+
+    // Call function to test
+    ret = exosite_write(&exoLib, "temp=42&hum=30&lux=14000");
+    // This will call:
+    // - exoPal_tcpSocketOpen()
+    // - mutilple: exoPal_socketWrite()
+    // - exoPal_sendingComplete()
+    // - as many as needed: exoPal_socketRead()
+    // - exoPal_tcpSocketClose()
+    // - ops.on_write_complete()
+
+    EXPECT_EQ(0, ret);
+    EXPECT_STREQ(
+            "POST /onep:v1/stack/alias HTTP/1.1\r\n"
+            "Host: aVendor.m2.exosite.com\r\n"
+            "X-Exosite-CIK: abcdef1234abcdef1234abcdef1234abcdef1234\r\n"
+            "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Content-Length: 24\r\n"
+            "\r\n"
+            "temp=42&hum=30&lux=14000",
+            nvm->writeToBuffer);
+    EXPECT_EQ(CB_BIT_write_complete, callbacksHit);
+    EXPECT_EQ(1, hit_cb_write_complete);
+
+}
+
+#if 0
+TEST_F(ExoLibCleanState, writeRequest)
+{
+    // Checks that the write request is properly formatted
+    exosite_setCIK(validTestcik);
+
+
+    EXO_STATE respa;
+    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
 
     // We didn't set a response, so we should receive a NO_RESPONSE
-    EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
+    EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
+
+    uint8_t respR;
 
     message out_msg = {0};
     setMsg(&out_msg);
 
     http_parser_init(&parser, HTTP_REQUEST);
 
+
+    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
+
+    const char * writeInfo = "testAlias=4";
+    uint16_t resLength = 0;
+    respR = exosite_write(writeInfo,  strlen(writeInfo));
+
+
+    // Parse write request
     size_t parsed;
     parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
 
-    // Did parse correctly
-    EXPECT_TRUE(parsed);
-
-    // build expected body
-    char expected_body[255] = {0};
-    strcpy(expected_body,"vendor=");
-    strcat(expected_body,TEST_VENDOR);
-    strcat(expected_body,"&model=");
-    strcat(expected_body,TEST_MODEL);
-    strcat(expected_body,"&sn=");
-    strcat(expected_body,nvm->uuid);
-
+    // check cik is correct
+    EXPECT_STREQ(validTestcik,out_msg.headers[1][1]);
 
     // Check body is what we want
-    EXPECT_STREQ(expected_body,out_msg.body);
+    EXPECT_STREQ(writeInfo,out_msg.body);
 
     // check request url is correct
-    EXPECT_STREQ("/provision/activate", out_msg.request_url);
+    EXPECT_STREQ("/onep:v1/stack/alias", out_msg.request_url);
 
-    // Check Content Length is correct
-    uint16_t body_length = strlen(expected_body);
-    char contentLengthStr[5];
-    exoPal_itoa(body_length,contentLengthStr,5);
-    EXPECT_STREQ( contentLengthStr, out_msg.headers[2][1]);
+    // Check body size is correct
+    uint16_t body_length = strlen(writeInfo);
     EXPECT_EQ( body_length, out_msg.body_size);
+
+    // check that content length header is same as our measured body length
+    EXPECT_EQ(body_length, atoi(out_msg.headers[3][1]));
 }
-
-TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
-{
-
-    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nContent-Length: 40\r\n\r\n");
-    strcat(nvm->readFromBuffer,validTestcik);
-
-    nvm->readFromBufferLen = strlen(nvm->readFromBuffer);
-    // we received a 200 response, which means we received a valid cik
-    strcpy(nvm->uuid,"123456789");
-
-
-    EXO_STATE resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
-
-    // Init should have been successful
-    EXPECT_EQ(EXO_STATE_INIT_COMPLETE,resp);
-
-    // retrieve cik
-    char newcik[41] = "";
-    exosite_getCIK(newcik);
-
-    // We should have our new cik
-    EXPECT_STREQ(validTestcik, newcik);
-
-}
-
-
 TEST_F(ExoLibCleanState, readRequest)
 {
     // Checks that the read request is properly formatted
@@ -495,52 +532,5 @@ TEST_F(ExoLibCleanState, readSingle_200Response_goodFormat)
 
 }
 
-TEST_F(ExoLibCleanState, writeRequest)
-{
-    // Checks that the write request is properly formatted
-    exosite_setCIK(validTestcik);
-
-
-    EXO_STATE respa;
-    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
-
-    // We didn't set a response, so we should receive a NO_RESPONSE
-    EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
-
-    uint8_t respR;
-
-    message out_msg = {0};
-    setMsg(&out_msg);
-
-    http_parser_init(&parser, HTTP_REQUEST);
-
-
-    strcpy(nvm->readFromBuffer,"HTTP/1.1 200 OK\r\nsome random header = blah\r\n\r\n");
-
-    const char * writeInfo = "testAlias=4";
-    uint16_t resLength = 0;
-    respR = exosite_write(writeInfo,  strlen(writeInfo));
-
-
-    // Parse write request
-    size_t parsed;
-    parsed = http_parser_execute(&parser, &parser_settings, nvm->writeToBuffer, nvm->writeToBufferLen);
-
-    // check cik is correct
-    EXPECT_STREQ(validTestcik,out_msg.headers[1][1]);
-
-    // Check body is what we want
-    EXPECT_STREQ(writeInfo,out_msg.body);
-
-    // check request url is correct
-    EXPECT_STREQ("/onep:v1/stack/alias", out_msg.request_url);
-
-    // Check body size is correct
-    uint16_t body_length = strlen(writeInfo);
-    EXPECT_EQ( body_length, out_msg.body_size);
-
-    // check that content length header is same as our measured body length
-    EXPECT_EQ(body_length, atoi(out_msg.headers[3][1]));
-}
 #endif
 // vim: set ai cin et sw=4 ts=4 :
