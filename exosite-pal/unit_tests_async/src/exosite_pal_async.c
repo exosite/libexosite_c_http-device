@@ -43,38 +43,6 @@
  * @{
  */
 
-#define RX_TX_BUFFER_SIZE 512
-
-// unit test specific stuffs
-struct UnitTest_storage
-{
-    char cik[40];
-    char uuid[41];
-    char vendor[21];
-    char model[21];
-    char writeToBuffer[RX_TX_BUFFER_SIZE];
-    uint16_t writeToBufferLen;
-    char readFromBuffer[RX_TX_BUFFER_SIZE];
-    uint16_t readFromBufferLen;
-
-    uint8_t isSocketOpen;
-
-    uint8_t retVal_setCik;
-    uint8_t retVal_getCik;
-    uint8_t retVal_getModel;
-    uint8_t retVal_getVendor;
-    uint8_t retVal_getUuid;
-
-    uint8_t retVal_start;
-    uint8_t retVal_stop;
-
-    uint8_t retVal_tcpSocketClose;
-    uint8_t retVal_tcpSocketOpen;
-    uint8_t retVal_socketRead;
-    uint8_t retVal_socketWrite;
-    uint8_t retVal_sendingComplete;
-};
-
 /*!
  * Stores a bunch of stuff to emulate nvm and manipulate return results
  */
@@ -88,9 +56,14 @@ struct UnitTest_storage mem_nvm;
  *
  * \return A pointer to the UnitTest_storage
  */
-void * getUnitTestStorageStruct()
+struct UnitTest_storage * getUnitTestStorageStruct()
 {
     return &mem_nvm;
+}
+
+void resetUnitTestStorageStruct()
+{
+    memset(&mem_nvm, 0, sizeof(struct UnitTest_storage));
 }
 
 /**@}*/
@@ -299,7 +272,6 @@ void exoPal_init(exoPal_state_t *state)
 int exoPal_start(exoPal_state_t *state, const char *host)
 {
     mem_nvm.writeToBufferLen = exoPal_strlcpy(mem_nvm.writeToBuffer, host, RX_TX_BUFFER_SIZE);
-    // TODO: from mem_nvm, call on_start_complete() now, or after timer?
     if(state->ops.on_start_complete)
     {
         state->ops.on_start_complete(state, mem_nvm.retVal_start);

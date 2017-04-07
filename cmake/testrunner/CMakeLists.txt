@@ -24,6 +24,7 @@ set(test_async_srcs
 	../../exosite-tests/src/main.cpp
 	../../exosite-tests/src/msg.cpp
 	../../exosite-tests/src/http_parser.c
+	../../exosite-tests/src/lib-async-tests.cpp
 	../../exosite-tests/include/msg.h
 	../../exosite-tests/include/http_parser.h
 	../../exosite-pal/unit_tests_async/include/exosite_pal_async.h

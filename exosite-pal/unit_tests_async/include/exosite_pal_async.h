@@ -37,6 +37,46 @@
 #include <sys/types.h>
 #include <stdint.h>
 
+/*****************************************************************************
+ * \defgroup Unit Test Specific details
+ * @{
+ */
+#define RX_TX_BUFFER_SIZE 512
+
+// unit test specific stuffs
+struct UnitTest_storage
+{
+    char cik[40];
+    char uuid[41];
+    char vendor[21];
+    char model[21];
+    char writeToBuffer[RX_TX_BUFFER_SIZE];
+    uint16_t writeToBufferLen;
+    char readFromBuffer[RX_TX_BUFFER_SIZE];
+    uint16_t readFromBufferLen;
+
+    uint8_t isSocketOpen;
+
+    uint8_t retVal_setCik;
+    uint8_t retVal_getCik;
+    uint8_t retVal_getModel;
+    uint8_t retVal_getVendor;
+    uint8_t retVal_getUuid;
+
+    uint8_t retVal_start;
+    uint8_t retVal_stop;
+
+    uint8_t retVal_tcpSocketClose;
+    uint8_t retVal_tcpSocketOpen;
+    uint8_t retVal_socketRead;
+    uint8_t retVal_socketWrite;
+    uint8_t retVal_sendingComplete;
+};
+struct UnitTest_storage * getUnitTestStorageStruct();
+void resetUnitTestStorageStruct();
+/**@}*/
+
+
 // Utility PAL
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
 int32_t exoPal_atoi(char* val);
