@@ -43,8 +43,8 @@
 //
 //    retVal = exoPal_socketWrite("GET /\r\n",sizeof("GET /\r\n"));
 //    EXPECT_EQ(0,retVal);
-//    
-//    
+//
+//
 //    char inBuf[100];
 //    char * pBuf = inBuf;
 //    uint16_t responseL=0;
