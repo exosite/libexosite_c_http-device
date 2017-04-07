@@ -672,16 +672,14 @@ int exosite_start(Exosite_state_t *state)
     exoPal_getVendor(state->projectid);
     state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
     exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
-    exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(STR_HOST_ROOT));
+    exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(hostbuf));
 
     // Need the SN.
     exoPal_getUuid(state->uuid);
 
     state->state = Exosite_State_pal_starting;
     // Start up pal. (includes a DNS lookup.)
-    exoPal_start(state->exoPal, hostbuf);
-
-    return 0;
+    return exoPal_start(state->exoPal, hostbuf);
 }
 
 int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)

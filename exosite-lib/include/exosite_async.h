@@ -35,6 +35,8 @@
 
 #ifndef __EXOSITE_ASYNC_H__
 #define __EXOSITE_ASYNC_H__
+#include <stdlib.h>
+#include "exosite_pal_async.h"
 
 // DEFINES
 #define CIK_LENGTH                              40
