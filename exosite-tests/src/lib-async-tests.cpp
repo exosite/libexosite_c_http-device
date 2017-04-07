@@ -41,15 +41,21 @@ protected:
     // virtual void TearDown() {}
 };
 
-/**
+/*
  * Failme callbacks.  Use this callback for the ones that should NOT get called
  * during a test.
  */
+#define CB_BIT_start_complete     (1<<0)
+#define CB_BIT_write_complete     (1<<1)
+#define CB_BIT_read_begin         (1<<2)
+#define CB_BIT_read_raw           (1<<3)
+#define CB_BIT_read_complete      (1<<4)
+#define CB_BIT_timestamp_complete (1<<5)
 int exotest_failme_start_complete(Exosite_state_t *state, int status)
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<0;
+    me->callbacksHit |= CB_BIT_start_complete;
     me->hit_cb_start_complete ++;
     return -1;
 }
@@ -57,7 +63,7 @@ int exotest_failme_write_complete(Exosite_state_t *state, int status)
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<1;
+    me->callbacksHit |= CB_BIT_write_complete;
     me->hit_cb_write_complete ++;
     return -1;
 }
@@ -65,7 +71,7 @@ int exotest_failme_read_begin(Exosite_state_t *state, int status)
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<2;
+    me->callbacksHit |= CB_BIT_read_begin;
     me->hit_cb_read_begin ++;
     return -1;
 }
@@ -73,7 +79,7 @@ int exotest_failme_read_raw(Exosite_state_t *state, const char *data, size_t len
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<3;
+    me->callbacksHit |= CB_BIT_read_raw;
     me->hit_cb_read_raw ++;
     return -1;
 }
@@ -81,7 +87,7 @@ int exotest_failme_read_complete(Exosite_state_t *state, int status)
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<4;
+    me->callbacksHit |= CB_BIT_read_complete;
     me->hit_cb_read_complete ++;
     return -1;
 }
@@ -89,7 +95,7 @@ int exotest_failme_timestamp_complete(Exosite_state_t *state, const char *data, 
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<5;
+    me->callbacksHit |= CB_BIT_timestamp_complete;
     me->hit_cb_timestamp_complete ++;
     return -1;
 }
@@ -131,7 +137,7 @@ void ExositeAsyncLib::SetUp() {
 int exotest_canNotStart_status(Exosite_state_t *state, int status)
 {
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<0;
+    me->callbacksHit |= CB_BIT_start_complete;
     me->hit_cb_start_complete ++;
     EXPECT_EQ(100, status);
     return -1;
@@ -146,6 +152,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 100;
 
+    // Call function to test
     ret = exosite_start(&exoLib);
     // This will call:
     // - exoPal_init()
@@ -158,7 +165,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
     EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
     EXPECT_STREQ("1234567", exoLib.uuid);
     EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
-    EXPECT_EQ(1<<0, callbacksHit);
+    EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
 }
 
@@ -166,7 +173,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
 int exotest_canStart_status(Exosite_state_t *state, int status)
 {
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
-    me->callbacksHit |= 1<<0;
+    me->callbacksHit |= CB_BIT_start_complete;
     me->hit_cb_start_complete ++;
     EXPECT_EQ(200, status);
     return -1;
@@ -193,6 +200,7 @@ TEST_F(ExositeAsyncLib, canStart)
             "abcdef1234abcdef1234abcdef1234abcdef1234"
             , sizeof(nvm->readFromBuffer));
 
+    // Call function to test
     ret = exosite_start(&exoLib);
     // This will call:
     // - exoPal_init()
@@ -221,7 +229,7 @@ TEST_F(ExositeAsyncLib, canStart)
             "\r\n"
             "vendor=aVendor&model=aVendor&sn=1234567",
             nvm->writeToBuffer);
-    EXPECT_EQ(1<<0, callbacksHit);
+    EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
 }
 
