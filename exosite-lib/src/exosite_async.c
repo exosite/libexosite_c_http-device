@@ -34,6 +34,7 @@
 *****************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h> // FOR DEBUGGING ONLY.
 
 #include "exosite_pal_async.h"
 #include "exosite_async.h"
@@ -223,9 +224,11 @@ void exosite_http_rpl_init(exoHttp_rpl_t *http_rpl)
 
 void exosite_http_rpl_header_name(Exosite_state_t *state, const char *data, size_t len)
 {
+//    printf("THUNK -> Header Name: %.*s\n", (int)len, data);
 }
 void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, size_t len)
 {
+//    printf("THUNK -> Header value: %.*s\n", (int)len, data);
 }
 
 // Just the prototype here. Implementation is down below.
