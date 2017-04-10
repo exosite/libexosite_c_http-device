@@ -162,9 +162,10 @@ struct Exosite_state_s {
     char cik[CIK_LENGTH+1];
     char uuid[MAX_UUID_LENGTH+1];
 
-    // union these two?
-    exoHttp_req_t http_req;
-    exoHttp_rpl_t http_rpl;
+    union {
+        exoHttp_req_t req;
+        exoHttp_rpl_t rpl;
+    } http;
 
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
     int wb_offset; //!> If we need to recv again to get enough data.

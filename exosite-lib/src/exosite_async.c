@@ -67,7 +67,7 @@ static const char STR_CRLF[] = "\r\n";
 void exosite_send_http_req(Exosite_state_t *state)
 {
     size_t slen = 0;
-    exoHttp_req_t *req = &state->http_req;
+    exoHttp_req_t *req = &state->http.req;
     switch(req->step) {
         case exoHttp_req_method_url:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
@@ -235,7 +235,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len);
 
 void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
 {
-    exoHttp_rpl_t *rpl = &state->http_rpl;
+    exoHttp_rpl_t *rpl = &state->http.rpl;
     char dc;
     const char *start_mark = data;
 
@@ -365,18 +365,18 @@ void exosite_activate(Exosite_state_t *state)
     state->state = Exosite_State_activate;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_ACTIVATE_URL;
-    state->http_req.content_length = (sizeof(STR_VENDOR) - 1) +
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_ACTIVATE_URL;
+    state->http.req.content_length = (sizeof(STR_VENDOR) - 1) +
         (sizeof(STR_MODEL) - 1) + (sizeof(STR_SN) - 1) +
         (exoPal_strlen(state->projectid) * 2) + exoPal_strlen(state->uuid);
-    state->http_req.is_post = 1;
-    state->http_req.include_cik = 0;
-    state->http_req.is_activate = 1;
-    state->http_req.body = NULL;
-    state->http_req.query = NULL;
-    state->http_req.modified_since = NULL;
-    state->http_req.request_timeout = 0;
+    state->http.req.is_post = 1;
+    state->http.req.include_cik = 0;
+    state->http.req.is_activate = 1;
+    state->http.req.body = NULL;
+    state->http.req.query = NULL;
+    state->http.req.modified_since = NULL;
+    state->http.req.request_timeout = 0;
 
     exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -452,7 +452,7 @@ int exosite_lib_send_complete(exoPal_state_t *pal, int status)
         state->stage = Exosite_Stage_recving;
         state->wb_offset = 0;
         state->statusCode = 0;
-        exosite_http_rpl_init(&state->http_rpl);
+        exosite_http_rpl_init(&state->http.rpl);
         exoPal_socketRead(state->exoPal, state->workbuf, sizeof(state->workbuf));
     }
     return 0;
@@ -472,11 +472,11 @@ int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len)
 
     exosite_http_rpl_parse(state, data, len);
 
-    if(state->http_rpl.step == exoHttp_rpl_complete) {
+    if(state->http.rpl.step == exoHttp_rpl_complete) {
         state->stage = Exosite_Stage_closing;
         exoPal_tcpSocketClose(state->exoPal);
 
-    } else if(state->http_rpl.step == exoHttp_rpl_error) {
+    } else if(state->http.rpl.step == exoHttp_rpl_error) {
         state->stage = Exosite_Stage_closing;
         exoPal_tcpSocketClose(state->exoPal);
         // TODO: callback?
@@ -500,7 +500,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
             case Exosite_State_hybrid:
             case Exosite_State_longpoll:
                 if(state->ops.on_read_begin) {
-                    state->ops.on_read_begin(state, state->http_rpl.statusCode);
+                    state->ops.on_read_begin(state, state->http.rpl.statusCode);
                 }
                 break;
             default:
@@ -512,7 +512,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
     // Process body data.
     switch(state->state) {
         case Exosite_State_activate:
-            if(state->http_rpl.statusCode == 409) {
+            if(state->http.rpl.statusCode == 409) {
                 // Already activated.
                 exoPal_getCik(state->cik);
                 if(!exosite_isCIKValid(state->cik)) {
@@ -523,7 +523,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 // activate complete!
                 retcode = 1;
 
-            } else if(state->http_rpl.statusCode == 200) {
+            } else if(state->http.rpl.statusCode == 200) {
                 // Just activated.
 
                 // copy into cik, by parts if need be.
@@ -555,7 +555,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
         case Exosite_State_read:
         case Exosite_State_hybrid:
         case Exosite_State_longpoll:
-            if(state->http_rpl.statusCode != 200) {
+            if(state->http.rpl.statusCode != 200) {
                 // just stop.
                 retcode = 1;
 
@@ -569,7 +569,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
             break;
 
         case Exosite_State_timestamp:
-            if(state->http_rpl.statusCode != 200) {
+            if(state->http.rpl.statusCode != 200) {
                 // just stop.
                 retcode = 1;
 
@@ -616,7 +616,7 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             state->stage = Exosite_Stage_idle;
             state->state = Exosite_State_idle;
             if(state->ops.on_write_complete) {
-                state->ops.on_write_complete(state, state->http_rpl.statusCode);
+                state->ops.on_write_complete(state, state->http.rpl.statusCode);
             }
             break;
 
@@ -698,16 +698,16 @@ int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
     state->state = Exosite_State_write;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_DATA_URL;
-    state->http_req.content_length = exoPal_strlen(aliasesAndValues);
-    state->http_req.is_post = 1;
-    state->http_req.include_cik = 1;
-    state->http_req.is_activate = 0;
-    state->http_req.body = aliasesAndValues;
-    state->http_req.query = NULL;
-    state->http_req.modified_since = NULL;
-    state->http_req.request_timeout = 0;
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_DATA_URL;
+    state->http.req.content_length = exoPal_strlen(aliasesAndValues);
+    state->http.req.is_post = 1;
+    state->http.req.include_cik = 1;
+    state->http.req.is_activate = 0;
+    state->http.req.body = aliasesAndValues;
+    state->http.req.query = NULL;
+    state->http.req.modified_since = NULL;
+    state->http.req.request_timeout = 0;
 
     state->statusCode = 0;
 
@@ -723,16 +723,16 @@ int exosite_read(Exosite_state_t *state, const char *aliases)
     state->state = Exosite_State_read;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_DATA_URL;
-    state->http_req.content_length = 0;
-    state->http_req.is_post = 0;
-    state->http_req.include_cik = 1;
-    state->http_req.is_activate = 0;
-    state->http_req.body = NULL;
-    state->http_req.query = aliases;
-    state->http_req.modified_since = NULL;
-    state->http_req.request_timeout = 0;
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_DATA_URL;
+    state->http.req.content_length = 0;
+    state->http.req.is_post = 0;
+    state->http.req.include_cik = 1;
+    state->http.req.is_activate = 0;
+    state->http.req.body = NULL;
+    state->http.req.query = aliases;
+    state->http.req.modified_since = NULL;
+    state->http.req.request_timeout = 0;
 
     state->statusCode = 0;
 
@@ -748,16 +748,16 @@ int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, co
     state->state = Exosite_State_hybrid;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_DATA_URL;
-    state->http_req.content_length = exoPal_strlen(writeAliasesAndValues);
-    state->http_req.is_post = 1;
-    state->http_req.include_cik = 1;
-    state->http_req.is_activate = 0;
-    state->http_req.body = writeAliasesAndValues;
-    state->http_req.query = readAliases;
-    state->http_req.modified_since = NULL;
-    state->http_req.request_timeout = 0;
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_DATA_URL;
+    state->http.req.content_length = exoPal_strlen(writeAliasesAndValues);
+    state->http.req.is_post = 1;
+    state->http.req.include_cik = 1;
+    state->http.req.is_activate = 0;
+    state->http.req.body = writeAliasesAndValues;
+    state->http.req.query = readAliases;
+    state->http.req.modified_since = NULL;
+    state->http.req.request_timeout = 0;
 
     state->statusCode = 0;
 
@@ -773,19 +773,19 @@ int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modi
     state->state = Exosite_State_longpoll;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_DATA_URL;
-    state->http_req.content_length = 0;
-    state->http_req.is_post = 0;
-    state->http_req.include_cik = 1;
-    state->http_req.is_activate = 0;
-    state->http_req.body = NULL;
-    state->http_req.query = alias;
-    state->http_req.modified_since = modified_since;
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_DATA_URL;
+    state->http.req.content_length = 0;
+    state->http.req.is_post = 0;
+    state->http.req.include_cik = 1;
+    state->http.req.is_activate = 0;
+    state->http.req.body = NULL;
+    state->http.req.query = alias;
+    state->http.req.modified_since = modified_since;
     if(timeout == 0) {
         timeout = 300000;
     }
-    state->http_req.request_timeout = MIN(300000, timeout);
+    state->http.req.request_timeout = MIN(300000, timeout);
 
     state->statusCode = 0;
 
@@ -801,16 +801,16 @@ int exosite_timestamp(Exosite_state_t *state)
     state->state = Exosite_State_timestamp;
     state->stage = Exosite_Stage_connecting;
 
-    state->http_req.step = exoHttp_req_method_url;
-    state->http_req.method_url_path = (char*)STR_TIMESTAMP_URL;
-    state->http_req.content_length = 0;
-    state->http_req.is_post = 0;
-    state->http_req.include_cik = 0;
-    state->http_req.is_activate = 0;
-    state->http_req.body = NULL;
-    state->http_req.query = NULL;
-    state->http_req.modified_since = NULL;
-    state->http_req.request_timeout = 0;
+    state->http.req.step = exoHttp_req_method_url;
+    state->http.req.method_url_path = (char*)STR_TIMESTAMP_URL;
+    state->http.req.content_length = 0;
+    state->http.req.is_post = 0;
+    state->http.req.include_cik = 0;
+    state->http.req.is_activate = 0;
+    state->http.req.body = NULL;
+    state->http.req.query = NULL;
+    state->http.req.modified_since = NULL;
+    state->http.req.request_timeout = 0;
 
     state->statusCode = 0;
     state->timestamp = 0;
