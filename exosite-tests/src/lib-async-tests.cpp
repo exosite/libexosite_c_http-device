@@ -552,4 +552,64 @@ TEST_F(ExositeAsyncLib, longpollRequest)
 // TODO: test reads with bad data and error codes and such.
 
 
+/******************************************************************************/
+int exotest_timestampRequest_timestamp_complete(Exosite_state_t *state, const char *data, size_t len)
+{
+    ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
+    me->callbacksHit |= CB_BIT_timestamp_complete;
+    me->hit_cb_timestamp_complete ++;
+    EXPECT_EQ(10, len);
+    EXPECT_EQ(0, memcmp("1234567890", data, MIN(10,len)));
+    return 0;
+}
+TEST_F(ExositeAsyncLib, timestampRequest)
+{
+    int ret;
+    // Setup test data
+    strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    nvm->retVal_start = 0;
+    nvm->retVal_tcpSocketOpen = 0;
+    nvm->retVal_socketWrite = 0;
+    nvm->retVal_socketRead = 0;
+    nvm->retVal_tcpSocketClose = 0;
+    nvm->readFromBufferLen = strlcpy(nvm->readFromBuffer, "HTTP/1.1 200 OK\r\n"
+            "Date: \r\n"
+            "Server: faker\r\n"
+            "Connection: Close\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "Content-Length: 10\r\n"
+            "\r\n"
+            "1234567890"
+            , sizeof(nvm->readFromBuffer));
+
+    // 'Mock' that exosite_start() was called.
+    strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
+    strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
+    exoLib.state = Exosite_State_idle;
+    exoLib.stage = Exosite_Stage_idle;
+    exoLib.ops.on_timestamp_complete = exotest_timestampRequest_timestamp_complete;
+
+    // Call function to test
+    ret = exosite_timestamp(&exoLib);
+    // This will call:
+    // - exoPal_tcpSocketOpen()
+    // - mutilple: exoPal_socketWrite()
+    // - exoPal_sendingComplete()
+    // - as many as needed: exoPal_socketRead()
+    // - exoPal_tcpSocketClose()
+    // - ops.on_write_complete()
+
+    EXPECT_EQ(0, ret);
+    EXPECT_STREQ(
+            "GET /timestamp HTTP/1.1\r\n"
+            "Host: aVendor.m2.exosite.com\r\n"
+            "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "\r\n"
+            , nvm->writeToBuffer);
+    EXPECT_EQ(CB_BIT_timestamp_complete, callbacksHit);
+    EXPECT_EQ(1, hit_cb_timestamp_complete);
+}
 // vim: set ai cin et sw=4 ts=4 :
