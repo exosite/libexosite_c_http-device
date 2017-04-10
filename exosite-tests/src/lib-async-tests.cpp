@@ -91,7 +91,7 @@ int exotest_failme_read_complete(Exosite_state_t *state, int status)
     me->hit_cb_read_complete ++;
     return -1;
 }
-int exotest_failme_timestamp_complete(Exosite_state_t *state, const char *data, size_t len)
+int exotest_failme_timestamp_complete(Exosite_state_t *state, uint32_t timestamp)
 {
     EXPECT_TRUE(false);
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
@@ -553,13 +553,12 @@ TEST_F(ExositeAsyncLib, longpollRequest)
 
 
 /******************************************************************************/
-int exotest_timestampRequest_timestamp_complete(Exosite_state_t *state, const char *data, size_t len)
+int exotest_timestampRequest_timestamp_complete(Exosite_state_t *state, uint32_t timestamp)
 {
     ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
     me->callbacksHit |= CB_BIT_timestamp_complete;
     me->hit_cb_timestamp_complete ++;
-    EXPECT_EQ(10, len);
-    EXPECT_EQ(0, memcmp("1234567890", data, MIN(10,len)));
+    EXPECT_EQ(1234567890, timestamp);
     return 0;
 }
 TEST_F(ExositeAsyncLib, timestampRequest)
