@@ -767,12 +767,15 @@ int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modi
     state->http_req.step = exoHttp_req_method_url;
     state->http_req.method_url_path = (char*)STR_DATA_URL;
     state->http_req.content_length = 0;
-    state->http_req.is_post = 1;
+    state->http_req.is_post = 0;
     state->http_req.include_cik = 1;
     state->http_req.is_activate = 0;
     state->http_req.body = NULL;
     state->http_req.query = alias;
     state->http_req.modified_since = modified_since;
+    if(timeout == 0) {
+        timeout = 300000;
+    }
     state->http_req.request_timeout = MIN(300000, timeout);
 
     return exoPal_tcpSocketOpen(state->exoPal);
