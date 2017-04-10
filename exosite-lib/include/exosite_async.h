@@ -102,6 +102,7 @@ struct exoHttp_rpl_s {
     enum exoHttp_rpl_e step;
     uint16_t statusCode; //!> HTTP status code
 #if 0
+    // Maybe future feature.
     size_t content_length; //!> Value of Content-Length header, if it exists.
 #endif
 
@@ -163,6 +164,7 @@ struct Exosite_ops_s {
     exo_status_cb    on_read_begin; //!< Callback for the beginning of reading
     exo_data_cb      on_read_raw; //!< Callback with data from read.
 #if 0
+    // Maybe future feature.
     exo_data_cb      on_read_alias;
     exo_data_cb      on_read_value;
 #endif

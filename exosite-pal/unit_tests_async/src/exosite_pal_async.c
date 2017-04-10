@@ -263,7 +263,7 @@ void exoPal_init(exoPal_state_t *state)
  * This will be called everytime exosite_start is called.  It is expected that this
  * will do a DNS lookup of #host.
  *
- * When this is complete, it must call state->ops.on_start_complete(). Either as
+ * When this is complete, it must call exoPal_ops_s::on_start_complete(). Either as
  * the last thing this function does, or sometime later from async activity.
  *
  * \retval 0 Everything is ok
@@ -291,7 +291,7 @@ int exoPal_stop(exoPal_state_t *state)
 /** \brief Opens a tcp socket
  * \param[in,out] state The PAL state.
  *
- * When this is complete, it must call state->ops.on_connected(). Either as
+ * When this is complete, it must call exoPal_ops_s::on_connected(). Either as
  * the last thing this function does, or sometime later from async activity.
  *
  * \return errorcode if failed, else a 0
@@ -313,7 +313,7 @@ int exoPal_tcpSocketOpen(exoPal_state_t *state)
 /** \brief Closes a tcp socket
  * \param[in,out] state The PAL state.
  *
- * When this is complete, it must call state->ops.on_socket_closed(). Either as
+ * When this is complete, it must call exoPal_ops_s::on_socket_closed(). Either as
  * the last thing this function does, or sometime later from async activity.
  *
  * \return errorcode if failed, else a 0
@@ -333,7 +333,7 @@ int exoPal_tcpSocketClose(exoPal_state_t *state)
  * \param[in] buffer Data to write to socket
  * \param[in] len Length of data to write to socket
  *
- * When this is complete, it must call state->ops.on_send_complete(). Either as
+ * When this is complete, it must call exoPal_ops_s::on_send_complete(). Either as
  * the last thing this function does, or sometime later from async activity.
  *
  * \return errorcode if failed, else a 0
@@ -362,10 +362,10 @@ int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len)
  * \param[in] buffer Buffer received data will be written to
  * \param[in] bufferSize Size of buffer
  *
- * \note #buffer must remain and be untouched until the on_recv() callback is
- * called.
+ * \note #buffer must remain and be untouched until the exoPal_ops_s::on_recv()
+ * callback is called.
  *
- * When this is complete, it must call state->ops.on_recv(). Either as
+ * When this is complete, it must call exoPal_ops_s::on_recv(). Either as
  * the last thing this function does, or sometime later from async activity.
  *
  * \return errorcode if failed, else a 0

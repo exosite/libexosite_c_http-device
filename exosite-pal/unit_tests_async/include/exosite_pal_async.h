@@ -90,6 +90,7 @@ size_t exoPal_strlcpy(char* dst, const char* src, size_t len);
 size_t exoPal_strlcat(char* dst, const char* src, size_t len);
 
 #ifndef MIN
+/** Macro for the least of the two */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #endif /*MIN*/
 
@@ -105,8 +106,19 @@ uint8_t exoPal_getUuid(char * read_buffer);
 typedef struct exoPal_state_s exoPal_state_t;
 typedef struct exoPal_ops_s exoPal_ops_t;
 
-typedef int (*exoPal_status_cb) (exoPal_state_t *, int status);
-typedef int (*exoPal_data_cb) (exoPal_state_t *, const char *data, size_t len);
+/** \brief Status callback
+ * \param[in,out] state The PAL state.
+ * \param[in] status THe status of the operation
+ */
+typedef int (*exoPal_status_cb) (exoPal_state_t *state, int status);
+
+/** \brief Data Received callback
+ * \param[in,out] state The PAL state.
+ * \param[in] data The data just read
+ * \param[in] len How much data
+ */
+typedef int (*exoPal_data_cb) (exoPal_state_t *state, const char *data, size_t len);
+
 struct exoPal_ops_s {
     exoPal_status_cb on_start_complete;
     exoPal_status_cb on_connected; // on_socket_opened.
@@ -117,10 +129,11 @@ struct exoPal_ops_s {
 
 enum exoPal_state_e {
     exoPal_state_uninitalized = 0,
+    exoPal_state_initalized,
 };
 struct exoPal_state_s {
-    enum exoPal_state_e state;
-    exoPal_ops_t ops;
+    enum exoPal_state_e state; //!< State that this PAL is in
+    exoPal_ops_t ops; //!< Table of callback functions.
     void *context; //!< This is used to store Exosite_state_t
 
     // Contents here are specific to each PAL.
