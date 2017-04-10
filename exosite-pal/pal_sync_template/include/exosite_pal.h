@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-*  exosite_hal.h - Common header for Exosite hardware adapation layer
+*  exosite_pal.h - Common header for Exosite hardware adapation layer
 *  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,37 @@
 *
 *****************************************************************************/
 
-#ifndef EXOSITE_PAL_PRIVATE_H
-#define EXOSITE_PAL_PRIVATE_H
+#ifndef EXOSITE_PAL_H
+#define EXOSITE_PAL_H
 #include <stdint.h>
-#include "exosite_pal.h"
 
-/* Stuff that only your implementation needs goes here. */
+// defines
+/*!< This defines the size of the rx buffer in the PAL.  This buffer is used
+to place incoming data from the modem/socket in.*/
+#define RX_BUFFER_SIZE                         512
+
+extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
+
+// functions for export
+void exoPal_init();
+uint8_t exoPal_setCik(const char * read_buffer);
+uint8_t exoPal_getCik(char * read_buffer);
+uint8_t exoPal_getModel(char * read_buffer);
+uint8_t exoPal_getVendor(char * read_buffer);
+uint8_t exoPal_getUuid(char * read_buffer);
+
+uint8_t exoPal_tcpSocketClose();
+uint8_t exoPal_tcpSocketOpen();
+uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength);
+uint8_t exoPal_socketWrite( const char * buffer, uint16_t len);
+int32_t exoPal_sendingComplete();
+
+uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize);
+int32_t exoPal_atoi(char* val);
+uint16_t exoPal_strlen(const char *s);
+char* exoPal_strstr(const char *str, const char *target);
+void * exoPal_memcpy(void* dst, const void * src, uint16_t length);
+
 
 #endif
 /* vim: set ai cin et sw=4 ts=4 : */
