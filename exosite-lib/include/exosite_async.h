@@ -38,21 +38,12 @@
 #include <stdlib.h>
 #include "exosite_pal_async.h"
 
-// DEFINES
-#define CIK_LENGTH                              40
-#define MAX_UUID_LENGTH                         40
-#define MAX_VENDOR_LENGTH                       20
-#define MAX_MODEL_LENGTH                        20
-
-/*!< This defines the maximum size that a string can be for sending data
-   to Exosite.  It is used to prevent exosite_strlen from overrunning.
-   If you are have a need to increase string length, you can freely adjust
-   this number up to uint16_t*/
+#define CIK_LENGTH        (40) //!< Length of a CIK
+#define MAX_UUID_LENGTH   (40) //!< Maximum size of an idenifier
+#define MAX_VENDOR_LENGTH (20) //!< Maximum size of a Vendor name
+#define MAX_MODEL_LENGTH  (20) //!< Maximum size of a Model name
 
 /******************************************************************************/
-
-/* State machine for sending HTTP requests to Exosite HTTP-Device-API.
- */
 
 enum exoHttp_req_e {
     exoHttp_req_method_url = 0,
@@ -69,13 +60,16 @@ enum exoHttp_req_e {
     exoHttp_req_body,
     exoHttp_req_complete
 };
+/** State machine for sending HTTP requests to Exosite HTTP-Device-API.
+ * http://docs.exosite.com/reference/products/device-api/http/
+ */
 struct exoHttp_req_s {
     enum exoHttp_req_e step; //!< Where it is on sending data.
     size_t content_length; //!< how much data is in body.
     int is_post:1; //!< POST or GET?
-    int include_cik:1; //!< Iinclude CIK header.
+    int include_cik:1; //!< Include CIK header.
     int is_activate:1; //!< Don't use body, compute activation body instead.
-    const char * method_url_path;
+    const char * method_url_path; //!< URL Path for request
     const char * query; //!< query params, usually the aliases to read
     const char * body; //!< POST body, usually aliases and data to write
     const char * modified_since; //!< For LongPoll, start time for waiting
@@ -83,8 +77,7 @@ struct exoHttp_req_s {
 };
 typedef struct exoHttp_req_s exoHttp_req_t;
 
-/* State machine for receiving HTTP requests from Exosite HTTP-Device-API.
- */
+/******************************************************************************/
 enum exoHttp_rpl_e {
     exoHttp_rpl_looking_for_status = 0,
     exoHttp_rpl_read_status,
@@ -101,6 +94,10 @@ enum exoHttp_rpl_e {
     exoHttp_rpl_complete,
     exoHttp_rpl_error
 };
+/**
+ * State machine for receiving HTTP requests from Exosite HTTP-Device-API.
+ * http://docs.exosite.com/reference/products/device-api/http/
+ */
 struct exoHttp_rpl_s {
     enum exoHttp_rpl_e step;
     uint16_t statusCode; //!> HTTP status code
@@ -135,50 +132,75 @@ enum Exosite_Stage_e {
 };
 typedef struct Exosite_ops_s Exosite_ops_t;
 typedef struct Exosite_state_s Exosite_state_t;
+
+/** \brief Callback with a status value
+ * \param[in] state The Exosite state structure
+ * \param[in] status The status code. Usually a HTTP status code.
+ */
 typedef int (*exo_status_cb) (Exosite_state_t *state, int status);
+
+/** \brief Callback with some data
+ * \param[in] state The Exosite state structure
+ * \param[in] data The data just read
+ * \param[in] len How much data
+ */
 typedef int (*exo_data_cb) (Exosite_state_t *state, const char *data, size_t len);
+
+/** \brief Callback with a timestamp
+ * \param[in] state The Exosite state structure
+ * \param[in] timestamp Seconds since the Unix EPOCH.
+ */
 typedef int (*exo_timestamp_cb) (Exosite_state_t *state, uint32_t timestamp);
 
+/**
+ * Various callbacks that can be handled.
+ *
+ * All of these can be set to NULL to ignore that callback.
+ */
 struct Exosite_ops_s {
-    exo_status_cb    on_start_complete;
-    exo_status_cb    on_write_complete;
+    exo_status_cb    on_start_complete; //!< Callback when library is read for reads and writes.
+    exo_status_cb    on_write_complete; //!< Callback when write is complete.
     exo_status_cb    on_read_begin; //!< Callback for the beginning of reading
-    exo_data_cb      on_read_raw;
+    exo_data_cb      on_read_raw; //!< Callback with data from read.
 #if 0
     exo_data_cb      on_read_alias;
     exo_data_cb      on_read_value;
 #endif
-    exo_status_cb    on_read_complete;
-    exo_timestamp_cb on_timestamp_complete;
+    exo_status_cb    on_read_complete; //!< Callback when all of the data has been read.
+    exo_timestamp_cb on_timestamp_complete; //!< Callback with the timestamp from the server.
 };
 
+/**
+ * The state of a conncetion to Exsoite.
+ */
 struct Exosite_state_s {
     // Private
-    enum Exosite_state_e state;
-    enum Exosite_Stage_e stage;
+    enum Exosite_state_e state; //!< Current state of the library
+    enum Exosite_Stage_e stage; //!< Current stage within a state
 
-    char projectid[MAX_VENDOR_LENGTH+1];
-    char modelid[MAX_MODEL_LENGTH+1];
-    char cik[CIK_LENGTH+1];
-    char uuid[MAX_UUID_LENGTH+1];
+    char projectid[MAX_VENDOR_LENGTH+1]; //!< The project.id (or Vendor)
+    char modelid[MAX_MODEL_LENGTH+1]; //!< The model.id (or project.id)
+    char cik[CIK_LENGTH+1]; //!< The assigned CIK token.
+    char uuid[MAX_UUID_LENGTH+1]; //!< The Unique ID. (or serial number)
 
+    /** Working place for handling the HTTP transaction. */
     union {
-        exoHttp_req_t req;
-        exoHttp_rpl_t rpl;
+        exoHttp_req_t req; //!< Request state machine state
+        exoHttp_rpl_t rpl; //!< Reply state machine state
     } http;
 
-    char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
-    int wb_offset; //!> If we need to recv again to get enough data.
+    char workbuf[80]; //!< Working buffer to build up sends and pull-in receives
+    int wb_offset; //!< If we need to recv again to get enough data.
 
     // union these two?
-    int statusCode; //!>  status code
-    uint32_t timestamp;
+    int statusCode; //!< Holding place status code
+    uint32_t timestamp; //!< Holding place for the timestamp while it is received
 
     // Public
-    Exosite_ops_t ops;
-    exoPal_state_t *exoPal;
+    Exosite_ops_t ops; //!< All of the callbacks
+    exoPal_state_t *exoPal; //!< Plaform specific interface
 
-    void *context; //!< Use specific context data.
+    void *context; //!< User specific context data.
 };
 
 
@@ -302,7 +324,7 @@ int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, co
  * exoLib.ops.on_read_begin = my_read_begin;
  * exoLib.ops.on_read_raw = my_read_raw;
  * exoLib.ops.on_read_complete = my_read_complete;
- * ret = exosite_read(&exoLib, "temp&hum");
+ * ret = exosite_longpoll(&exoLib, "temp&hum", NULL, 10000);
  * \endcode
  *
  */
