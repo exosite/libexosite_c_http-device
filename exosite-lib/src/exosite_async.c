@@ -575,17 +575,19 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 retcode = 1;
 
             } else {
-                // FIXME: need to build the response up somewhere.
+                // The actual timestamp values could be broken across multiple
+                // calls of this function.
 
-                // how do I know when to stop? kinda works. maybe
-                if((state->wb_offset + len) < 15) {
-                    // read more.
-                    state->wb_offset += len;
-                    exoPal_socketRead(state->exoPal, &(state->workbuf[state->wb_offset]),
-                            sizeof(state->workbuf) - state->wb_offset);
-                } else {
-                    state->wb_offset += len;
-                    retcode = 1;
+                for(; len > 0; ++data, --len) {
+                    char dc = *data;
+                    if(dc >= '0' && dc <= '9') {
+                        state->timestamp *= 10;
+                        state->timestamp += dc - '0';
+                    } else {
+                        // Not number, stop.
+                        retcode = 1;
+                        break;
+                    }
                 }
             }
             break;
@@ -623,7 +625,7 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             state->stage = Exosite_Stage_idle;
             state->state = Exosite_State_idle;
             if(state->ops.on_timestamp_complete) {
-                state->ops.on_timestamp_complete(state, state->workbuf, state->wb_offset);
+                state->ops.on_timestamp_complete(state, state->timestamp);
             }
             break;
 
@@ -706,6 +708,8 @@ int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)
     state->http_req.modified_since = NULL;
     state->http_req.request_timeout = 0;
 
+    state->statusCode = 0;
+
     return exoPal_tcpSocketOpen(state->exoPal);
 }
 
@@ -729,6 +733,8 @@ int exosite_read(Exosite_state_t *state, const char *aliases)
     state->http_req.modified_since = NULL;
     state->http_req.request_timeout = 0;
 
+    state->statusCode = 0;
+
     return exoPal_tcpSocketOpen(state->exoPal);
 }
 
@@ -751,6 +757,8 @@ int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, co
     state->http_req.query = readAliases;
     state->http_req.modified_since = NULL;
     state->http_req.request_timeout = 0;
+
+    state->statusCode = 0;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }
@@ -778,6 +786,8 @@ int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modi
     }
     state->http_req.request_timeout = MIN(300000, timeout);
 
+    state->statusCode = 0;
+
     return exoPal_tcpSocketOpen(state->exoPal);
 }
 
@@ -800,6 +810,9 @@ int exosite_timestamp(Exosite_state_t *state)
     state->http_req.query = NULL;
     state->http_req.modified_since = NULL;
     state->http_req.request_timeout = 0;
+
+    state->statusCode = 0;
+    state->timestamp = 0;
 
     return exoPal_tcpSocketOpen(state->exoPal);
 }

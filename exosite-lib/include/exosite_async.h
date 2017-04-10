@@ -136,18 +136,19 @@ typedef struct Exosite_ops_s Exosite_ops_t;
 typedef struct Exosite_state_s Exosite_state_t;
 typedef int (*exo_status_cb) (Exosite_state_t *state, int status);
 typedef int (*exo_data_cb) (Exosite_state_t *state, const char *data, size_t len);
+typedef int (*exo_timestamp_cb) (Exosite_state_t *state, uint32_t timestamp);
 
 struct Exosite_ops_s {
-    exo_status_cb on_start_complete;
-    exo_status_cb on_write_complete;
-    exo_status_cb on_read_begin;
-    exo_data_cb   on_read_raw;
+    exo_status_cb    on_start_complete;
+    exo_status_cb    on_write_complete;
+    exo_status_cb    on_read_begin;
+    exo_data_cb      on_read_raw;
 #if 0
-    exo_data_cb   on_read_alias;
-    exo_data_cb   on_read_value;
+    exo_data_cb      on_read_alias;
+    exo_data_cb      on_read_value;
 #endif
-    exo_status_cb on_read_complete;
-    exo_data_cb   on_timestamp_complete;
+    exo_status_cb    on_read_complete;
+    exo_timestamp_cb on_timestamp_complete;
 };
 
 struct Exosite_state_s {
@@ -166,7 +167,9 @@ struct Exosite_state_s {
     char workbuf[80]; //!> Working buffer to build up sends and pull-in receives
     int wb_offset; //!> If we need to recv again to get enough data.
 
+    // union these two?
     int statusCode; //!>  status code
+    uint32_t timestamp;
 
     // Public
     Exosite_ops_t ops;
