@@ -142,7 +142,7 @@ typedef int (*exo_timestamp_cb) (Exosite_state_t *state, uint32_t timestamp);
 struct Exosite_ops_s {
     exo_status_cb    on_start_complete;
     exo_status_cb    on_write_complete;
-    exo_status_cb    on_read_begin;
+    exo_status_cb    on_read_begin; //!< Callback for the beginning of reading
     exo_data_cb      on_read_raw;
 #if 0
     exo_data_cb      on_read_alias;
@@ -182,21 +182,146 @@ struct Exosite_state_s {
 };
 
 
-void exosite_init(Exosite_state_t *state);
-/*
- * - call init
- * - set pal pointer
- * - set ops.callbacks
- * - optionally set context.
- * - call start
+/**
+ * \brief Initialize the memory
+ * \param[out] state The Exosite state structure
  */
+void exosite_init(Exosite_state_t *state);
 
+/** \brief Start using the Exosite HTTP-Device API
+ * \param[in,out] state The Exosite state structure
+ * \retval 0 Startup ok, wait for callback.
+ * \retval !0 Startup failed, callback will not get called.
+ *
+ * This call gets everything ready for doing reads and writes.  This includes doing
+ * device activation if required.  It may also do DNS lookups.
+ *
+ * Once everything is ready the Exosite_ops_s::on_start_complete callback will be
+ * called.
+ *
+ *
+ * \code
+ * Exosite_state_t exoLib;
+ * exosite_init(&exoLib);
+ * exoLib.exoPal = &exoPal;
+ * exoLib.ops.on_start_complete = my_start_callback;
+ * ret = exosite_start(&exoLib);
+ * \endcode
+ *
+ */
 int exosite_start(Exosite_state_t *state);
 
+/** \brief Write to aliases on a device
+ * \param[in,out] state The Exosite state structure
+ * \param[in] aliasesAndValues Query style string of aliases and their values
+ * \retval 0 Write ok, wait for callback.
+ * \retval !0 Write failed, callback will not get called.
+ *
+ * Send off a write request. Once complete, the callback
+ * Exosite_ops_s::on_write_complete will get called.
+ *
+ * \code
+ * exoLib.ops.on_write_complete = my_write_callback;
+ * ret = exosite_write(&exoLib, "temp=75&hum=30");
+ * \endcode
+ */
 int exosite_write(Exosite_state_t *state, const char *aliasesAndValues);
+
+/** \brief Read aliases
+ * \param[in,out] state The Exosite state structure
+ * \param[in] aliases The aliases to read seperated with '&'
+ * \retval 0 Read ok, wait for callback.
+ * \retval !0 Read failed, callback will not get called.
+ *
+ * Send off a read request. When complete, Exosite_ops_s::on_read_begin will be
+ * called with the HTTP response code.  Then Exosite_ops_s::on_read_raw will be
+ * called one or more times with the raw body data. Finally,
+ * Exosite_ops_s::on_read_complete will get called when all of the data has been
+ * fetched.
+ *
+ * The data returned to Exosite_ops_s::on_read_raw will be the form urlencoded
+ * data.
+ *
+ *
+ * \code
+ * exoLib.ops.on_read_begin = my_read_begin;
+ * exoLib.ops.on_read_raw = my_read_raw;
+ * exoLib.ops.on_read_complete = my_read_complete;
+ * ret = exosite_read(&exoLib, "temp&hum");
+ * \endcode
+ */
 int exosite_read(Exosite_state_t *state, const char *aliases);
+
+/** \brief Do a write followed immeaditally be a read in one call.
+ * \param[in,out] state The Exosite state structure
+ * \param[in] writeAliasesAndValues Query style string of aliases and their values
+ * \param[in] readAliases The aliases to read seperated with '&'
+ * \retval 0 Hybrid read/write ok, wait for callback.
+ * \retval !0 Hybrid read/write failed, callback will not get called.
+ *
+ * Send off a hybrid read/write request. When complete,
+ * Exosite_ops_s::on_read_begin will be called with the HTTP response code.  Then
+ * Exosite_ops_s::on_read_raw will be called one or more times with the raw body
+ * data. Finally, Exosite_ops_s::on_read_complete will get called when all of the
+ * data has been fetched.
+ *
+ * The data returned to Exosite_ops_s::on_read_raw will be the form urlencoded
+ * data.
+ *
+ *
+ * \code
+ * exoLib.ops.on_read_begin = my_read_begin;
+ * exoLib.ops.on_read_raw = my_read_raw;
+ * exoLib.ops.on_read_complete = my_read_complete;
+ * ret = exosite_hybrid(&exoLib, "temp=75&hum=30", "led1&led2");
+ * \endcode
+ */
 int exosite_hybrid(Exosite_state_t *state, const char *writeAliasesAndValues, const char *readAliases);
+
+/** \brief Start a LongPoll for data that will cahnge in the future
+ * \param[in,out] state The Exosite state structure
+ * \param[in] alias The alias to wait on
+ * \param[in] modified_since
+ * \param[in] timeout Max time to wait in milliseconds. (MAX value is 300000)
+ * \retval 0 LongPoll ok, wait for callback.
+ * \retval !0 LongPoll failed, callback will not get called.
+ *
+ * Send off a LongPoll request. When complete, Exosite_ops_s::on_read_begin will be
+ * called with the HTTP response code.  Then Exosite_ops_s::on_read_raw will be
+ * called one or more times with the raw body data. Finally,
+ * Exosite_ops_s::on_read_complete will get called when all of the data has been
+ * fetched.
+ *
+ * This will wait, upto #timeout, before returning.  If nothing has changed, this
+ * returns with a 304.
+ *
+ * The data returned to Exosite_ops_s::on_read_raw will be the form urlencoded data.
+ *
+ *
+ * \code
+ * exoLib.ops.on_read_begin = my_read_begin;
+ * exoLib.ops.on_read_raw = my_read_raw;
+ * exoLib.ops.on_read_complete = my_read_complete;
+ * ret = exosite_read(&exoLib, "temp&hum");
+ * \endcode
+ *
+ */
 int exosite_longpoll(Exosite_state_t *state, const char *alias, const char *modified_since, uint32_t timeout);
+
+/** \brief Get current time
+ * \param[in,out] state The Exosite state structure
+ * \retval 0 Timestamp ok, wait for callback.
+ * \retval !0 Timestamp failed, callback will not get called.
+ *
+ * Requests the current time from the servers.  When complete,
+ * Exosite_ops_s::on_timestamp_complete will be called.
+ *
+ *
+ * \code
+ * exoLib.ops.on_timestamp_complete = my_timestamp_callback;
+ * ret = exosite_timestamp(&exoLib);
+ * \endcode
+ */
 int exosite_timestamp(Exosite_state_t *state);
 
 
