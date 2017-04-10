@@ -196,8 +196,7 @@ void exosite_send_http_req(Exosite_state_t *state)
                 exoPal_strlcpy(state->workbuf, STR_VENDOR, sizeof(state->workbuf));
                 exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
                 exoPal_strlcat(state->workbuf, STR_MODEL, sizeof(state->workbuf));
-                // TODO: actually call to exoPal_getModel();  Still might need 1P support.
-                exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
+                exoPal_strlcat(state->workbuf, state->modelid, sizeof(state->workbuf));
                 exoPal_strlcat(state->workbuf, STR_SN, sizeof(state->workbuf));
                 slen = exoPal_strlcat(state->workbuf, state->uuid, sizeof(state->workbuf));
 
@@ -677,6 +676,8 @@ int exosite_start(Exosite_state_t *state)
     // Build full domain name string
     exoPal_getVendor(state->projectid);
     state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
+    exoPal_getModel(state->modelid);
+    state->modelid[MAX_MODEL_LENGTH-1] = '\0';
     exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
     exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(hostbuf));
 

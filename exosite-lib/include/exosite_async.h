@@ -42,6 +42,7 @@
 #define CIK_LENGTH                              40
 #define MAX_UUID_LENGTH                         40
 #define MAX_VENDOR_LENGTH                       20
+#define MAX_MODEL_LENGTH                        20
 
 /*!< This defines the maximum size that a string can be for sending data
    to Exosite.  It is used to prevent exosite_strlen from overrunning.
@@ -157,6 +158,7 @@ struct Exosite_state_s {
     enum Exosite_Stage_e stage;
 
     char projectid[MAX_VENDOR_LENGTH+1];
+    char modelid[MAX_MODEL_LENGTH+1];
     char cik[CIK_LENGTH+1];
     char uuid[MAX_UUID_LENGTH+1];
 

@@ -149,6 +149,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
 
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 100;
 
@@ -163,6 +164,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
 
     EXPECT_EQ(100, ret);
     EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
+    EXPECT_STREQ(TEST_MODEL, exoLib.modelid);
     EXPECT_STREQ("1234567", exoLib.uuid);
     EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
     EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
@@ -185,6 +187,7 @@ TEST_F(ExositeAsyncLib, canStart)
 
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -218,6 +221,7 @@ TEST_F(ExositeAsyncLib, canStart)
 
     EXPECT_EQ(0, ret);
     EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
+    EXPECT_STREQ(TEST_MODEL, exoLib.modelid);
     EXPECT_STREQ("1234567", exoLib.uuid);
     EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
     EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
@@ -227,7 +231,7 @@ TEST_F(ExositeAsyncLib, canStart)
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Content-Length: 39\r\n"
             "\r\n"
-            "vendor=aVendor&model=aVendor&sn=1234567",
+            "vendor=aVendor&model=aModel&sn=1234567",
             nvm->writeToBuffer);
     EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
@@ -249,6 +253,7 @@ TEST_F(ExositeAsyncLib, writeRequest)
     int ret;
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -265,6 +270,7 @@ TEST_F(ExositeAsyncLib, writeRequest)
     // 'Mock' that exosite_start() was called.
     strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
     strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.modelid, TEST_MODEL, sizeof(exoLib.modelid));
     strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
     exoLib.state = Exosite_State_idle;
     exoLib.stage = Exosite_Stage_idle;
@@ -328,6 +334,7 @@ TEST_F(ExositeAsyncLib, readRequest)
     int ret;
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -346,6 +353,7 @@ TEST_F(ExositeAsyncLib, readRequest)
     // 'Mock' that exosite_start() was called.
     strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
     strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.modelid, TEST_MODEL, sizeof(exoLib.modelid));
     strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
     exoLib.state = Exosite_State_idle;
     exoLib.stage = Exosite_Stage_idle;
@@ -411,6 +419,7 @@ TEST_F(ExositeAsyncLib, hybridRequest)
     int ret;
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -429,6 +438,7 @@ TEST_F(ExositeAsyncLib, hybridRequest)
     // 'Mock' that exosite_start() was called.
     strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
     strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.modelid, TEST_MODEL, sizeof(exoLib.modelid));
     strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
     exoLib.state = Exosite_State_idle;
     exoLib.stage = Exosite_Stage_idle;
@@ -497,6 +507,7 @@ TEST_F(ExositeAsyncLib, longpollRequest)
     int ret;
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -515,6 +526,7 @@ TEST_F(ExositeAsyncLib, longpollRequest)
     // 'Mock' that exosite_start() was called.
     strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
     strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.modelid, TEST_MODEL, sizeof(exoLib.modelid));
     strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
     exoLib.state = Exosite_State_idle;
     exoLib.stage = Exosite_Stage_idle;
@@ -566,6 +578,7 @@ TEST_F(ExositeAsyncLib, timestampRequest)
     int ret;
     // Setup test data
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
@@ -585,6 +598,7 @@ TEST_F(ExositeAsyncLib, timestampRequest)
     // 'Mock' that exosite_start() was called.
     strlcpy(exoLib.cik, "abcdef1234abcdef1234abcdef1234abcdef1234", sizeof(exoLib.cik));
     strlcpy(exoLib.projectid, TEST_VENDOR, sizeof(exoLib.projectid));
+    strlcpy(exoLib.modelid, TEST_MODEL, sizeof(exoLib.modelid));
     strlcpy(exoLib.uuid, "1234567", sizeof(exoLib.uuid));
     exoLib.state = Exosite_State_idle;
     exoLib.stage = Exosite_Stage_idle;
