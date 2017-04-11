@@ -159,8 +159,12 @@ size_t exoPal_strlcat(char* dst, const char* src, size_t len)
  * \param[in] cik cik to write to nvm
  * \return errorcode if successful else 0
  */
-uint8_t exoPal_setCik(const char * cik)
+uint8_t exoPal_setCik(const char * cik, uint8_t len)
 {
+    char zeroterminated[41];
+    memcpy(zeroterminated, cik, MIN(40, len));
+    zeroterminated[40] = '\0';
+    setenv("INTGR8_CIK", zeroterminated, 1);
     return 0;
 }
 
@@ -169,8 +173,10 @@ uint8_t exoPal_setCik(const char * cik)
  * \param[out] read_buffer pointer of buffer to place results in
  * \return 0 if successful, else errorCode
  */
-uint8_t exoPal_getCik(char * read_buffer)
+uint8_t exoPal_getCik(char * read_buffer, uint8_t maxlen)
 {
+    char *env = getenv("INTGR8_CIK");
+    strlcpy(read_buffer, env, maxlen);
     return 0;
 }
 
@@ -179,8 +185,10 @@ uint8_t exoPal_getCik(char * read_buffer)
  * \param[in] read_buffer pointer of buffer to place results in
  * \return 0 if successful, else returns error code
  */
-uint8_t exoPal_getModel(char * read_buffer)
+uint8_t exoPal_getModel(char * read_buffer, uint8_t maxlen)
 {
+    char *env = getenv("INTGR8_MODEL");
+    strlcpy(read_buffer, env, maxlen);
     return 0;
 }
 
@@ -189,8 +197,10 @@ uint8_t exoPal_getModel(char * read_buffer)
  * \param[in] read_buffer pointer of buffer to place results in
  * \return returns 0 if successful, else returns error code.
  */
-uint8_t exoPal_getVendor(char * read_buffer)
+uint8_t exoPal_getVendor(char * read_buffer, uint8_t maxlen)
 {
+    char *env = getenv("INTGR8_VENDOR");
+    strlcpy(read_buffer, env, maxlen);
     return 0;
 }
 
@@ -205,8 +215,10 @@ uint8_t exoPal_getVendor(char * read_buffer)
  * \param[out]
  * \return 1 if failed to retrieve UUID, else 0
  */
-uint8_t exoPal_getUuid(char * read_buffer)
+uint8_t exoPal_getUuid(char * read_buffer, uint8_t maxlen)
 {
+    char *env = getenv("INTGR8_SN");
+    strlcpy(read_buffer, env, maxlen);
     return 0;
 }
 
