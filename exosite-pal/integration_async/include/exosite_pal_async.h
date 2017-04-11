@@ -119,6 +119,8 @@ int exoPal_socketWrite(exoPal_state_t *state, const char * buffer, uint16_t len)
 int exoPal_socketRead(exoPal_state_t *state, char *buffer, uint16_t bufSize);
 int exoPal_sendingComplete(exoPal_state_t *state);
 
+int exoPal_processEvents(exoPal_state_t *state);
+
 #endif /*__EXOSITE_PAL_ASYNC__*/
 
 /* vim: set ai cin et sw=4 ts=4 : */

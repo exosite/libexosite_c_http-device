@@ -31,5 +31,6 @@ add_subdirectory(gtest)
 
 ##########################test runner code#################################
 add_subdirectory(testrunner)
+add_subdirectory(integration)
 
 #  vim: set sw=4 ts=4 :
