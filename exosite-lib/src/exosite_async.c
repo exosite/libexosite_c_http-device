@@ -527,7 +527,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
         case Exosite_State_activate:
             if(state->http.rpl.statusCode == 409) {
                 // Already activated.
-                exoPal_getCik(state->cik);
+                exoPal_getCik(state->cik, CIK_LENGTH);
                 if(!exosite_isCIKValid(state->cik)) {
                     // Stored CIK is invalid and this SN is activated.
                     state->statusCode = -409;
@@ -549,7 +549,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 if(state->wb_offset == CIK_LENGTH) {
                     // ok, all of CIK is now in cik; save it.
                     if(exosite_isCIKValid(state->cik)) {
-                        exoPal_setCik(state->cik);
+                        exoPal_setCik(state->cik, CIK_LENGTH);
                     } else {
                         // It gave us an invalid CIK!?!?!?!
                         state->statusCode = -200;
@@ -687,15 +687,15 @@ int exosite_start(Exosite_state_t *state)
     state->exoPal->context = state;
 
     // Build full domain name string
-    exoPal_getVendor(state->projectid);
+    exoPal_getVendor(state->projectid, MAX_VENDOR_LENGTH);
     state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
-    exoPal_getModel(state->modelid);
+    exoPal_getModel(state->modelid, MAX_MODEL_LENGTH);
     state->modelid[MAX_MODEL_LENGTH-1] = '\0';
     exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
     exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(hostbuf));
 
     // Need the SN.
-    exoPal_getUuid(state->uuid);
+    exoPal_getUuid(state->uuid, MAX_UUID_LENGTH);
 
     state->state = Exosite_State_pal_starting;
     // Start up pal. (includes a DNS lookup.)

@@ -180,9 +180,10 @@ size_t exoPal_strlcat(char* dst, const char* src, size_t len)
  * Writes the 40 chars starting at cik* to nvm.
  *
  * \param[in] cik cik to write to nvm
+ * \param[in] len Size of the cik (should be 40)
  * \return errorcode if successful else 0
  */
-uint8_t exoPal_setCik(const char * cik)
+uint8_t exoPal_setCik(const char * cik, uint8_t len)
 {
     memcpy( mem_nvm.cik,cik, sizeof(mem_nvm.cik));
     return mem_nvm.retVal_setCik;
@@ -191,9 +192,10 @@ uint8_t exoPal_setCik(const char * cik)
 /*!
  * \brief Retrieves the stored CIK
  * \param[out] read_buffer pointer of buffer to place results in
+ * \param[in] maxlen Size of the read_buffer
  * \return 0 if successful, else errorCode
  */
-uint8_t exoPal_getCik(char * read_buffer)
+uint8_t exoPal_getCik(char * read_buffer, uint8_t maxlen)
 {
     memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
     return mem_nvm.retVal_getCik;
@@ -201,10 +203,11 @@ uint8_t exoPal_getCik(char * read_buffer)
 
 /*!
  * \brief Retrieves the stored Model string
- * \param[in] read_buffer pointer of buffer to place results in
+ * \param[out] read_buffer pointer of buffer to place results in
+ * \param[in] maxlen Size of the read_buffer
  * \return 0 if successful, else returns error code
  */
-uint8_t exoPal_getModel(char * read_buffer)
+uint8_t exoPal_getModel(char * read_buffer, uint8_t maxlen)
 {
     memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
     return mem_nvm.retVal_getModel;
@@ -212,10 +215,11 @@ uint8_t exoPal_getModel(char * read_buffer)
 
 /*!
  * \brief Retrieves the vendor string
- * \param[in] read_buffer pointer of buffer to place results in
+ * \param[out] read_buffer pointer of buffer to place results in
+ * \param[in] maxlen Size of the read_buffer
  * \return returns 0 if successful, else returns error code.
  */
-uint8_t exoPal_getVendor(char * read_buffer)
+uint8_t exoPal_getVendor(char * read_buffer, uint8_t maxlen)
 {
     memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
     return mem_nvm.retVal_getVendor;
@@ -228,11 +232,11 @@ uint8_t exoPal_getVendor(char * read_buffer)
  *	the MEID of a cell modem, MAC address of a network card, or serial number
  *	of the device.
  *
- * \param[in] UUID_buf Buffer to put the devices UUID into.
- * \param[out]
+ * \param[out] read_buffer Buffer to put the devices UUID into.
+ * \param[in] maxlen Size of the read_buffer
  * \return 1 if failed to retrieve UUID, else 0
  */
-uint8_t exoPal_getUuid(char * read_buffer)
+uint8_t exoPal_getUuid(char * read_buffer, uint8_t maxlen)
 {
     memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
     return mem_nvm.retVal_getUuid;
