@@ -5,28 +5,28 @@ include_directories(
 	../../exosite-lib/include/
 	../../exosite-pal/unit_tests_sync/include/
 	../../exosite-pal/unit_tests_async/include/
-	../../exosite-tests/include/
+	../../exosite-tests/unit/include/
 )
 
 set(test_sync_srcs
-	../../exosite-tests/src/main.cpp
-	../../exosite-tests/src/msg.cpp
-	../../exosite-tests/src/http_parser.c
-	../../exosite-tests/src/lib-sync-tests.cpp
-	../../exosite-tests/include/msg.h
-	../../exosite-tests/include/http_parser.h
+	../../exosite-tests/unit/src/main.cpp
+	../../exosite-tests/unit/src/msg.cpp
+	../../exosite-tests/unit/src/http_parser.c
+	../../exosite-tests/unit/src/lib-sync-tests.cpp
+	../../exosite-tests/unit/include/msg.h
+	../../exosite-tests/unit/include/http_parser.h
 	../../exosite-pal/unit_tests_sync/include/exosite_pal.h
 	../../exosite-pal/unit_tests_sync/include/exosite_pal_private.h
 	../../exosite-lib/include/exosite.h
 )
 
 set(test_async_srcs
-	../../exosite-tests/src/main.cpp
-	../../exosite-tests/src/msg.cpp
-	../../exosite-tests/src/http_parser.c
-	../../exosite-tests/src/lib-async-tests.cpp
-	../../exosite-tests/include/msg.h
-	../../exosite-tests/include/http_parser.h
+	../../exosite-tests/unit/src/main.cpp
+	../../exosite-tests/unit/src/msg.cpp
+	../../exosite-tests/unit/src/http_parser.c
+	../../exosite-tests/unit/src/lib-async-tests.cpp
+	../../exosite-tests/unit/include/msg.h
+	../../exosite-tests/unit/include/http_parser.h
 	../../exosite-pal/unit_tests_async/include/exosite_pal_async.h
 	../../exosite-lib/include/exosite.h
 )
