@@ -266,7 +266,7 @@ int exoPal_start(exoPal_state_t *state, const char *host)
         return -1;
     }
     memcpy(&state->ip, resolved->h_addr, sizeof(state->ip));
-    fprintf(stdout, "III Resolved '%s' to '%s'", host, inet_ntoa(state->ip));
+    fprintf(stdout, "III Resolved '%s' to '%s'\n", host, inet_ntoa(state->ip));
 
     state->state = exoPal_state_initalized;
     if(state->ops.on_start_complete) {
@@ -321,9 +321,10 @@ int exoPal_tcpSocketOpen(exoPal_state_t *state)
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = 443;
+    addr.sin_port = 80;
     addr.sin_addr = state->ip;
 
+    state->state = exoPal_state_connecting;
     ret = connect(state->polled.fd, (const struct sockaddr *)&addr, sizeof(addr));
     if(ret != 0 && errno != EINPROGRESS) {
         fprintf(stderr, "XXX connect failed %d:%s\n", errno, strerror(errno));
@@ -416,7 +417,10 @@ int exoPal_processEvents(exoPal_state_t *state)
     int ret, opt_err;
     socklen_t err_size;
 
-    ret = poll(&state->polled, 1, 10000);
+    ret = poll(&state->polled, 1, 30 * 1000);
+    // ret < 0 : Error
+    // ret == 0 : Timeout
+    // ret == 1 : One item has events.
     if(ret < 0) {
         fprintf(stderr, "XXX poll failed %d:%s\n", errno, strerror(errno));
         return ret;
