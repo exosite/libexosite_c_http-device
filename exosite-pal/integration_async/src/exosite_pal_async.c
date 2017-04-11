@@ -43,6 +43,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 
 /*****************************************************************************
@@ -264,9 +265,10 @@ int exoPal_start(exoPal_state_t *state, const char *host)
                 host, h_errno, hstrerror(h_errno));
         return -1;
     }
-    fprintf(stdout, "III Resolved '%s' to ''", host);
     memcpy(&state->ip, resolved->h_addr, sizeof(state->ip));
+    fprintf(stdout, "III Resolved '%s' to '%s'", host, inet_ntoa(state->ip));
 
+    state->state = exoPal_state_initalized;
     if(state->ops.on_start_complete) {
         state->ops.on_start_complete(state, 0);
     }
@@ -302,17 +304,15 @@ int exoPal_tcpSocketOpen(exoPal_state_t *state)
         return -1;
     }
 
-    if((flags = fcntl(state->polled.fd, F_GETFL, 0)) < 0) {
+    if((flags = fcntl(fd, F_GETFL, 0)) < 0) {
         fprintf(stderr, "XXX fcntl getflags failed %d:%s\n", errno, strerror(errno));
-        shutdown(state->polled.fd, SHUT_RDWR);
-        state->polled.fd = -1;
+        shutdown(fd, SHUT_RDWR);
         return -1;
     }
 
-    if(fcntl(state->polled.fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+    if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
         fprintf(stderr, "XXX fcntl setflags failed %d:%s\n", errno, strerror(errno));
-        shutdown(state->polled.fd, SHUT_RDWR);
-        state->polled.fd = -1;
+        shutdown(fd, SHUT_RDWR);
         return -1;
     }
 
@@ -416,7 +416,7 @@ int exoPal_processEvents(exoPal_state_t *state)
     int ret, opt_err;
     socklen_t err_size;
 
-    ret = poll(&state->polled, 1, -1);
+    ret = poll(&state->polled, 1, 10000);
     if(ret < 0) {
         fprintf(stderr, "XXX poll failed %d:%s\n", errno, strerror(errno));
         return ret;
