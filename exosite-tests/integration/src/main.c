@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     while(1) {
         ret = exoPal_processEvents(&exoPal);
         if(ret != 0) {
-            printf("Processed failed: %d\n", ret);
+            fprintf(stderr, "XXX Processed failed: %d\n", ret);
             return ret;
         }
     }

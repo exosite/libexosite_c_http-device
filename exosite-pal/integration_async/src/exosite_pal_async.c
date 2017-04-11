@@ -260,8 +260,11 @@ int exoPal_start(exoPal_state_t *state, const char *host)
     struct hostent *resolved;
     resolved = gethostbyname(host);
     if (resolved == NULL) {
+        fprintf(stderr, "XXX Failed to resolve host '%s' :%d:%s\n",
+                host, h_errno, hstrerror(h_errno));
         return -1;
     }
+    fprintf(stdout, "III Resolved '%s' to ''", host);
     memcpy(&state->ip, resolved->h_addr, sizeof(state->ip));
 
     if(state->ops.on_start_complete) {
@@ -295,16 +298,19 @@ int exoPal_tcpSocketOpen(exoPal_state_t *state)
     // FIXME: TLS.
     fd = socket(PF_INET, SOCK_STREAM, 0);
     if(fd < 0) {
+        fprintf(stderr, "XXX Open socket failed %d:%s\n", errno, strerror(errno));
         return -1;
     }
 
     if((flags = fcntl(state->polled.fd, F_GETFL, 0)) < 0) {
+        fprintf(stderr, "XXX fcntl getflags failed %d:%s\n", errno, strerror(errno));
         shutdown(state->polled.fd, SHUT_RDWR);
         state->polled.fd = -1;
         return -1;
     }
 
     if(fcntl(state->polled.fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        fprintf(stderr, "XXX fcntl setflags failed %d:%s\n", errno, strerror(errno));
         shutdown(state->polled.fd, SHUT_RDWR);
         state->polled.fd = -1;
         return -1;
@@ -319,7 +325,8 @@ int exoPal_tcpSocketOpen(exoPal_state_t *state)
     addr.sin_addr = state->ip;
 
     ret = connect(state->polled.fd, (const struct sockaddr *)&addr, sizeof(addr));
-    if(ret != 0 && ret != EINPROGRESS) {
+    if(ret != 0 && errno != EINPROGRESS) {
+        fprintf(stderr, "XXX connect failed %d:%s\n", errno, strerror(errno));
         shutdown(state->polled.fd, SHUT_RDWR);
         state->polled.fd = -1;
         return -1;
@@ -410,6 +417,10 @@ int exoPal_processEvents(exoPal_state_t *state)
     socklen_t err_size;
 
     ret = poll(&state->polled, 1, -1);
+    if(ret < 0) {
+        fprintf(stderr, "XXX poll failed %d:%s\n", errno, strerror(errno));
+        return ret;
+    }
 
     switch(state->state) {
         case exoPal_state_connecting:
@@ -460,6 +471,7 @@ int exoPal_processEvents(exoPal_state_t *state)
             ret = recv(state->polled.fd, state->buf, state->buflen, 0);
             if(ret < 0) {
                 //ret = errno;
+                fprintf(stderr, "XXX recv failed %d:%s\n", errno, strerror(errno));
             }
             if(state->ops.on_recv) {
                 state->ops.on_recv(state, state->buf, ret);
