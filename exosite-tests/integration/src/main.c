@@ -32,6 +32,9 @@ int main(int argc, char **argv)
     exoLib.exoPal = &exoPal;
     exoLib.ops.on_start_complete = intgr8_on_start;
 
+    // FIXME: Use real Vendor. Am maybe getting connect errors from trying to use
+    // fake one.
+    // Also, Look into TSL more.  May endup doing a massive rewrite anyways.
     setenv("INTGR8_VENDOR", "1234567890", 0);
     setenv("INTGR8_MODEL", "1234567890", 0);
     setenv("INTGR8_SN", "1234567890", 0);
