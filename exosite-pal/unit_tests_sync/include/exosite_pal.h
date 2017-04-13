@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-*  exosite_hal.h - Common header for Exosite hardware adapation layer
+*  exosite_pal.h - Common header for Exosite hardware adapation layer
 *  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without

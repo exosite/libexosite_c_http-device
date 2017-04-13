@@ -20,9 +20,9 @@ static http_parser_settings parser_settings = {0};
 #define TEST_MODEL "aModel"
 #define TEST_VENDOR "aVendor"
 
-char * validTestcik = "abcdef1234abcdef1234abcdef1234abcdef1234";
-char * invalidTestcik_nonHexChar = "@abcdef1234abcdef1234abcdef1234abcdef124";
-char * invalidTestcik_short = "abcdef1234abcdef1234abcdef1234abcdef123";
+char * validTestcik = (char*)"abcdef1234abcdef1234abcdef1234abcdef1234";
+char * invalidTestcik_nonHexChar = (char*)"@abcdef1234abcdef1234abcdef1234abcdef124";
+char * invalidTestcik_short = (char*)"abcdef1234abcdef1234abcdef1234abcdef123";
 class ExoLibCleanState : public ::testing::Test
 {
 protected:
@@ -277,7 +277,7 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
     EXPECT_TRUE(parsed);
 
     // build expected body
-    char * expected_response = "testAlias=5&anotherAlias=here";
+    char * expected_response = (char*)"testAlias=5&anotherAlias=here";
 
     // Check response is the value we responded with
     EXPECT_STREQ(expected_response,responseBuffer);
@@ -367,7 +367,7 @@ TEST_F(ExoLibCleanState, readSingle_200Response_goodFormat)
     EXPECT_TRUE(parsed);
 
     // build expected body
-    char * expected_response = "5";
+    char * expected_response = (char*)"5";
 
     // Check response is the value we responded with
     EXPECT_STREQ(expected_response,responseBuffer);

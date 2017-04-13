@@ -50,9 +50,6 @@
    If you are have a need to increase string length, you can freely adjust
    this number up to uint16_t*/
 
-
-
-
 // ENUMS
 /*!
  * Tracks the current state of the device on the Exosite Platform.
@@ -80,20 +77,14 @@ int32_t exosite_write(const char * writeData, uint16_t length);
 int32_t exosite_read(const char * alias, char * readResponse, uint16_t buflen, uint16_t * responseSize);
 int32_t exosite_readSingle(const char * alias, char * readResponse, uint16_t buflen, uint16_t * length);
 
-#if 0
-int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength);
-#endif
-
 int8_t exosite_getTimestamp(int32_t * timestamp);
-int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
 
+// Internal
+int32_t exosite_getBody(char *response, char **bodyStart, uint16_t *bodyLength);
 uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
 void exosite_setCIK(char * pCIK);
-
 uint8_t exosite_resetCik();
-
 void exosite_getCIK(char * pCIK);
+
 #endif
-
-
-
+/* vim: set ai cin et sw=4 ts=4 : */

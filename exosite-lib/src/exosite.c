@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
 *  exosite.c - Exosite cloud communications.
-*  Copyright (C) 2012 Exosite LLC
+*  Copyright (C) 2012-2017 Exosite LLC
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
@@ -41,9 +41,6 @@ static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
 static const char STR_READ_URL[] = "GET /onep:v1/stack/alias?";
 static const char STR_WRITE_URL[] = "POST /onep:v1/stack/alias ";
 static const char STR_ACTIVATE_URL[] = "POST /provision/activate ";
-#if 0
-static const char STR_RPC_URL[] = "POST /onep:v1/rpc/process ";
-#endif
 static const char STR_HTTP[] = "HTTP/1.1";
 static const char STR_HOST[] = "Host: m2.exosite.com";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
@@ -858,88 +855,6 @@ int8_t exosite_getTimestamp(int32_t * timestamp)
     return 0;
 
 }
-
-#if 0
-/*!
- * @brief  Makes a request to the Exosite RPC API
- *
- *
- * @param requestBody Full json rpc request string
- * @param requestLength Length of json request string
- *
- * @return int32_t
- */
-int32_t exosite_rawRpcRequest(const char * requestBody, uint16_t requestLength, char * responseBuffer, int32_t responseBufferLength)
-{
-    char contentLengthStr[5];
-    uint16_t responseLength = 0;
-    uint8_t connection_status;
-    uint8_t len_of_contentLengthStr;
-    int32_t results = 0;
-
-    if(!exosite_isCIKValid(cikBuffer))
-    {
-        // tried to write without a valid CIK
-        return -99;
-    }
-
-    // connect to exosite
-    connection_status = exosite_connect();
-
-    if (connection_status != 0)
-    {
-        return connection_status;
-    }
-
-    // assume content length will never be over 9999 bytes
-
-    len_of_contentLengthStr = exoPal_itoa((int)requestLength, contentLengthStr, 5);
-
-
-    // send request
-    results |= exoPal_socketWrite(STR_RPC_URL, sizeof(STR_RPC_URL)-1);
-    results |= exoPal_socketWrite(STR_HTTP, sizeof(STR_HTTP)-1);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-
-    // send Host header
-    results |= exoPal_socketWrite(STR_HOST, sizeof(STR_HOST)-1);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-
-    // send content type header
-    results |= exoPal_socketWrite(STR_CONTENT_JSON, sizeof(STR_CONTENT_JSON)-1);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-
-    // send accept header
-    results |= exoPal_socketWrite(STR_ACCEPT_JSON, sizeof(STR_ACCEPT_JSON)-1);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-
-    // send content length header
-    results |= exoPal_socketWrite(STR_CONTENT_LENGTH, sizeof(STR_CONTENT_LENGTH)-1);
-    results |= exoPal_socketWrite(contentLengthStr, len_of_contentLengthStr);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-    results |= exoPal_socketWrite(STR_CRLF, sizeof(STR_CRLF)-1);
-
-    // send body
-    results |= exoPal_socketWrite(requestBody, requestLength);
-
-    if (results != 0)
-    {
-        exosite_disconnect();
-        return results;
-    }
-
-
-    exoPal_sendingComplete();
-
-    // get response
-    exoPal_getResponse(responseBuffer, responseBufferLength, &responseLength);
-
-    exosite_disconnect();
-    return responseLength;
-
-}
-#endif
-
 
 /*!
  * \brief Connects to Exosite
