@@ -540,7 +540,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 // Just activated.
 
                 // copy into cik, by parts if need be.
-                int remain = MIN(len, CIK_LENGTH - state->wb_offset);
+                unsigned int remain = MIN(len, (unsigned int)(CIK_LENGTH - state->wb_offset));
                 EXO_ASSERT(remain > 0);
                 exoPal_memmove(&state->cik[state->wb_offset], data, remain);
                 state->wb_offset += remain;
