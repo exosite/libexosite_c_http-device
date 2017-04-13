@@ -62,6 +62,21 @@ static const char STR_MODEL[] = "&model=";
 static const char STR_SN[] = "&sn=";
 static const char STR_CRLF[] = "\r\n";
 
+/******************************************************************************/
+/* Local Prototypes */
+void exosite_send_http_req(Exosite_state_t *state);
+void exosite_http_rpl_init(exoHttp_rpl_t *http_rpl);
+void exosite_http_rpl_header_name(Exosite_state_t *state, const char *data, size_t len);
+void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, size_t len);
+int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len);
+void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len);
+void exosite_activate(Exosite_state_t *state);
+uint8_t exosite_isCIKValid(char cik[CIK_LENGTH]);
+int exosite_lib_start_complete(exoPal_state_t *pal, int status);
+int exosite_lib_connected(exoPal_state_t *pal, int status);
+int exosite_lib_send_complete(exoPal_state_t *pal, int status);
+int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len);
+int exosite_lib_socket_closed(exoPal_state_t *pal, int status);
 
 /******************************************************************************/
 void exosite_send_http_req(Exosite_state_t *state)
@@ -230,8 +245,6 @@ void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, siz
 //    printf("THUNK -> Header value: %.*s\n", (int)len, data);
 }
 
-// Just the prototype here. Implementation is down below.
-int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len);
 
 void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
 {
