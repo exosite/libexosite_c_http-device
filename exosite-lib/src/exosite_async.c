@@ -550,6 +550,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                     // ok, all of CIK is now in cik; save it.
                     if(exosite_isCIKValid(state->cik)) {
                         exoPal_setCik(state->cik, CIK_LENGTH);
+                        state->statusCode = 200;
                     } else {
                         // It gave us an invalid CIK!?!?!?!
                         state->statusCode = -200;
@@ -557,6 +558,10 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 
                     retcode = 1;
                 }
+            } else {
+                // All other status codes.
+                state->statusCode = state->http.rpl.statusCode;
+                retcode = 1;
             }
             break;
 
@@ -621,7 +626,7 @@ int exosite_lib_socket_closed(exoPal_state_t *pal, int status)
             state->stage = Exosite_Stage_idle;
             state->state = Exosite_State_idle;
             if(state->ops.on_start_complete) {
-                state->ops.on_start_complete(state, 200);
+                state->ops.on_start_complete(state, state->statusCode);
             }
             break;
 

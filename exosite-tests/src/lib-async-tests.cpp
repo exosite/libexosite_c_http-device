@@ -238,6 +238,67 @@ TEST_F(ExositeAsyncLib, canStart)
 }
 // TODO: test re-activation (409)
 // TODO: test activates with bad data and error codes and such.
+/******************************************************************************/
+int exotest_inStart_activateIs404_status(Exosite_state_t *state, int status)
+{
+    ExositeAsyncLib *me = (ExositeAsyncLib *)state->context;
+    me->callbacksHit |= CB_BIT_start_complete;
+    me->hit_cb_start_complete ++;
+    EXPECT_EQ(404, status);
+    return -1;
+}
+TEST_F(ExositeAsyncLib, inStart_activateIs404)
+{
+    int ret;
+    exoLib.ops.on_start_complete = exotest_inStart_activateIs404_status;
+
+    // Setup test data
+    strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
+    strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
+    strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    nvm->retVal_start = 0;
+    nvm->retVal_tcpSocketOpen = 0;
+    nvm->retVal_socketWrite = 0;
+    nvm->retVal_socketRead = 0;
+    nvm->retVal_tcpSocketClose = 0;
+    nvm->readFromBufferLen = strlcpy(nvm->readFromBuffer, "HTTP/1.1 404 Not Found\r\n"
+            "Date: Mon, 17 Apr 2017 20:48:04 GMT\r\n"
+            "Content-Length: 24\r"
+            "\nServer: nginx\r\n\r\nHTTP/1.1 404 Not Found\r\n"
+            , sizeof(nvm->readFromBuffer));
+
+    // Call function to test
+    ret = exosite_start(&exoLib);
+    // This will call:
+    // - exoPal_init()
+    // - exoPal_getVendor()
+    // - exoPal_getUuid()
+    // - exoPal_start()
+    // - exosite_activate()
+    // - exoPal_tcpSocketOpen()
+    // - mutilple: exoPal_socketWrite()
+    // - exoPal_sendingComplete()
+    // - as many as needed: exoPal_socketRead()
+    // - exoPal_tcpSocketClose()
+    // - ops.on_start_complete()
+
+    EXPECT_EQ(0, ret);
+    EXPECT_STREQ(TEST_VENDOR, exoLib.projectid);
+    EXPECT_STREQ(TEST_MODEL, exoLib.modelid);
+    EXPECT_STREQ("1234567", exoLib.uuid);
+    EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
+    EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
+    EXPECT_STREQ("POST /provision/activate HTTP/1.1\r\n"
+            "Host: aVendor.m2.exosite.com\r\n"
+            "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
+            "Content-Length: 39\r\n"
+            "\r\n"
+            "vendor=aVendor&model=aModel&sn=1234567",
+            nvm->writeToBuffer);
+    EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
+    EXPECT_EQ(1, hit_cb_start_complete);
+}
 
 /******************************************************************************/
 int exotest_writeRequest_status(Exosite_state_t *state, int status)
