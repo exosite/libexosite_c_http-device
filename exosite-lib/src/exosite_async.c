@@ -392,7 +392,9 @@ void exosite_activate(Exosite_state_t *state)
     state->http.req.method_url_path = (char*)STR_ACTIVATE_URL;
     state->http.req.content_length = (sizeof(STR_VENDOR) - 1) +
         (sizeof(STR_MODEL) - 1) + (sizeof(STR_SN) - 1) +
-        (exoPal_strlen(state->projectid) * 2) + exoPal_strlen(state->uuid);
+        exoPal_strlen(state->projectid) +
+        exoPal_strlen(state->modelid) +
+        exoPal_strlen(state->uuid);
     state->http.req.is_post = 1;
     state->http.req.include_cik = 0;
     state->http.req.is_activate = 1;
