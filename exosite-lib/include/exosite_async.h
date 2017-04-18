@@ -50,6 +50,7 @@ enum exoHttp_req_e {
     exoHttp_req_query,
     exoHttp_req_http_version,
     exoHttp_req_host,
+    exoHttp_req_agent,
     exoHttp_req_cik,
     exoHttp_req_content,
     exoHttp_req_accept,

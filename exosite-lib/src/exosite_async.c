@@ -52,6 +52,7 @@ static const char STR_HTTP[] = " HTTP/1.1";
 static const char STR_HOST[] = "Host: ";
 static const char STR_HOST_ROOT[] = ".m2.exosite.com";
 static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
+static const char STR_AGENT_HEADER[] = "User-Agent: Exosite-Async-C-lib/1.0";
 static const char STR_REQUEST_TIMEOUT[] = "Request-Timeout: ";
 static const char STR_MODIFIED_SINCE[] = "If-Modified-Since: ";
 static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
@@ -121,6 +122,15 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_strlcpy(state->workbuf, STR_HOST, sizeof(state->workbuf));
             exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
             exoPal_strlcat(state->workbuf, STR_HOST_ROOT, sizeof(state->workbuf));
+            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
+            req->step = exoHttp_req_agent;
+            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+            break;
+
+        case exoHttp_req_agent:
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+            exoPal_strlcpy(state->workbuf, STR_AGENT_HEADER, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
             req->step = exoHttp_req_cik;

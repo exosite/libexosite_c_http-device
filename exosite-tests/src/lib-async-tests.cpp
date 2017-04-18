@@ -227,6 +227,7 @@ TEST_F(ExositeAsyncLib, canStart)
     EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
     EXPECT_STREQ("POST /provision/activate HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Content-Length: 39\r\n"
@@ -287,9 +288,10 @@ TEST_F(ExositeAsyncLib, inStart_activateIs404)
     EXPECT_STREQ(TEST_MODEL, exoLib.modelid);
     EXPECT_STREQ("1234567", exoLib.uuid);
     EXPECT_STREQ("aVendor.m2.exosite.com", nvm->hostname);
-    EXPECT_STREQ("abcdef1234abcdef1234abcdef1234abcdef1234", exoLib.cik);
+    EXPECT_STREQ("", exoLib.cik);
     EXPECT_STREQ("POST /provision/activate HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Content-Length: 39\r\n"
@@ -351,6 +353,7 @@ TEST_F(ExositeAsyncLib, writeRequest)
     EXPECT_STREQ(
             "POST /onep:v1/stack/alias HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "X-Exosite-CIK: abcdef1234abcdef1234abcdef1234abcdef1234\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
@@ -436,6 +439,7 @@ TEST_F(ExositeAsyncLib, readRequest)
     EXPECT_STREQ(
             "GET /onep:v1/stack/alias?temp&hum&lux HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "X-Exosite-CIK: abcdef1234abcdef1234abcdef1234abcdef1234\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
@@ -521,6 +525,7 @@ TEST_F(ExositeAsyncLib, hybridRequest)
     EXPECT_STREQ(
             "POST /onep:v1/stack/alias?temp&hum&lux HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "X-Exosite-CIK: abcdef1234abcdef1234abcdef1234abcdef1234\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
@@ -609,6 +614,7 @@ TEST_F(ExositeAsyncLib, longpollRequest)
     EXPECT_STREQ(
             "GET /onep:v1/stack/alias?temp&hum&lux HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "X-Exosite-CIK: abcdef1234abcdef1234abcdef1234abcdef1234\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
@@ -679,6 +685,7 @@ TEST_F(ExositeAsyncLib, timestampRequest)
     EXPECT_STREQ(
             "GET /timestamp HTTP/1.1\r\n"
             "Host: aVendor.m2.exosite.com\r\n"
+            "User-Agent: Exosite-Async-C-lib/1.0\r\n"
             "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "\r\n"
