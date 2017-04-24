@@ -56,6 +56,7 @@ static const char STR_AGENT_HEADER[] = "User-Agent: Exosite-Async-C-lib/1.0";
 static const char STR_REQUEST_TIMEOUT[] = "Request-Timeout: ";
 static const char STR_MODIFIED_SINCE[] = "If-Modified-Since: ";
 static const char STR_CONTENT_LENGTH[] = "Content-Length: ";
+static const char STR_CONNECTION_CLOSE[] = "Connection: close";
 static const char STR_ACCEPT[] = "Accept: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_CONTENT[] = "Content-Type: application/x-www-form-urlencoded; charset=utf-8";
 static const char STR_VENDOR[] = "vendor=";
@@ -133,9 +134,19 @@ void exosite_send_http_req(Exosite_state_t *state)
             exoPal_strlcpy(state->workbuf, STR_AGENT_HEADER, sizeof(state->workbuf));
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
+            req->step = exoHttp_req_connection;
+            exoPal_socketWrite(state->exoPal, state->workbuf, slen);
+            break;
+
+        case exoHttp_req_connection:
+            exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
+            exoPal_strlcpy(state->workbuf, STR_CONNECTION_CLOSE, sizeof(state->workbuf));
+            slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
+
             req->step = exoHttp_req_cik;
             exoPal_socketWrite(state->exoPal, state->workbuf, slen);
             break;
+
 
         case exoHttp_req_cik:
             req->step = exoHttp_req_content;
