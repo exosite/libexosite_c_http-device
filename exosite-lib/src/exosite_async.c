@@ -546,6 +546,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
                 }
 
                 // activate complete!
+                state->statusCode = 200;
                 retcode = 1;
 
             } else if(state->http.rpl.statusCode == 200) {
