@@ -235,6 +235,7 @@ TEST_F(ExositeAsyncLib, canStart)
             "\r\n"
             "vendor=aVendor&model=aModel&sn=1234567",
             nvm->writeToBuffer);
+    EXPECT_EQ(40, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
 }
@@ -300,6 +301,7 @@ TEST_F(ExositeAsyncLib, inStart_activateIs404)
             "\r\n"
             "vendor=aVendor&model=aModel&sn=1234567",
             nvm->writeToBuffer);
+    EXPECT_EQ(24, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_start_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_start_complete);
 }
@@ -364,6 +366,7 @@ TEST_F(ExositeAsyncLib, writeRequest)
             "\r\n"
             "temp=42&hum=30&lux=14000",
             nvm->writeToBuffer);
+    EXPECT_EQ(0, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_write_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_write_complete);
 
@@ -449,6 +452,7 @@ TEST_F(ExositeAsyncLib, readRequest)
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "\r\n"
             , nvm->writeToBuffer);
+    EXPECT_EQ(24, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_read_begin | CB_BIT_read_raw | CB_BIT_read_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_read_begin);
     EXPECT_EQ(1, hit_cb_read_raw);
@@ -538,6 +542,7 @@ TEST_F(ExositeAsyncLib, hybridRequest)
             "\r\n"
             "temp=42&hum=30&lux=14000"
             , nvm->writeToBuffer);
+    EXPECT_EQ(24, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_read_begin | CB_BIT_read_raw | CB_BIT_read_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_read_begin);
     EXPECT_EQ(1, hit_cb_read_raw);
@@ -627,6 +632,7 @@ TEST_F(ExositeAsyncLib, longpollRequest)
             "Request-Timeout: 300000\r\n"
             "\r\n"
             , nvm->writeToBuffer);
+    EXPECT_EQ(24, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_read_begin | CB_BIT_read_raw | CB_BIT_read_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_read_begin);
     EXPECT_EQ(1, hit_cb_read_raw);
@@ -697,6 +703,7 @@ TEST_F(ExositeAsyncLib, timestampRequest)
             "Accept: application/x-www-form-urlencoded; charset=utf-8\r\n"
             "\r\n"
             , nvm->writeToBuffer);
+    EXPECT_EQ(10, exoLib.http.rpl.content_length);
     EXPECT_EQ(CB_BIT_timestamp_complete, callbacksHit);
     EXPECT_EQ(1, hit_cb_timestamp_complete);
 }
