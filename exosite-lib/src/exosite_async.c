@@ -266,6 +266,12 @@ void exosite_http_rpl_header_value(Exosite_state_t *state, const char *data, siz
 //    printf("THUNK -> Header value: %.*s\n", (int)len, data);
 }
 
+char exosite_to_lower(char c) {
+    if(c >= 'A' && c <= 'Z') {
+        return c + ('a'-'A');
+    }
+    return c;
+}
 
 void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len)
 {
@@ -317,6 +323,12 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
                     // error.
                     rpl->step = exoHttp_rpl_looking_for_lf_start_body;
                 } else {
+                    // Watch for Content-Length.
+                    if(exosite_to_lower(dc) == 'c') {
+                        rpl->could_be_content_length = 1;
+                    } else {
+                        rpl->could_be_content_length = -1;
+                    }
                     start_mark = data;
                     rpl->step = exoHttp_rpl_header_looking_for_sep;
                 }
@@ -326,16 +338,32 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
                     // switch to value
                     rpl->step = exoHttp_rpl_header_mark_value;
                     exosite_http_rpl_header_name(state, start_mark, data-start_mark);
+                } else if(rpl->could_be_content_length >= 0) {
+                    // Still Content-Length?
+                    if( exosite_to_lower(dc) == exosite_to_lower(STR_CONTENT_LENGTH[rpl->could_be_content_length])) {
+                        rpl->could_be_content_length ++;
+                    } else {
+                        rpl->could_be_content_length = -1;
+                    }
                 }
                 break;
             case exoHttp_rpl_header_mark_value:
-                    start_mark = data;
-                    rpl->step = exoHttp_rpl_header_looking_for_cr;
-                    // this *must* fall-thru
+                start_mark = data;
+                rpl->step = exoHttp_rpl_header_looking_for_cr;
+                if(rpl->could_be_content_length > 0) {
+                    rpl->content_length = 0;
+                }
+                // this *must* fall-thru
             case exoHttp_rpl_header_looking_for_cr:
                 if(dc == '\r') {
                     rpl->step = exoHttp_rpl_header_looking_for_lf;
                     exosite_http_rpl_header_value(state, start_mark, data-start_mark);
+                } else if(rpl->could_be_content_length > 0) {
+                    // This is Content-Length
+                    if(dc >= '0' && dc <= '9') {
+                        rpl->content_length *= 10;
+                        rpl->content_length += dc - '0';
+                    }
                 }
                 break;
             case exoHttp_rpl_header_looking_for_lf:
@@ -346,6 +374,7 @@ void exosite_http_rpl_parse(Exosite_state_t *state, const char *data, size_t len
                 } else {
                     rpl->step = exoHttp_rpl_error;
                 }
+                rpl->could_be_content_length = -1;
                 break;
 
 

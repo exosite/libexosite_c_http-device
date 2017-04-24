@@ -102,11 +102,10 @@ enum exoHttp_rpl_e {
  */
 struct exoHttp_rpl_s {
     enum exoHttp_rpl_e step;
+    int could_be_content_length;
+
     uint16_t statusCode; //!> HTTP status code
-#if 0
-    // Maybe future feature.
     size_t content_length; //!> Value of Content-Length header, if it exists.
-#endif
 
 };
 typedef struct exoHttp_rpl_s exoHttp_rpl_t;
