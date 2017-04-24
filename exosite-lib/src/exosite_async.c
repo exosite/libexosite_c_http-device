@@ -80,6 +80,7 @@ int exosite_lib_connected(exoPal_state_t *pal, int status);
 int exosite_lib_send_complete(exoPal_state_t *pal, int status);
 int exosite_lib_recv(exoPal_state_t *pal, const char *data, size_t len);
 int exosite_lib_socket_closed(exoPal_state_t *pal, int status);
+char exosite_to_lower(char c);
 
 /******************************************************************************/
 void exosite_send_http_req(Exosite_state_t *state)
