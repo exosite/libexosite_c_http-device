@@ -51,7 +51,7 @@ static const char STR_ACTIVATE_URL[] = "/provision/activate";
 static const char STR_QM[] = "?";
 static const char STR_HTTP[] = " HTTP/1.1";
 static const char STR_HOST[] = "Host: ";
-static const char STR_HOST_ROOT[] = ".m2.exosite.com";
+//static const char STR_HOST_ROOT[] = ".m2.exosite.com";
 static const char STR_CIK_HEADER[] = "X-Exosite-CIK: ";
 static const char STR_AGENT_HEADER[] = "User-Agent: Exosite-Async-C-lib/1.0";
 static const char STR_REQUEST_TIMEOUT[] = "Request-Timeout: ";
@@ -122,9 +122,8 @@ void exosite_send_http_req(Exosite_state_t *state)
 
         case exoHttp_req_host:
             exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
-            exoPal_strlcpy(state->workbuf, STR_HOST, sizeof(state->workbuf));
-            exoPal_strlcat(state->workbuf, state->projectid, sizeof(state->workbuf));
-            exoPal_strlcat(state->workbuf, STR_HOST_ROOT, sizeof(state->workbuf));
+            slen = exoPal_strlcpy(state->workbuf, STR_HOST, sizeof(state->workbuf));
+            exoPal_getHostname(&state->workbuf[slen], sizeof(state->workbuf)-slen);
             slen = exoPal_strlcat(state->workbuf, STR_CRLF, sizeof(state->workbuf));
 
             req->step = exoHttp_req_agent;
@@ -739,8 +738,6 @@ void exosite_init(Exosite_state_t *state)
 
 int exosite_start(Exosite_state_t *state)
 {
-    char hostbuf[MAX_VENDOR_LENGTH + sizeof(STR_HOST_ROOT) + 1];
-
     if(state->state != Exosite_State_initialized) {
         return -1;
     }
@@ -763,15 +760,13 @@ int exosite_start(Exosite_state_t *state)
     state->projectid[MAX_VENDOR_LENGTH-1] = '\0';
     exoPal_getModel(state->modelid, MAX_MODEL_LENGTH);
     state->modelid[MAX_MODEL_LENGTH-1] = '\0';
-    exoPal_strlcpy(hostbuf, state->projectid, sizeof(hostbuf));
-    exoPal_strlcat(hostbuf, STR_HOST_ROOT, sizeof(hostbuf));
 
     // Need the SN.
     exoPal_getUuid(state->uuid, MAX_UUID_LENGTH);
 
     state->state = Exosite_State_pal_starting;
     // Start up pal. (includes a DNS lookup.)
-    return exoPal_start(state->exoPal, hostbuf);
+    return exoPal_start(state->exoPal);
 }
 
 int exosite_write(Exosite_state_t *state, const char *aliasesAndValues)

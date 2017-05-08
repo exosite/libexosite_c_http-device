@@ -207,6 +207,25 @@ uint8_t exoPal_getUuid(char * read_buffer, uint8_t maxlen)
     return 0;
 }
 
+/*!
+ * \brief Retrieves hostname
+ *
+ * Retrieves the hostname for your product.
+ *
+ * For Murano ADC products, this is found on the web page or from `murano device
+ * httpurl`
+ *
+ * For OnePlatform products, this is the vendor token followed by '.m2.exosite.com'
+ *
+ * \param[out] read_buffer Buffer to put the devices UUID into.
+ * \param[in] maxlen Size of the read_buffer
+ * \return 1 if failed to retrieve UUID, else 0
+ */
+uint8_t exoPal_getHostname(char *read_buffer, uint8_t maxlen)
+{
+    return 0;
+}
+
 /**@}*/
 /*****************************************************************************
  * \defgroup Async Sockets PAL
