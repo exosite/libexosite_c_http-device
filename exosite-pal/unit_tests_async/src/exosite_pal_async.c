@@ -242,6 +242,26 @@ uint8_t exoPal_getUuid(char * read_buffer, uint8_t maxlen)
     return mem_nvm.retVal_getUuid;
 }
 
+/*!
+ * \brief Retrieves hostname
+ *
+ * Retrieves the hostname for your product.
+ *
+ * For Murano ADC products, this is found on the web page or from `murano device
+ * httpurl`
+ *
+ * For OnePlatform products, this is the vendor token followed by '.m2.exosite.com'
+ *
+ * \param[out] read_buffer Buffer to put the devices UUID into.
+ * \param[in] maxlen Size of the read_buffer
+ * \return 1 if failed to retrieve UUID, else 0
+ */
+uint8_t exoPal_getHostname(char *read_buffer, uint8_t maxlen)
+{
+    memcpy(read_buffer, mem_nvm.hostname, sizeof(mem_nvm.hostname));
+    return mem_nvm.retVal_getHostname;
+}
+
 /**@}*/
 /*****************************************************************************
  * \defgroup Async Sockets PAL
@@ -273,9 +293,8 @@ void exoPal_init(exoPal_state_t *state)
  * \retval 0 Everything is ok
  * \retval !0 Errors.
  */
-int exoPal_start(exoPal_state_t *state, const char *host)
+int exoPal_start(exoPal_state_t *state)
 {
-    exoPal_strlcpy(mem_nvm.hostname, host, sizeof(mem_nvm.hostname));
     if(state->ops.on_start_complete)
     {
         state->ops.on_start_complete(state, mem_nvm.retVal_start);

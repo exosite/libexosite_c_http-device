@@ -151,6 +151,7 @@ TEST_F(ExositeAsyncLib, canNotStart)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 100;
 
     // Call function to test
@@ -189,6 +190,7 @@ TEST_F(ExositeAsyncLib, canStart)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -259,6 +261,7 @@ TEST_F(ExositeAsyncLib, inStart_activateIs404)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -322,6 +325,7 @@ TEST_F(ExositeAsyncLib, writeRequest)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -406,6 +410,7 @@ TEST_F(ExositeAsyncLib, readRequest)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -494,6 +499,7 @@ TEST_F(ExositeAsyncLib, hybridRequest)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -585,6 +591,7 @@ TEST_F(ExositeAsyncLib, longpollRequest)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
@@ -659,6 +666,7 @@ TEST_F(ExositeAsyncLib, timestampRequest)
     strlcpy(nvm->vendor, TEST_VENDOR, sizeof(nvm->vendor));
     strlcpy(nvm->model, TEST_MODEL, sizeof(nvm->vendor));
     strlcpy(nvm->uuid, "1234567", sizeof(nvm->uuid));
+    strlcpy(nvm->hostname, "aVendor.m2.exosite.com", sizeof(nvm->hostname));
     nvm->retVal_start = 0;
     nvm->retVal_tcpSocketOpen = 0;
     nvm->retVal_socketWrite = 0;
