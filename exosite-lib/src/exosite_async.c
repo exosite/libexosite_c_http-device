@@ -624,7 +624,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 
                     retcode = 1;
                 }
-            } else if(state->http.rpl.statusCode == 403) {
+            } else if(state->http.rpl.statusCode == 415) {
                 // We identified with a TLS Client Certificate.
                 // Carry on.
                 state->statusCode = 200;
