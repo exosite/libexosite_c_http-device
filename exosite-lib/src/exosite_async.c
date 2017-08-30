@@ -151,7 +151,7 @@ void exosite_send_http_req(Exosite_state_t *state)
 
         case exoHttp_req_cik:
             req->step = exoHttp_req_content;
-            if(req->include_cik) {
+            /*if(req->include_cik) {
                 exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
                 exoPal_strlcpy(state->workbuf, STR_CIK_HEADER, sizeof(state->workbuf));
                 exoPal_strlcat(state->workbuf, state->cik, sizeof(state->workbuf));
@@ -159,7 +159,7 @@ void exosite_send_http_req(Exosite_state_t *state)
 
                 exoPal_socketWrite(state->exoPal, state->workbuf, slen);
                 break;
-            }
+            }*/
             // Fall-thru if no CIK
 
         case exoHttp_req_content:
@@ -505,7 +505,12 @@ int exosite_lib_start_complete(exoPal_state_t *pal, int status)
 
     // Everything should be ready for network IO now.
     // We always do an activate next.
-    exosite_activate(state);
+    // exosite_activate(state);
+	state->stage = Exosite_Stage_idle;
+	state->state = Exosite_State_idle;
+	if(state->ops.on_start_complete) {
+		state->ops.on_start_complete(state, 200);
+	}
     return 0;
 }
 
@@ -624,7 +629,7 @@ int exosite_http_rpl_body(Exosite_state_t *state, const char *data, size_t len)
 
                     retcode = 1;
                 }
-            } else if(state->http.rpl.statusCode == 415) {
+            } else if(state->http.rpl.statusCode == 403) {
                 // We identified with a TLS Client Certificate.
                 // Carry on.
                 state->statusCode = 200;
