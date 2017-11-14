@@ -152,7 +152,7 @@ void exosite_send_http_req(Exosite_state_t *state)
         case exoHttp_req_cik:
             req->step = exoHttp_req_content;
             // FIXME: If using TLS Client Certificate, then NEVER send this header.
-            // Or if state->cik[0] == 0 ?
+            // Or if state->cik[0] == 0 ? // && strlen(state->cik) == 40 ???
             if(req->include_cik) {
                 exoPal_memset(state->workbuf, 0, sizeof(state->workbuf));
                 exoPal_strlcpy(state->workbuf, STR_CIK_HEADER, sizeof(state->workbuf));
