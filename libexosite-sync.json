@@ -1,0 +1,34 @@
+{
+  "name": "libexosite_c_http-data-api_sync",
+  "keywords": "",
+  "description": "Exosite Synchronous C Library for HTTP-Data-API",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/exosite/libexosite_c_http-device.git"
+  },
+  "authors": [
+    {
+      "name": "Michael Conrad Tadpol Tilstra",
+      "email": "miketilstra@exosite.com",
+      "maintainer": true
+    },
+    {
+      "name": "Andy Lee",
+      "email": "andylee@exosite.com"
+    },
+    {
+      "name": "Will Charlton",
+      "email": "willcharlton@exosite.com"
+    }
+  ],
+  "version": "2.0.0",
+  "frameworks": "*",
+  "platforms": "*",
+  "export": {
+    "include": [
+      "exosite-lib/include/exosite.h",
+      "exosite-lib/src/exosite.c"
+    ]
+  }
+}
