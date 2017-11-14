@@ -15,6 +15,8 @@ Then you need to implement the pal files.  Look to `exosite-pal/pal_sync_templat
 or `exosite-pal/pal_async_template` to get started.
 
 
+API docs are at https://exosite.github.io/libexosite_c_http-device/
+
 # Developing
 
 ## Unit Tests
