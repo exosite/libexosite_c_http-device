@@ -1,6 +1,6 @@
 {
-  "name": "libexosite_c_http-data-api_ssync",
-  "keywords": "",
+  "name": "libexosite http-data-api async",
+  "keywords": "communication,http,iot",
   "description": "Exosite Asynchronous C Library for HTTP-Data-API",
   "repository":
   {

@@ -1,6 +1,6 @@
 {
-  "name": "libexosite_c_http-data-api_sync",
-  "keywords": "",
+  "name": "libexosite http-data-api sync",
+  "keywords": "communication,http,iot",
   "description": "Exosite Synchronous C Library for HTTP-Data-API",
   "repository":
   {
