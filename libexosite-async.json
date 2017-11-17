@@ -9,17 +9,9 @@
   },
   "authors": [
     {
-      "name": "Michael Conrad Tadpol Tilstra",
-      "email": "miketilstra@exosite.com",
+      "name": "Applications Engineering",
+      "email": "support@exosite.com",
       "maintainer": true
-    },
-    {
-      "name": "Andy Lee",
-      "email": "andylee@exosite.com"
-    },
-    {
-      "name": "Will Charlton",
-      "email": "willcharlton@exosite.com"
     }
   ],
   "version": "2.0.0",
@@ -28,7 +20,10 @@
   "export": {
     "include": [
       "exosite-lib/include/exosite_async.h",
-      "exosite-lib/src/exosite_async.c"
+      "exosite-lib/src/exosite_async.c",
+	  "exosite-pal/pal_async_template/src/exosite_pal_async.c",
+	  "exosite-pal/pal_async_template/include/exosite_pal_async.h",
+	  "README.md"
     ]
   }
 }
