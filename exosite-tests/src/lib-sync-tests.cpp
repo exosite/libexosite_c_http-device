@@ -116,7 +116,7 @@ TEST_F(ExoLibCleanState, provisionActivateRequest)
 
 
     EXO_STATE resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+    resp = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
@@ -168,7 +168,7 @@ TEST_F(ExoLibCleanState, provisionActivate_200Response_goodFormat)
 
 
     EXO_STATE resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+    resp = exosite_init();
 
     // Init should have been successful
     EXPECT_EQ(EXO_STATE_INIT_COMPLETE,resp);
@@ -191,7 +191,7 @@ TEST_F(ExoLibCleanState, readRequest)
 
 
     EXO_STATE respa;
-    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
+    respa = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
@@ -245,7 +245,7 @@ TEST_F(ExoLibCleanState, read_200Response_goodFormat)
 
 
     uint8_t resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+    resp = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
@@ -292,7 +292,7 @@ TEST_F(ExoLibCleanState, readSingleRequest)
 
 
     EXO_STATE respa;
-    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
+    respa = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);
@@ -339,7 +339,7 @@ TEST_F(ExoLibCleanState, readSingle_200Response_goodFormat)
     exosite_setCIK(validTestcik);
 
     uint8_t resp;
-    resp = exosite_init(TEST_VENDOR, TEST_MODEL);
+    resp = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,resp);
@@ -381,7 +381,7 @@ TEST_F(ExoLibCleanState, writeRequest)
 
 
     EXO_STATE respa;
-    respa = exosite_init(TEST_VENDOR, TEST_MODEL);
+    respa = exosite_init();
 
     // We didn't set a response, so we should receive a NO_RESPONSE
     EXPECT_EQ(EXO_STATE_NO_RESPONSE,respa);

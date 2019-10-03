@@ -41,16 +41,18 @@
 /*!< This defines the size of the rx buffer in the PAL.  This buffer is used
 to place incoming data from the modem/socket in.*/
 #define RX_BUFFER_SIZE                         512
+#define MAX_HOSTNAME_SIZE   100
 
 extern char  exoPal_rxBuffer[RX_BUFFER_SIZE];
 
 // functions for export
 void exoPal_init();
+uint8_t exoPal_getHostname(char* read_buffer);
 uint8_t exoPal_setCik(const char * read_buffer);
 uint8_t exoPal_getCik(char * read_buffer);
 uint8_t exoPal_getModel(char * read_buffer);
 uint8_t exoPal_getVendor(char * read_buffer);
-uint8_t exoPal_getUuid(char * read_buffer);
+uint8_t exoPal_getUuid(char* read_buffer);
 
 uint8_t exoPal_tcpSocketClose();
 uint8_t exoPal_tcpSocketOpen();

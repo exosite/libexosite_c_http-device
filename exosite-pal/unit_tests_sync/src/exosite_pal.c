@@ -39,6 +39,29 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+#include <stdlib.h> //for exit(0);
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <errno.h> //For errno - the error number
+#include <netdb.h>   //hostent
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+
+char hostname[MAX_HOSTNAME_SIZE];;
+static int sockfd = 0, n = 0;
+char recvBuff[1024];
+pthread_t listening_thread_id;
+static char writeBuff[1024];
+static int writeLen;
+
+
+/*
+ * Private
+ */
+int hostname_to_ip(char * hostname , char* ip);
+
 
 /*!
  * Buffer for rx data
@@ -98,7 +121,6 @@ void * getUnitTestStorageStruct()
 uint16_t exoPal_strlen(const char *s)
 {
     return strlen(s);
-
 }
 
 /*!
@@ -164,10 +186,8 @@ void * exoPal_memcpy(void* dst, const void * src, uint16_t length)
  */
 uint8_t exoPal_tcpSocketClose()
 {
-    isSocketOpen = 0;
-    return mem_nvm.retVal_tcpSocketClose;
+    return close(sockfd);
 }
-
 
 /*!
  * \brief Opens a tcp socket
@@ -183,12 +203,35 @@ uint8_t exoPal_tcpSocketClose()
  */
 uint8_t exoPal_tcpSocketOpen()
 {
-    if (mem_nvm.retVal_tcpSocketOpen == 0)
+    //Get IP Address
+    char ip[100];
+    exoPal_getHostname(hostname);
+    int ret = hostname_to_ip(hostname, ip);
+    printf("Got IP: %s\n", ip);
+
+    struct sockaddr_in serv_addr; 
+
+    memset(recvBuff, '0',sizeof(recvBuff));
+    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        isSocketOpen = 1;
-        mem_nvm.writeToBufferLen = 0;
-    }
-    return mem_nvm.retVal_tcpSocketOpen;
+        printf("\n Error : Could not create socket \n");
+        return 1;
+    } 
+
+    memset(&serv_addr, '0', sizeof(serv_addr)); 
+
+    serv_addr.sin_family = AF_INET;
+    //serv_addr.sin_port = htons(443); 
+    serv_addr.sin_port = htons(80); 
+
+    if(inet_pton(AF_INET, ip, &serv_addr.sin_addr)<=0)
+    {
+        printf("\n inet_pton error occured\n");
+        return 1;
+    } 
+
+    printf("connecting...\n");
+    return connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0;
 }
 
 
@@ -209,13 +252,9 @@ uint8_t exoPal_tcpSocketOpen()
  */
 uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
 {
-    if (isSocketOpen == 1)
-    {
-        exoPal_memcpy(mem_nvm.writeToBuffer + mem_nvm.writeToBufferLen,buffer,len);
-        mem_nvm.writeToBufferLen += len;
-    }
-
-    return mem_nvm.retVal_socketWrite;
+    strcat(writeBuff, buffer);
+    writeLen += len;
+    return 0;
 }
 
 
@@ -235,9 +274,20 @@ uint8_t exoPal_socketWrite( const char * buffer, uint16_t len)
  */
 uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseLength)
 {
-    exoPal_memcpy(buffer,mem_nvm.readFromBuffer,bufSize);
-    *responseLength = mem_nvm.readFromBufferLen;
-    return mem_nvm.retVal_socketRead;
+    n = recv(sockfd, buffer, bufSize, MSG_WAITALL);
+    buffer[n] = 0;
+    if (n == 0)
+        n = recv(sockfd, buffer, bufSize, MSG_WAITALL);
+
+    *responseLength = n;
+
+    if(fputs(buffer, stdout) == EOF)
+    {
+        printf("\n Error : Fputs error\n");
+        return 1;
+    }
+
+    return 0;
 }
 
 
@@ -258,7 +308,6 @@ uint8_t exoPal_socketRead( char * buffer, uint16_t bufSize, uint16_t * responseL
 void exoPal_MSDelay(uint16_t delay)
 {
     //MSTimerDelay(delay);
-
     return;
 }
 
@@ -294,8 +343,14 @@ void exoPal_init()
  */
 uint8_t exoPal_setCik(const char * cik)
 {
-    memcpy( mem_nvm.cik,cik, sizeof(mem_nvm.cik));
-    return mem_nvm.retVal_setCik;
+    FILE *fp;
+    fp = fopen("cik.txt", "w");
+    if (fp == NULL) return -1;
+
+    fprintf(fp, "%s", cik);
+    fclose(fp);
+
+    return 0;
 }
 
 
@@ -313,48 +368,25 @@ uint8_t exoPal_setCik(const char * cik)
  */
 uint8_t exoPal_getCik(char * read_buffer)
 {
-    memcpy( read_buffer,mem_nvm.cik,sizeof(mem_nvm.cik));
-    return mem_nvm.retVal_getCik;
+    FILE *fp;
+    fp = fopen("cik.txt", "r");
+    if (fp == NULL) return -1;
+    fscanf(fp, "%s", read_buffer);
+    printf("GOT CIK from file: %s\n", read_buffer);
+    fclose(fp);
+    return 0;
 }
 
-
-/*!
- * \brief Retrieves the stored Model string
- *
- *
- *
- * \param[in] read_buffer pointer of buffer to place results in
- *
- * \return 0 if successful, else returns error code
- * \sa
- * \note
- * \warning
- */
-uint8_t exoPal_getModel(char * read_buffer)
+uint8_t exoPal_getHostname(char* read_buffer)
 {
-    memcpy(read_buffer,mem_nvm.model, sizeof(mem_nvm.model));
-    return mem_nvm.retVal_getModel;
+    FILE *fp;
+    fp = fopen("hostname.txt", "r");
+    if (fp == NULL) {printf("couldn't find hostname.txt"); return -1;}
+    fscanf(fp, "%s", read_buffer);
+    printf("GOT hostname from file: %s\n", read_buffer);
+    fclose(fp);
+    return 0;
 }
-
-
-/*!
- * \brief Retrieves the vendor string
- *
- *
- *
- * \param[in] read_buffer pointer of buffer to place results in
- *
- * \return returns 0 if successful, else returns error code.
- * \sa
- * \note
- * \warning
- */
-uint8_t exoPal_getVendor(char * read_buffer)
-{
-    memcpy(read_buffer,mem_nvm.vendor, sizeof(mem_nvm.vendor));
-    return mem_nvm.retVal_getVendor;
-}
-
 
 /*!
  * \brief Retrieves UUID from device
@@ -372,8 +404,13 @@ uint8_t exoPal_getVendor(char * read_buffer)
  */
 uint8_t exoPal_getUuid(char * read_buffer)
 {
-    exoPal_memcpy(read_buffer,mem_nvm.uuid, sizeof(mem_nvm.uuid));
-    return mem_nvm.retVal_getUuid;
+    FILE *fp;
+    fp = fopen("uuid.txt", "r");
+    if (fp == NULL) {printf("couldn't find uuid.txt"); return -1;}
+    fscanf(fp, "%s", read_buffer);
+    printf("GOT uuid from file: %s\n", read_buffer);
+    fclose(fp);
+    return 0;
 }
 
 /*!
@@ -384,13 +421,19 @@ uint8_t exoPal_getUuid(char * read_buffer)
  */
 int32_t exoPal_sendingComplete()
 {
-    //printf("[EXOPAL] Sending\r\n");//: %.*s\r\n", exoPal_txBufCounter, exoPal_txBuffer + 45);
-
-   //printf("[EXOPAL] Done Sending\r\n");
-    return 0;
+    writeBuff[writeLen] = '\0';
+    writeLen++;
+    printf("WriteBuff:\n%s\n", writeBuff);
+    printf("WriteLen: %d\n", writeLen);
+    int written =  write(sockfd, writeBuff, writeLen);
+    printf("Wrote: %d\n", written);
+    writeLen = 0;
+    writeBuff[0] = '\0';
+    if (written > 0)
+        return 0;
+    else
+        return written;
 }
-
-
 
 char* exoPal_strstr(const char *in, const char *str)
 {
@@ -414,5 +457,35 @@ char* exoPal_strstr(const char *in, const char *str)
 
 	return (char *) (in - 1);
 }
+
+/*
+    Get ip from domain name
+ */
+int hostname_to_ip(char * hostname , char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+
+    if ( (he = gethostbyname( hostname ) ) == NULL) 
+    {
+        // get the host info
+        herror("gethostbyname");
+        return 1;
+    }
+
+    addr_list = (struct in_addr **) he-> h_addr_list;
+
+    for(i = 0; addr_list[i] != NULL; i++) 
+    {
+        //Return the first one;
+        strcpy(ip , inet_ntoa(*addr_list[i]) );
+        return 0;
+    }
+
+    return 1;
+}
+
+
 
 /* vim: set ai cin et sw=4 ts=4 : */

@@ -35,9 +35,16 @@
 
 #include "exosite_pal_private.h"
 
-
+#include<string.h> //memset
+#include<stdlib.h> //for exit(0);
+#include<sys/socket.h>
+#include<errno.h> //For errno - the error number
+#include<netdb.h>   //hostent
+#include<arpa/inet.h>
 
 char  exoPal_rxBuffer[RX_BUFFER_SIZE];
+
+int socketfd = 0;
 
 /*!
  * \brief Closes a tcp socket
@@ -68,6 +75,14 @@ uint8_t exoPal_tcpSocketClose()
 uint8_t exoPal_tcpSocketOpen()
 {
     // do stuff to open a socket
+
+    struct sockaddr_in serv_addr;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    //Get IP Address
+    char ip[100];
+    ret = hostname_to_ip(hostname, ip);
+    print("Got IP: %s", ip);
 
     return 0;
     
@@ -270,5 +285,33 @@ uint16_t exoPal_strlen(const char *s)
 uint8_t exoPal_itoa(int value, char* buf, uint8_t bufSize)
 {
     return 0;
+}
+
+/*
+    Get ip from domain name
+ */
+int hostname_to_ip(char * hostname , char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+
+    if ( (he = gethostbyname( hostname ) ) == NULL) 
+    {
+        // get the host info
+        herror("gethostbyname");
+        return 1;
+    }
+
+    addr_list = (struct in_addr **) he-> h_addr_list;
+
+    for(i = 0; addr_list[i] != NULL; i++) 
+    {
+        //Return the first one;
+        strcpy(ip , inet_ntoa(*addr_list[i]) );
+        return 0;
+    }
+
+    return 1;
 }
 
